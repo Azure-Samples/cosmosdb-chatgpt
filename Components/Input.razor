@@ -1,0 +1,54 @@
+﻿<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Caption</h4>
+                
+                <button type="button" class="close"
+                        @onclick="@Cancel">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <input class="w-100" type="text" @onkeydown="@Enter" @bind="@Value" @oninput="@((e) => { ReturnValue=(string)e.Value;})" />
+            </div>
+            <div class="modal-footer">                
+                <button type="button" class="btn btn-primary"
+                @onclick=@Ok>
+                    Save
+                </button>
+                <button type="button" class="btn btn-warning"
+                @onclick="@Cancel">
+                    Don't Save
+                </button>                 
+                
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter] public string Caption { get; set; }
+    [Parameter] public string Value { get; set; }
+    [Parameter] public EventCallback<string> OnClose { get; set; }
+
+    public string ReturnValue { get; set; }
+
+    private Task Cancel()
+    {
+        return OnClose.InvokeAsync("");
+    }
+    private Task Ok()
+    {
+        return OnClose.InvokeAsync(ReturnValue);
+    }
+
+
+    public Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            return OnClose.InvokeAsync(ReturnValue);
+        }
+        return null;
+    }
+}

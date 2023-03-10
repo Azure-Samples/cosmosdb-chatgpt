@@ -1,0 +1,197 @@
+﻿@using CosmosDB_ChatGPT.Services
+@inject ChatService chatService
+@inject NavigationManager UriHelper
+
+
+
+
+<div class="sidebar h-100 d-flex flex-column">
+
+    <div class="flex-column top-row navbar navbar-dark">
+        <div class="container-fluid navbar-brand">
+            <h4 class="py-1">Cosmos DB + ChatGPT</h4>
+        </div>
+    </div>
+
+    <div class=" flex-grow-1 flex-column justify-content-center overflow-auto">
+        @if (LoadingComplete == true)
+        {
+            <div>
+                <nav class="flex-column">
+                    <div class="nav-item px-3">
+                        <NavLink style="cursor:pointer" class="nav-link" Match="NavLinkMatch.All" @onclick="@(e => NewChat())">
+                            <span class="oi oi-plus" aria-hidden="true"></span> New Chat
+                        </NavLink>
+                    </div>
+                </nav>
+            </div>
+            <div class="vstack gap-3 px-3">
+
+                @foreach (var session in ChatSessions)
+                {
+
+                    <div class="btn @highlightActiveChat(session.ChatSessionId)">
+
+                        <div class="w-100 p-1" style="text-align:left ">
+                            <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
+                                <span class="oi oi-chat" aria-hidden="true"></span>
+                                <span title="@session.ChatSessionName"> @SafeSubstring(session.ChatSessionName,20) </span>
+                            </a>
+                        </div>
+                        <div style="text-align:right ;width:100%">
+                            <a @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
+                                <i class="bi bi-pencil-fill"></i>
+                                <span class="oi oi-pencil" aria-hidden="true" style="color: white"></span>
+                            </a>
+                            <a @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
+                                <span class="oi oi-trash" aria-hidden="true" style="color: white"></span>
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @LoadChat(OpenSessionID,OpenSessionName);
+        </div>
+        }
+    </div>
+</div>
+
+
+
+
+
+@if (ConfirmationIsOpen)
+{
+    <Confirmation Caption="Delete a Chat"
+        Message="@UIMessageText"
+        OnClose="@OnConfirmationClose"
+        Type="Confirmation.Category.DeleteNot">
+    </Confirmation>
+}
+
+
+
+@if (InputIsOpen)
+{
+    <Input Caption="Rename a Chat"
+              Value="@UIMessageText"
+              OnClose="@OnInputClose" >
+    </Input>
+}
+
+
+
+@code {
+
+    private string OpenSessionID;
+    private string OpenSessionName;
+
+    private string SessionID;
+    private string UIMessageText;
+    private bool ConfirmationIsOpen = false;
+
+
+    private bool LoadingComplete;
+
+
+    private void OpenConfirmation(string id, string title)
+    {
+        ConfirmationIsOpen = true;
+        SessionID = id;
+        UIMessageText = "Do you want to delete the chat \""
+                  + title + "\"?";
+    }
+    private async Task OnConfirmationClose(bool isOk)
+    {
+        if (isOk)
+        {
+            ConfirmationIsOpen = false;
+            await chatService.DeleteChatSessionAsync(SessionID);
+
+            if (ChatSessions != null & ChatSessions.Count > 0)
+            {
+                OpenSessionID = ChatSessions.FirstOrDefault().ChatSessionId;
+                OpenSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+            }
+            else
+            {
+                OpenSessionID = "";
+                OpenSessionName = "";
+            }
+        }
+        ConfirmationIsOpen = false;
+    }
+
+    private bool InputIsOpen = false;
+
+    private void OpenInput(string id, string title)
+    {
+        InputIsOpen = true;
+        SessionID = id;
+        UIMessageText = title;
+    }
+    private async Task OnInputClose(string newName)
+    {
+        if (newName!="")
+        {
+            await chatService.RenameChatSessionAsync(SessionID,newName);
+
+        }
+        InputIsOpen = false;
+    }
+
+    private async Task NewChat()
+    {
+        await chatService.CreateNewChatSession();
+    }
+
+
+    List<ChatSession> ChatSessions;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        LoadingComplete = false;
+
+        ChatSessions = await chatService.GetAllChatSessionsAsync();
+        if (ChatSessions != null & ChatSessions.Count>0)
+        {
+            OpenSessionID = ChatSessions.FirstOrDefault().ChatSessionId;
+            OpenSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+        }
+
+        LoadingComplete = true;
+    }
+
+
+
+    private int LoadChat(string sessionId, string sessionName)
+    {
+        if (ChatSessions.Count > 0)
+        {
+            OpenSessionID = sessionId;
+            OpenSessionName = sessionName;
+            if (sessionId!=null & sessionId != "" & sessionName != "")
+                    UriHelper.NavigateTo($"showchat/{sessionId}/{sessionName}");
+        }
+        else
+        {
+            UriHelper.NavigateTo($"nochatsavailable/404");
+        }
+        return 0;
+    }
+
+    private string highlightActiveChat(string sessionId)
+    {
+        if (sessionId != OpenSessionID)
+            return "btn-primary";
+        else
+            return "btn-info";
+    }
+
+    public string SafeSubstring(string text, int maxLength)
+    {
+        
+        return text.Length > maxLength ? text.Substring(0, maxLength)+"..." : text;
+    }
+
+}

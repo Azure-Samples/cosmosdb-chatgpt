@@ -1,0 +1,161 @@
+﻿@page "/showchat/{ChatSessionId}/{ChatSessionName}"
+@page "/nochatsavailable/{ChatSessionId}"
+@page "/"
+
+
+@using CosmosDB_ChatGPT.Services
+@inject ChatService chatService
+@inject IJSRuntime JSRuntime
+
+
+<PageTitle>Chat Messages</PageTitle>
+
+<div class="h-100 d-flex flex-column overflow-hidden">
+	<!--Header Row-->
+    <div class="flex-column bg-light">
+        <h4 class="text-dark p-2" style="height:50px">@GetChatSessionName()</h4>
+	 </div>
+	<!--Content Row-->
+    <div class="flex-column justify-content-center p-4 flex-grow-1 overflow-auto" id="MessagesInChatdiv">
+        @if (ChatSessionId=="404")
+        {
+            <div class="alert alert-primary mt-4">
+                <span class="oi oi-lightbulb me-2" aria-hidden="true"></span>
+                <strong>No Chats Available</strong>
+
+                <span class="text-nowrap">
+                    Use the New Chat option to start a new chat.
+                </span>
+            </div>
+        }
+        else
+        {
+             
+            {
+                if (MessagesInChat == null || LoadingComplete == false)
+                {
+                    <div class="alert alert-info mt-4">
+                        <span class="oi oi-data-transfer-download me-2" aria-hidden="true"></span>
+                        Please wait while your chat loads.
+                    </div>
+                }
+                else
+                {
+                    if (MessagesInChat.Count == 0)
+                    {
+                        <div class="alert alert-info mt-4">
+                            <span class="oi oi-envelope-open me-2" aria-hidden="true"></span>
+                            <span class="text-nowrap">
+                                This chat has no messages.
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var msg in MessagesInChat)
+                        {
+                            if (msg.Sender == "OpenAI")
+                            {
+                                <p class="text-primary">
+                                    <b> @msg.Sender </b> &nbsp;&nbsp;&nbsp;<span class="small">@msg.TimeStamp</span>
+                                    <p>@msg.Text</p>
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-secondary">
+                                    <b> @msg.Sender </b> &nbsp;&nbsp;&nbsp;<span class="small">@msg.TimeStamp</span>
+                                    <p>@msg.Text</p>
+                                </p>
+                            }
+                        }
+                    }
+                }
+            }
+        }
+            			
+	</div>
+		<!--Prompt Input Row-->
+    <div class="@GetPromptVisibility() flex-column justify-content-center px-4" style="min-height:75px">
+		 <div style="padding:10px" class="border border-secondary rounded" >
+
+            <input type="text" @bind="@UserPromptSet" @onkeydown="@Enter" @oninput="@((e) => { UserPrompt=(string)e.Value;})" rows="1" placeholder="<Your Message>" class="m-0 w-full border-0 bg-transparent p-0 pl-2 pr-7"
+                   style="height:24px; overflow-y: hidden; width:calc(100% - 25px);resize: none"></input>
+            <a style="cursor:pointer" @onclick="submitPrompt">
+                <span class="oi oi-share" aria-hidden="true"></span>
+            </a>             
+            
+        </div>	
+	</div>				
+</div>
+
+@code {
+
+    List<ChatMessage> MessagesInChat;
+
+    [Parameter]
+    public string ChatSessionId{ get; set; }
+    [Parameter]
+    public string ChatSessionName { get; set; }
+
+    private bool LoadingComplete;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ChatSessionId != "404" & ChatSessionId != null)
+            MessagesInChat = await chatService.GetChatSessionMessages(ChatSessionId);
+
+        LoadingComplete = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        scrollLastChatToView();
+    }
+	
+	public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await submitPrompt();
+        }
+    }
+
+    private string UserPrompt { get; set; }
+    private string UserPromptSet { get; set; }
+    
+    private async Task submitPrompt()
+    {
+        if (ChatSessionId == "404" || UserPrompt == "" || UserPrompt==null)
+            return;
+
+        if (UserPrompt!="")
+        {           
+            UserPromptSet = "";
+
+        }
+        await chatService.AskOpenAi(ChatSessionId, UserPrompt);
+    }
+
+    private async Task scrollLastChatToView()
+    {
+        await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
+    }
+
+    private string GetChatSessionName()
+    {
+        if (ChatSessionId == "404")
+            return "";
+        else
+            return ChatSessionName;
+    }
+
+    private string GetPromptVisibility()
+    {
+        if (ChatSessionId == "404" || ChatSessionId == null || LoadingComplete == false)
+            return "invisible";
+        else
+            return "";
+    }
+
+}
