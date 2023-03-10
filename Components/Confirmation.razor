@@ -1,0 +1,67 @@
+﻿<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Caption</h4>
+                <button type="button" class="close"
+                        @onclick="@Cancel">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>@Message</p>
+            </div>
+            <div class="modal-footer">
+                @switch (Type)
+                {
+                    case Category.Okay:
+                        <button type="button" class="btn btn-primary"
+                        @onclick=@Ok>
+                            OK
+                        </button>
+                        break;
+                    case Category.SaveNot:
+                        <button type="button" class="btn btn-primary"
+                        @onclick=@Ok>
+                            Save
+                        </button>
+                        <button type="button" class="btn btn-warning"
+                        @onclick="@Cancel">
+                            Don't Save
+                        </button>
+                        break;
+                    case Category.DeleteNot:
+                        <button type="button" class="btn btn-danger"
+                        @onclick=@Ok>
+                            Delete
+                        </button>
+                        <button type="button" class="btn btn-warning"
+                        @onclick="@Cancel">
+                            Don't Delete
+                        </button>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter] public string Caption { get; set; }
+    [Parameter] public string Message { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+    [Parameter] public Category Type { get; set; }
+    private Task Cancel()
+    {
+        return OnClose.InvokeAsync(false);
+    }
+    private Task Ok()
+    {
+        return OnClose.InvokeAsync(true);
+    }
+    public enum Category
+    {
+        Okay,
+        SaveNot,
+        DeleteNot
+    }
+}
