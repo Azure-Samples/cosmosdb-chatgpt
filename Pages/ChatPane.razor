@@ -1,4 +1,4 @@
-﻿@using CosmosDB_ChatGPT.Services
+﻿@using cosmosdb_chatgpt.Services
 @inject ChatService chatService
 @inject IJSRuntime JSRuntime
 
@@ -180,7 +180,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        ScrollLastChatToView();
+        await ScrollLastChatToView();
     }
     private async Task ScrollLastChatToView()
     {

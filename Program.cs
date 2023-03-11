@@ -1,4 +1,4 @@
-using CosmosDB_ChatGPT.Services;
+using cosmosdb_chatgpt.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 

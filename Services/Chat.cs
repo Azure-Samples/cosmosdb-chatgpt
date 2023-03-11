@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace CosmosDB_ChatGPT.Services
+namespace cosmosdb_chatgpt.Services
 {
 
     public class ChatSession

@@ -7,17 +7,20 @@ of the OpenAi ChatGPT experience.
 
 ## Features
 
-This application has individual chat sessions which are displayed in the left-hand nav. Clicking on a session will show the messages within that chat, 
-separated by human prompts and AI completions within them. 
+This application has individual chat sessions which are displayed and can be selected in the left-hand nav. Clicking on a session will show the messages that contain
+human prompts and AI completions. 
 
-When a new prompt is sent to the Azure OpenAI service, some of the conversation history is sent with it. This helps provide context for the model that allows 
-ChatGPT to respond as though it is having a conversation with correct context. The length of this conversation history can be configured from appsettings.json 
+When a new prompt is sent to the Azure OpenAI service, some of the conversation history is sent with it. This provides context allowing ChatGPT to respond 
+as though it is having a conversation. The length of this conversation history can be configured from appsettings.json 
 with the `OpenAiMaxTokens` value that is then translated to a maximum conversation string length that is 1/2 of this value. 
 
 Please note that ChatGPT itself has a maximum of 4096 tokens and these are used in both the request and reponse from the service. Overriding the maxConversationLength to values 
 approaching maximum token value could result in completions that contain little to no text if all of it has been used in the request.
 
 The history for all User prompts and AI responses in each chat session is stored in Azure Cosmos DB. Deleting a chat session in the UI will delete it's corresponding data as well.
+
+The application will also summarize the name of the chat session by asking ChatGPT to provide a one or two word summary of the first prompt. This allows you to easily
+identity different chat sessions.
 
 
 ## Getting Started

@@ -1,17 +1,9 @@
-﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
-using System.Collections;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
-using System.Linq.Expressions;
-using System;
-using System.ComponentModel;
-using Container = Microsoft.Azure.Cosmos.Container;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
-namespace CosmosDB_ChatGPT.Services
+
+namespace cosmosdb_chatgpt.Services
 {
     public class CosmosService
     {
@@ -24,7 +16,6 @@ namespace CosmosDB_ChatGPT.Services
         public CosmosService(IConfiguration configuration)
         {
             
-
             string uri = configuration["CosmosUri"];
             string key = configuration["CosmosKey"];
 
@@ -33,21 +24,21 @@ namespace CosmosDB_ChatGPT.Services
 
             cosmosClient = new CosmosClient(uri, key);
 
+            chatContainer = cosmosClient.GetContainer(databaseId, containerId);
+
         }
 
         
         // First call is made to this when chat page is loaded for left-hand nav.
         // Only retrieve the chat sessions, not chat messages
-        public async Task<List<ChatSession>> GetChatSessionsListAsync()
+        public async Task<List<ChatSession>> GetChatSessionsAsync()
         {
-
-            if (chatContainer == null)
-                chatContainer = await CreateContainerIfNotExistsAsync(databaseId, containerId);
 
             List<ChatSession> chatSessions = new();
 
-            try { 
-                //Get documents that are the chat sessions without the chat message documents.
+            try 
+            { 
+                //Get the chat sessions without the chat messages.
                 QueryDefinition query = new QueryDefinition("SELECT DISTINCT c.id, c.Type, c.ChatSessionId, c.ChatSessionName FROM c WHERE c.Type = @Type")
                     .WithParameter("@Type", "ChatSession");
 
@@ -65,7 +56,7 @@ namespace CosmosDB_ChatGPT.Services
             }
             catch(CosmosException ce)
             {
-                //if 404, first run, create a new default chat session document.
+                //if 404, first run, create a new default chat session.
                 if (ce.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     ChatSession chatSession = new ChatSession();
@@ -95,36 +86,35 @@ namespace CosmosDB_ChatGPT.Services
 
         public async Task DeleteChatSessionAsync(string chatSessionId)
         {
-            //Retrieve the chat session and all the chat message items for a chat session
-            QueryDefinition query = new QueryDefinition("SELECT c.id, c.ChatSessionId FROM c WHERE c.ChatSessionId = @ID")
-                    .WithParameter("@ID", chatSessionId);
+            
+            //Retrieve the chat session and all chat messages
+            QueryDefinition query = new QueryDefinition("SELECT c.id, c.ChatSessionId FROM c WHERE c.ChatSessionId = @chatSessionId")
+                    .WithParameter("@chatSessionId", chatSessionId);
 
 
-            FeedIterator<ItemResponse> results = chatContainer.GetItemQueryIterator<ItemResponse>(query);
+            FeedIterator<ChatMessage> results = chatContainer.GetItemQueryIterator<ChatMessage>(query);
+
+
+            List<Task> deleteTasks = new List<Task>();
 
             while (results.HasMoreResults)
             {
-                FeedResponse<ItemResponse> response = await results.ReadNextAsync();
-                foreach (ItemResponse responseItem in response)
+                FeedResponse<ChatMessage> response = await results.ReadNextAsync();
+                
+                foreach (var item in response)
                 {
-                    await chatContainer.DeleteItemAsync<ItemResponse>(id: responseItem.Id, partitionKey: new PartitionKey(responseItem.ChatSessionId));
+
+                    deleteTasks.Add(chatContainer.DeleteItemStreamAsync(item.Id, new PartitionKey(item.ChatSessionId)));
+
                 }
 
             }
 
-
+            await Task.WhenAll(deleteTasks);
+ 
         }
 
-        private class ItemResponse
-        {
-            [JsonProperty(PropertyName = "id")]
-            public string Id { get; set; }
-
-            [JsonProperty(PropertyName = "ChatSessionId")]
-            public string ChatSessionId { get; set; }
-        }
-
-            public async Task<ChatMessage> InsertChatMessageAsync(ChatMessage chatMessage)
+        public async Task<ChatMessage> InsertChatMessageAsync(ChatMessage chatMessage)
         {
 
             return await chatContainer.CreateItemAsync<ChatMessage>(chatMessage, new PartitionKey(chatMessage.ChatSessionId));
@@ -156,36 +146,6 @@ namespace CosmosDB_ChatGPT.Services
 
         }
 
-        public async Task<Container> CreateContainerIfNotExistsAsync(string databaseId, string containerId)
-        {
-
-            Database database = await cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId); //= cosmosClient.GetDatabase(databaseId); //
-
-            ContainerProperties properties = new ContainerProperties();
-
-            properties.Id = containerId;
-            properties.PartitionKeyDefinitionVersion = PartitionKeyDefinitionVersion.V2;
-            properties.PartitionKeyPath = "/ChatSessionId";
-
-            properties.IndexingPolicy.Automatic = true;
-            properties.IndexingPolicy.IndexingMode = IndexingMode.Consistent;
-            properties.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
-            //properties.IndexingPolicy.ExcludedPaths.Add(new ExcludedPath { Path = "/Response/?" });
-            properties.IndexingPolicy.CompositeIndexes.Add(
-                new Collection<CompositePath> { 
-                    new CompositePath() { 
-                        Path = "/ChatName", Order = CompositePathSortOrder.Ascending,}, 
-                    new CompositePath() { 
-                        Path = "/DateTime", Order = CompositePathSortOrder.Ascending 
-                    } 
-                });
-
-            ThroughputProperties throughput = ThroughputProperties.CreateAutoscaleThroughput(1000);
-
-            return await database.CreateContainerIfNotExistsAsync(properties, throughput);
-
-            
-        }
     }
 
 }
