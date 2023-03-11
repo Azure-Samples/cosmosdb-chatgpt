@@ -1,7 +1,7 @@
 ﻿function scrollToLastMessage()
 {
-    if (document.getElementById('chatmessagesdiv')) {
-        var elem = document.getElementById('chatmessagesdiv');
+    if (document.getElementById('MessagesInChatdiv')) {
+        var elem = document.getElementById('MessagesInChatdiv');
         elem.scrollTop = elem.scrollHeight;
         return true;
     }

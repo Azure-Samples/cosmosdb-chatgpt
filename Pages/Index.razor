@@ -1,0 +1,50 @@
+﻿@page "/"
+
+
+
+@using CosmosDB_ChatGPT.Services
+
+<div class="flex-row justify-content-center" style="min-width:275px">
+    <NavMenu @ref="@navmenu" OnChatClicked="LoadChatEventHandler"  />
+</div>
+
+<div class="flex-row justify-content-center flex-grow-1">
+    <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" />
+</div>
+
+@code {
+
+    private ChatSession CurrentSession;//{ get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnChatRenamed { get; set; }
+
+    private ChatPane ChatPane;
+
+    private NavMenu navmenu;
+
+    async protected override void OnInitialized()
+    {
+        navmenu = new NavMenu();
+        ChatPane = new ChatPane();
+
+    }
+    async public void LoadChatEventHandler(ChatSession session)
+    {
+        CurrentSession = session;
+
+        ChatPane.CurrentChatSession = session;
+
+        // Inform blazor the UI needs updating
+        InvokeAsync(StateHasChanged);
+    }
+
+    async public void ForceRefresh()
+    {    
+        // Inform blazor the UI needs updating
+        InvokeAsync(StateHasChanged);
+
+    }
+
+    
+}

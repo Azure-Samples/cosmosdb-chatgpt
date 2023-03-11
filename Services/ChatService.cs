@@ -34,6 +34,7 @@ namespace CosmosDB_ChatGPT.Services
         //Returns the chat messages to display on the main web page when the user selects a chat from the left-hand nav
         public async Task<List<ChatMessage>> GetChatSessionMessages(string chatSessionId)
         {
+
             List<ChatMessage> chatMessages = new List<ChatMessage>();
 
             int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
@@ -117,8 +118,8 @@ namespace CosmosDB_ChatGPT.Services
                 List<ChatMessage> chatMessages = chatSessions[index].Messages;
 
                 //Summarize the first prompt and rename the chat session
-                if(chatMessages.Count == 1)
-                    await SummarizeChatSessionNameAsync(chatSessionId, chatMessages[0].Text);
+                //if(chatMessages.Count == 1)
+                //    await SummarizeChatSessionNameAsync(chatSessionId, chatMessages[0].Text);
 
                 foreach(ChatMessage chatMessage in chatMessages)
                 {
@@ -135,12 +136,14 @@ namespace CosmosDB_ChatGPT.Services
             return conversation;
         }
 
-        private async Task SummarizeChatSessionNameAsync(string chatSessionId, string prompt)
+        public async Task<string> SummarizeChatSessionNameAsync(string chatSessionId, string prompt)
         {
             prompt += "\n\n Summarize this question in one or two words so I can use it as a label to fit in the button on a web page";
             string response = await openAi.AskAsync(chatSessionId, prompt);
 
             await RenameChatSessionAsync(chatSessionId, response);
+
+            return response;
 
         }
 
