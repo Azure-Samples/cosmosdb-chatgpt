@@ -1,8 +1,4 @@
-﻿using System;
-using System.Configuration;
-using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
-
+﻿using Microsoft.VisualBasic;
 
 namespace CosmosDB_ChatGPT.Services
 {
@@ -100,7 +96,7 @@ namespace CosmosDB_ChatGPT.Services
         {
             await AddPromptMessage(chatSessionId, prompt);
 
-            string conversation = GetChatSessionConversation(chatSessionId);
+            string conversation = await GetChatSessionConversationAsync(chatSessionId);
 
             string response = await openAi.AskAsync(chatSessionId, conversation);
 
@@ -110,7 +106,7 @@ namespace CosmosDB_ChatGPT.Services
 
         }
 
-        private string GetChatSessionConversation(string chatSessionId)
+        private async Task<string> GetChatSessionConversationAsync(string chatSessionId)
         {
             string conversation = "";
 
@@ -119,6 +115,10 @@ namespace CosmosDB_ChatGPT.Services
             if (chatSessions[index].Messages.Count > 0)
             {
                 List<ChatMessage> chatMessages = chatSessions[index].Messages;
+
+                //Summarize the first prompt and rename the chat session
+                if(chatMessages.Count == 1)
+                    await SummarizeChatSessionNameAsync(chatSessionId, chatMessages[0].Text);
 
                 foreach(ChatMessage chatMessage in chatMessages)
                 {
@@ -133,6 +133,15 @@ namespace CosmosDB_ChatGPT.Services
             }
 
             return conversation;
+        }
+
+        private async Task SummarizeChatSessionNameAsync(string chatSessionId, string prompt)
+        {
+            prompt += "\n\n Summarize this question in one or two words so I can use it as a label to fit in the button on a web page";
+            string response = await openAi.AskAsync(chatSessionId, prompt);
+
+            await RenameChatSessionAsync(chatSessionId, response);
+
         }
 
         // Add human prompt to the chat session message list object and insert into Cosmos.
