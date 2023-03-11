@@ -1,11 +1,7 @@
-﻿using System.Diagnostics;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure;
+﻿using Azure;
 using Azure.AI.OpenAI;
 
-namespace CosmosDB_ChatGPT.Services
+namespace cosmosdb_chatgpt.Services
 {
     public class OpenAiService
     {

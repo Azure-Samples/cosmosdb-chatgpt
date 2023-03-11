@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-
-namespace CosmosDB_ChatGPT.Services
+﻿namespace cosmosdb_chatgpt.Services
 {
     public class ChatService 
     {
@@ -26,7 +24,7 @@ namespace CosmosDB_ChatGPT.Services
         // Returns list of chat session ids and names for left-hand nav to bind to (display ChatSessionName and ChatSessionId as hidden)
         public async Task<List<ChatSession>> GetAllChatSessionsAsync()
         {
-            chatSessions = await cosmos.GetChatSessionsListAsync();
+            chatSessions = await cosmos.GetChatSessionsAsync();
            
             return chatSessions;
         }
@@ -97,7 +95,7 @@ namespace CosmosDB_ChatGPT.Services
         {
             await AddPromptMessage(chatSessionId, prompt);
 
-            string conversation = await GetChatSessionConversationAsync(chatSessionId);
+            string conversation = GetChatSessionConversation(chatSessionId);
 
             string response = await openAi.AskAsync(chatSessionId, conversation);
 
@@ -107,7 +105,7 @@ namespace CosmosDB_ChatGPT.Services
 
         }
 
-        private async Task<string> GetChatSessionConversationAsync(string chatSessionId)
+        private string GetChatSessionConversation(string chatSessionId)
         {
             string conversation = "";
 
@@ -117,10 +115,7 @@ namespace CosmosDB_ChatGPT.Services
             {
                 List<ChatMessage> chatMessages = chatSessions[index].Messages;
 
-                //Summarize the first prompt and rename the chat session
-                //if(chatMessages.Count == 1)
-                //    await SummarizeChatSessionNameAsync(chatSessionId, chatMessages[0].Text);
-
+                
                 foreach(ChatMessage chatMessage in chatMessages)
                 {
 
@@ -138,7 +133,7 @@ namespace CosmosDB_ChatGPT.Services
 
         public async Task<string> SummarizeChatSessionNameAsync(string chatSessionId, string prompt)
         {
-            prompt += "\n\n Summarize this question in one or two words so I can use it as a label to fit in the button on a web page";
+            prompt += "\n\n Summarize this prompt in one or two words to use as a label in a button on a web page";
             string response = await openAi.AskAsync(chatSessionId, prompt);
 
             await RenameChatSessionAsync(chatSessionId, response);
