@@ -1,9 +1,4 @@
-﻿@page "/showchat/{ChatSessionId}/{ChatSessionName}"
-@page "/nochatsavailable/{ChatSessionId}"
-@page "/"
-
-
-@using CosmosDB_ChatGPT.Services
+﻿@using CosmosDB_ChatGPT.Services
 @inject ChatService chatService
 @inject IJSRuntime JSRuntime
 
@@ -17,7 +12,15 @@
 	 </div>
 	<!--Content Row-->
     <div class="flex-column justify-content-center p-4 flex-grow-1 overflow-auto" id="MessagesInChatdiv">
-        @if (ChatSessionId=="404")
+
+        @if (CurrentChatSession == null)
+        {
+             <div class="alert alert-info mt-4">
+                <span class="oi oi-data-transfer-download me-2" aria-hidden="true"></span>
+                Please wait while your chat loads.
+            </div>
+        }
+        else if (CurrentChatSession.ChatSessionId == "404")
         {
             <div class="alert alert-primary mt-4">
                 <span class="oi oi-lightbulb me-2" aria-hidden="true"></span>
@@ -94,26 +97,35 @@
     List<ChatMessage> MessagesInChat;
 
     [Parameter]
-    public string ChatSessionId{ get; set; }
-    [Parameter]
-    public string ChatSessionName { get; set; }
+    public EventCallback<string> OnChatRenamed { get; set; }
 
     private bool LoadingComplete;
 
+    [Parameter]
+    public ChatSession CurrentChatSession { get; set; }
+
+    public async Task ReLoadChatMessages()
+    {
+        if (CurrentChatSession != null)
+            MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
+    }
+
+
     protected override async Task OnParametersSetAsync()
     {
-        if (ChatSessionId != "404" & ChatSessionId != null)
-            MessagesInChat = await chatService.GetChatSessionMessages(ChatSessionId);
+
+        if (CurrentChatSession == null)
+            return;
+
+        if (CurrentChatSession.ChatSessionId != "404" & CurrentChatSession.ChatSessionId != null)
+            MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
 
         LoadingComplete = true;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        scrollLastChatToView();
-    }
-	
-	public async Task Enter(KeyboardEventArgs e)
+
+
+    public async Task Enter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
@@ -123,10 +135,10 @@
 
     private string UserPrompt { get; set; }
     private string UserPromptSet { get; set; }
-    
+
     private async Task submitPrompt()
     {
-        if (ChatSessionId == "404" || UserPrompt == "" || UserPrompt==null)
+        if (CurrentChatSession.ChatSessionId == "404" || UserPrompt == "" || UserPrompt == null)
             return;
 
         if (UserPrompt!="")
@@ -134,28 +146,44 @@
             UserPromptSet = "";
 
         }
-        await chatService.AskOpenAi(ChatSessionId, UserPrompt);
+        await chatService.AskOpenAi(CurrentChatSession.ChatSessionId, UserPrompt);
+
+        if(MessagesInChat.Count==2)
+        {
+            string newSessionName;
+            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentChatSession.ChatSessionId, MessagesInChat[0].Text);
+
+            CurrentChatSession.ChatSessionName = newSessionName;
+            await OnChatRenamed.InvokeAsync();
+        }
+
+        ScrollLastChatToView();
     }
 
-    private async Task scrollLastChatToView()
-    {
-        await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
-    }
+ 
 
     private string GetChatSessionName()
     {
-        if (ChatSessionId == "404")
+        if (CurrentChatSession==null|| CurrentChatSession.ChatSessionId == "404")
             return "";
         else
-            return ChatSessionName;
+            return CurrentChatSession.ChatSessionName;
     }
 
     private string GetPromptVisibility()
     {
-        if (ChatSessionId == "404" || ChatSessionId == null || LoadingComplete == false)
+        if (CurrentChatSession==null || CurrentChatSession.ChatSessionId == "404" || CurrentChatSession.ChatSessionId == null || LoadingComplete == false)
             return "invisible";
         else
             return "";
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        ScrollLastChatToView();
+    }
+    private async Task ScrollLastChatToView()
+    {
+        await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
+    }
 }

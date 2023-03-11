@@ -1,8 +1,5 @@
 ﻿@using CosmosDB_ChatGPT.Services
 @inject ChatService chatService
-@inject NavigationManager UriHelper
-
-
 
 
 <div class="sidebar h-100 d-flex flex-column">
@@ -49,14 +46,10 @@
                         </div>
                     </div>
                 }
-
-                @LoadChat(OpenSessionID,OpenSessionName);
         </div>
         }
     </div>
 </div>
-
-
 
 
 
@@ -83,15 +76,20 @@
 
 @code {
 
-    private string OpenSessionID;
-    private string OpenSessionName;
+    List<ChatSession> ChatSessions;
+    public ChatSession CurrentSession;
 
     private string SessionID;
     private string UIMessageText;
     private bool ConfirmationIsOpen = false;
 
-
     private bool LoadingComplete;
+
+    [Parameter]
+    public EventCallback<ChatSession> OnChatClicked { get; set; }
+
+    //[Parameter]
+    //public string CurrentSessionName { get; set; }
 
 
     private void OpenConfirmation(string id, string title)
@@ -101,24 +99,40 @@
         UIMessageText = "Do you want to delete the chat \""
                   + title + "\"?";
     }
+
     private async Task OnConfirmationClose(bool isOk)
     {
+        bool loadFirst=false;
+
+        if (CurrentSession!=null & SessionID == CurrentSession.ChatSessionId)
+            loadFirst = true;
+
         if (isOk)
         {
             ConfirmationIsOpen = false;
             await chatService.DeleteChatSessionAsync(SessionID);
+            
+            ConfirmationIsOpen = false;
+
+            if (!loadFirst)
+                return;
+            
+            CurrentSession = new ChatSession();
+            CurrentSession.ChatSessionId = "404";
+            CurrentSession.ChatSessionName = string.Empty;
 
             if (ChatSessions != null & ChatSessions.Count > 0)
             {
-                OpenSessionID = ChatSessions.FirstOrDefault().ChatSessionId;
-                OpenSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+                CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
+                CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
             }
-            else
-            {
-                OpenSessionID = "";
-                OpenSessionName = "";
-            }
+
+            await LoadCurrentChat();
+            // Inform blazor the UI needs updating
+            InvokeAsync(StateHasChanged);
+
         }
+
         ConfirmationIsOpen = false;
     }
 
@@ -130,11 +144,26 @@
         SessionID = id;
         UIMessageText = title;
     }
+
+
     private async Task OnInputClose(string newName)
     {
         if (newName!="")
         {
+            bool loadFirst = false;
+
+            if (SessionID == CurrentSession.ChatSessionId)
+                loadFirst = true;
+
             await chatService.RenameChatSessionAsync(SessionID,newName);
+
+            InputIsOpen = false;
+
+            if (!loadFirst)
+                return;
+            
+            CurrentSession.ChatSessionName = newName;
+            await LoadCurrentChat();
 
         }
         InputIsOpen = false;
@@ -143,46 +172,76 @@
     private async Task NewChat()
     {
         await chatService.CreateNewChatSession();
+
+        if (ChatSessions.Count == 1)
+        {
+            CurrentSession = ChatSessions[0];
+            await LoadCurrentChat();
+        }
     }
-
-
-    List<ChatSession> ChatSessions;
 
     protected override async Task OnParametersSetAsync()
     {
+        if (LoadingComplete == true)
+            return;
+
         LoadingComplete = false;
 
         ChatSessions = await chatService.GetAllChatSessionsAsync();
-        if (ChatSessions != null & ChatSessions.Count>0)
+        if (CurrentSession != null & ChatSessions != null & ChatSessions.Count > 0)
         {
-            OpenSessionID = ChatSessions.FirstOrDefault().ChatSessionId;
-            OpenSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+            CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
+            CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
         }
 
         LoadingComplete = true;
+        LoadCurrentChat();
+
     }
 
-
-
-    private int LoadChat(string sessionId, string sessionName)
+    async private Task<int> LoadCurrentChat()
     {
-        if (ChatSessions.Count > 0)
+
+        if (CurrentSession == null)
         {
-            OpenSessionID = sessionId;
-            OpenSessionName = sessionName;
-            if (sessionId!=null & sessionId != "" & sessionName != "")
-                    UriHelper.NavigateTo($"showchat/{sessionId}/{sessionName}");
+            CurrentSession = new ChatSession();
+            CurrentSession.ChatSessionId = "404";
+            CurrentSession.ChatSessionName = string.Empty;
+
+            if (ChatSessions != null & ChatSessions.Count > 0)
+            {                
+        
+                CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
+                CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+            }            
         }
-        else
-        {
-            UriHelper.NavigateTo($"nochatsavailable/404");
-        }
+
+        await OnChatClicked.InvokeAsync(CurrentSession);
+
+        return 0;
+    }
+
+    async private Task<int> LoadChat(string sessionId, string sessionName)
+    {
+        if (ChatSessions == null) return 0;
+
+        if (CurrentSession == null)
+           CurrentSession = new ChatSession();
+
+        CurrentSession.ChatSessionId = sessionId;
+        CurrentSession.ChatSessionName = sessionName;            
+
+        await LoadCurrentChat();
+
         return 0;
     }
 
     private string highlightActiveChat(string sessionId)
     {
-        if (sessionId != OpenSessionID)
+        if (CurrentSession == null)
+            return "btn-primary";
+
+        if (sessionId != CurrentSession.ChatSessionId)
             return "btn-primary";
         else
             return "btn-info";
@@ -190,7 +249,8 @@
 
     public string SafeSubstring(string text, int maxLength)
     {
-        
+        if(text == null) return string.Empty;
+
         return text.Length > maxLength ? text.Substring(0, maxLength)+"..." : text;
     }
 
