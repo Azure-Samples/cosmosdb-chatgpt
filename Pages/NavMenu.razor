@@ -27,7 +27,7 @@
                 @foreach (var session in ChatSessions)
                 {
 
-                    <div class="btn @highlightActiveChat(session.ChatSessionId)">
+                    <div class="btn @GetChatButtonClass(session.ChatSessionId)">
 
                         <div class="w-100 p-1" style="text-align:left ">
                             <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
@@ -53,25 +53,23 @@
 
 
 
-@if (ConfirmationIsOpen)
+@if (DeletePopUpOpen)
 {
     <Confirmation Caption="Delete a Chat"
-        Message="@UIMessageText"
+        Message="@PopUpText"
         OnClose="@OnConfirmationClose"
         Type="Confirmation.Category.DeleteNot">
     </Confirmation>
 }
 
 
-
-@if (InputIsOpen)
+@if (RenamePopUpOpen)
 {
     <Input Caption="Rename a Chat"
-              Value="@UIMessageText"
-              OnClose="@OnInputClose" >
+        Value="@PopUpText"
+        OnClose="@OnInputClose" >
     </Input>
 }
-
 
 
 @code {
@@ -80,41 +78,38 @@
     public ChatSession CurrentSession;
 
     private string SessionID;
-    private string UIMessageText;
-    private bool ConfirmationIsOpen = false;
+    private string PopUpText;
+    private bool DeletePopUpOpen = false;
 
     private bool LoadingComplete;
 
     [Parameter]
     public EventCallback<ChatSession> OnChatClicked { get; set; }
 
-    //[Parameter]
-    //public string CurrentSessionName { get; set; }
-
 
     private void OpenConfirmation(string id, string title)
     {
-        ConfirmationIsOpen = true;
+        DeletePopUpOpen = true;
         SessionID = id;
-        UIMessageText = "Do you want to delete the chat \""
+        PopUpText = "Do you want to delete the chat \""
                   + title + "\"?";
     }
 
     private async Task OnConfirmationClose(bool isOk)
     {
-        bool loadFirst=false;
+        bool updateCurrentChat=false;
 
         if (CurrentSession!=null & SessionID == CurrentSession.ChatSessionId)
-            loadFirst = true;
+            updateCurrentChat = true;
 
         if (isOk)
         {
-            ConfirmationIsOpen = false;
+            DeletePopUpOpen = false;
             await chatService.DeleteChatSessionAsync(SessionID);
             
-            ConfirmationIsOpen = false;
+            DeletePopUpOpen = false;
 
-            if (!loadFirst)
+            if (!updateCurrentChat)
                 return;
             
             CurrentSession = new ChatSession();
@@ -133,16 +128,16 @@
 
         }
 
-        ConfirmationIsOpen = false;
+        DeletePopUpOpen = false;
     }
 
-    private bool InputIsOpen = false;
+    private bool RenamePopUpOpen = false;
 
     private void OpenInput(string id, string title)
     {
-        InputIsOpen = true;
+        RenamePopUpOpen = true;
         SessionID = id;
-        UIMessageText = title;
+        PopUpText = title;
     }
 
 
@@ -150,23 +145,23 @@
     {
         if (newName!="")
         {
-            bool loadFirst = false;
+            bool updateCurrentChat = false;
 
             if (SessionID == CurrentSession.ChatSessionId)
-                loadFirst = true;
+                updateCurrentChat = true;
 
             await chatService.RenameChatSessionAsync(SessionID,newName);
 
-            InputIsOpen = false;
+            RenamePopUpOpen = false;
 
-            if (!loadFirst)
+            if (!updateCurrentChat)
                 return;
             
             CurrentSession.ChatSessionName = newName;
             await LoadCurrentChat();
 
         }
-        InputIsOpen = false;
+        RenamePopUpOpen = false;
     }
 
     private async Task NewChat()
@@ -236,7 +231,7 @@
         return 0;
     }
 
-    private string highlightActiveChat(string sessionId)
+    private string GetChatButtonClass(string sessionId)
     {
         if (CurrentSession == null)
             return "btn-primary";
