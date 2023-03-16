@@ -4,7 +4,7 @@
     {
 
         //All data is cached in chatSessions List object.
-        private List<ChatSession> chatSessions= new List<ChatSession>();
+        private static List<ChatSession> chatSessions;
 
         private readonly CosmosService cosmos;
         private readonly OpenAiService openAi;
