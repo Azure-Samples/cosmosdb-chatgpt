@@ -36,7 +36,7 @@ var cosmosDBAccountName = '${chatAppName}-cosmos'
 var openAiAccountName = '${chatAppName}-openai'
 var hostingPlanName = '${chatAppName}-hostingplan'
 var webSiteName = '${chatAppName}-webapp'
-var webSiteRepository = 'https://github.com/AzureCosmosDB/cosmos-chatgpt.git'
+var webSiteRepository = 'https://github.com/Azure-Samples/cosmos-chatgpt.git'
 var databaseName = 'ChatDatabase'
 var containerName = 'ChatContainer'
 var openAiMaxTokens = '3000'
@@ -154,11 +154,11 @@ resource webSite 'Microsoft.Web/sites@2020-12-01' = {
       appSettings: [
         {
           name: 'CosmosUri'
-          value: reference(cosmosDBAccount.id, '2022-08-15').documentEndpoint
+          value: cosmosDBAccount.properties.documentEndpoint
         }
         {
           name: 'CosmosKey'
-          value: listKeys(cosmosDBAccount.id, '2022-08-15').primaryMasterKey
+          value: cosmosDBAccount.listKeys().primaryMasterKey
         }
         {
           name: 'CosmosDatabase'
@@ -170,11 +170,11 @@ resource webSite 'Microsoft.Web/sites@2020-12-01' = {
         }
         {
           name: 'OpenAiUri'
-          value: reference(openAiAccount.id, '2022-12-01').endpoint
+          value: openAiAccount.properties.endpoint
         }
         {
           name: 'OpenAiKey'
-          value: listKeys(openAiAccount.id, '2022-12-01').key1
+          value: openAiAccount.listKeys().key1
         }
         {
           name: 'OpenAiDeployment'
@@ -189,7 +189,7 @@ resource webSite 'Microsoft.Web/sites@2020-12-01' = {
   }
 }
 
-resource sourcecontrols 'Microsoft.Web/sites/sourcecontrols@2020-12-01' = {
+resource webSiteName_web 'Microsoft.Web/sites/sourcecontrols@2020-12-01' = {
   parent: webSite
   name: 'web'
   properties: {

@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.14.85.62628",
-      "templateHash": "13447736111506208810"
+      "version": "0.15.31.15270",
+      "templateHash": "655242673034266663"
     }
   },
   "parameters": {
@@ -82,7 +82,7 @@
     "openAiAccountName": "[format('{0}-openai', parameters('chatAppName'))]",
     "hostingPlanName": "[format('{0}-hostingplan', parameters('chatAppName'))]",
     "webSiteName": "[format('{0}-webapp', parameters('chatAppName'))]",
-    "webSiteRepository": "https://github.com/AzureCosmosDB/cosmos-chatgpt.git",
+    "webSiteRepository": "https://github.com/Azure-Samples/cosmos-chatgpt.git",
     "databaseName": "ChatDatabase",
     "containerName": "ChatContainer",
     "openAiMaxTokens": "3000"
