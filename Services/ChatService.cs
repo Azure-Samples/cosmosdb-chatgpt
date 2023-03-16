@@ -30,7 +30,7 @@
         }
 
         //Returns the chat messages to display on the main web page when the user selects a chat from the left-hand nav
-        public async Task<List<ChatMessage>> GetChatSessionMessages(string chatSessionId)
+        public async Task<List<ChatMessage>> GetChatSessionMessagesAsync(string chatSessionId)
         {
 
             List<ChatMessage> chatMessages = new List<ChatMessage>();
@@ -56,7 +56,7 @@
         }
 
         //User creates a new Chat Session
-        public async Task CreateNewChatSession()
+        public async Task CreateNewChatSessionAsync()
         {
             ChatSession chatSession = new ChatSession();
 
@@ -91,15 +91,15 @@
         }
 
         //User prompt to ask OpenAI a question
-        public async Task<string> AskOpenAi(string chatSessionId, string prompt)
+        public async Task<string> AskOpenAiAsync(string chatSessionId, string prompt)
         {
-            await AddPromptMessage(chatSessionId, prompt);
+            await AddPromptMessageAsync(chatSessionId, prompt);
 
             string conversation = GetChatSessionConversation(chatSessionId);
 
             string response = await openAi.AskAsync(chatSessionId, conversation);
 
-            await AddResponseMessage(chatSessionId, response);
+            await AddResponseMessageAsync(chatSessionId, response);
 
             return response;
 
@@ -119,7 +119,7 @@
                 foreach(ChatMessage chatMessage in chatMessages)
                 {
 
-                    conversation += chatMessage.Sender + ": " + chatMessage.Text + "\n";
+                    conversation += chatMessage.Text + "\n";
                     
                 }
 
@@ -143,7 +143,7 @@
         }
 
         // Add human prompt to the chat session message list object and insert into Cosmos.
-        private async Task AddPromptMessage(string chatSessionId, string text)
+        private async Task AddPromptMessageAsync(string chatSessionId, string text)
         {
             ChatMessage chatMessage = new ChatMessage(chatSessionId, "Human", text);
 
@@ -156,7 +156,7 @@
         }
 
         // Add OpenAI response to the chat session message list object and insert into Cosmos.
-        private async Task AddResponseMessage(string chatSessionId, string text)
+        private async Task AddResponseMessageAsync(string chatSessionId, string text)
         {
             ChatMessage chatMessage = new ChatMessage(chatSessionId, "AI", text);
 

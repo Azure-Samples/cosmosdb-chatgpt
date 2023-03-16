@@ -135,7 +135,7 @@
     public async Task ReLoadChatMessages()
     {
         if (CurrentChatSession != null)
-            MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
+            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession.ChatSessionId);
     }
 
     protected override async Task OnInitializedAsync()
@@ -161,7 +161,7 @@
             return;
 
         if (CurrentChatSession.ChatSessionId != "404" & CurrentChatSession.ChatSessionId != null)
-            MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
+            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession.ChatSessionId);
 
         LoadingComplete = true;
     }
@@ -189,7 +189,7 @@
             UserPromptSet = "";
 
         }
-        await chatService.AskOpenAi(CurrentChatSession.ChatSessionId, UserPrompt);
+        await chatService.AskOpenAiAsync(CurrentChatSession.ChatSessionId, UserPrompt);
 
         if(MessagesInChat.Count==2)
         {

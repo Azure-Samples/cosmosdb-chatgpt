@@ -207,7 +207,7 @@
 
     private async Task NewChat()
     {
-        await chatService.CreateNewChatSession();
+        await chatService.CreateNewChatSessionAsync();
 
         if (ChatSessions.Count == 1)
         {
