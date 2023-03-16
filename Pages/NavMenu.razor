@@ -77,7 +77,7 @@
 
 
 @code {
-   
+
     [Parameter]
     public EventCallback<ChatSession> OnChatClicked { get; set; }
 
@@ -110,15 +110,11 @@
         {
             this.InvokeAsync(() =>
             {
-                this.UpdateNavMenu();
                 this.StateHasChanged();
+                LoadCurrentChat();
             });
         };
 
-    }
-    private async Task UpdateNavMenu()
-    {
-        ChatSessions =  await chatService.GetAllChatSessionsAsync();
     }
 
     private void OpenConfirmation(string id, string title)
@@ -156,7 +152,7 @@
 
             if (!updateCurrentChat)
                 return;
-            
+
             CurrentSession = new ChatSession();
             CurrentSession.ChatSessionId = "404";
             CurrentSession.ChatSessionName = string.Empty;
@@ -166,7 +162,7 @@
                 CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
                 CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
             }
-            
+
             await LoadCurrentChat();
 
         }
@@ -201,10 +197,10 @@
 
             if (!updateCurrentChat)
                 return;
-            
+
             CurrentSession.ChatSessionName = newName;
             await LoadCurrentChat();
-            
+
         }
         RenamePopUpOpen = false;
     }
@@ -243,8 +239,12 @@
 
     async private Task<int> LoadCurrentChat()
     {
-
-        if (CurrentSession == null)
+        int index = 0;
+        if (CurrentSession != null & ChatSessions != null & ChatSessions.Count > 0)
+        {
+            index = ChatSessions.FindIndex(s => s.ChatSessionId == CurrentSession.ChatSessionId);
+        }
+        if (CurrentSession == null || index<0)
         {
             CurrentSession = new ChatSession();
             CurrentSession.ChatSessionId = "404";
