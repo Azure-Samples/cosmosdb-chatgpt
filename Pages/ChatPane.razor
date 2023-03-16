@@ -7,12 +7,27 @@
 
 <div class="h-100 d-flex flex-column overflow-hidden">
 	<!--Header Row-->
-    <div class="flex-column bg-light">
+     @if (ShowHeader)
+        {
+            <div class="flex-column bg-dark" data-bs-theme="dark" >         
+                
+                <div class="w-100 p-1 text-white p-4" style="text-align:left">
+                    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                        <span class="oi oi-menu" aria-hidden="true" style="color: white"></span>
+                    </button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <span class="px-4">Cosmos DB + ChatGPT  </span>
+                </div>
+
+
+            </div>
+        }
+    <div class="flex-column  bg-light">
         <h4 class="text-dark p-2" style="height:50px">@GetChatSessionName()</h4>
 	 </div>
 	<!--Content Row-->
     <div class="flex-column justify-content-center p-4 flex-grow-1 overflow-auto" id="MessagesInChatdiv">
-
+       
         @if (CurrentChatSession == null)
         {
              <div class="alert alert-info mt-4">
@@ -94,15 +109,28 @@
 
 @code {
 
-    List<ChatMessage> MessagesInChat;
-
     [Parameter]
     public EventCallback<string> OnChatRenamed { get; set; }
 
-    private bool LoadingComplete;
-
     [Parameter]
     public ChatSession CurrentChatSession { get; set; }
+
+    [Parameter]
+    public bool ShowHeader { get; set; }
+
+	[Parameter]
+    public EventCallback OnNavBarVisibilityUpdated { get; set; }
+	
+
+    List<ChatMessage> MessagesInChat;
+    private static event EventHandler<ChatSession> OnMessagePosted;
+    private bool LoadingComplete;
+
+	async private Task ToggleNavMenu()
+    {
+        await OnNavBarVisibilityUpdated.InvokeAsync();
+    }
+
 
     public async Task ReLoadChatMessages()
     {
@@ -110,6 +138,21 @@
             MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        OnMessagePosted += (o, e) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                if (e.ChatSessionId == CurrentChatSession.ChatSessionId)
+                {
+                    this.ReLoadChatMessages();
+                    this.StateHasChanged();
+                }
+            });
+        };
+
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -155,6 +198,11 @@
 
             CurrentChatSession.ChatSessionName = newSessionName;
             await OnChatRenamed.InvokeAsync();
+        }
+
+        if (null != OnMessagePosted)
+        {
+            OnMessagePosted.Invoke(null, CurrentChatSession);
         }
 
         ScrollLastChatToView();

@@ -4,9 +4,12 @@
 
 <div class="sidebar h-100 d-flex flex-column">
 
-    <div class="flex-column top-row navbar navbar-dark">
+    <div class="flex-column top-row navbar bg-dark">
         <div class="container-fluid navbar-brand">
-            <h4 class="py-1">Cosmos DB + ChatGPT</h4>
+            <h6 class="py-1 text-white">Cosmos DB + ChatGPT</h6>
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="oi oi-menu" aria-hidden="true"  style="color: white"></span>
+           </button>
         </div>
     </div>
 
@@ -20,33 +23,34 @@
                             <span class="oi oi-plus" aria-hidden="true"></span> New Chat
                         </NavLink>
                     </div>
+
+                    <div class="vstack gap-3 px-3">
+
+                        @foreach (var session in ChatSessions)
+                        {
+
+                            <div class="btn @GetChatButtonClass(session.ChatSessionId)">
+
+                                <div class="w-100 p-1" style="text-align:left ">
+                                    <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
+                                        <span class="oi oi-chat" aria-hidden="true"></span>
+                                        <span title="@session.ChatSessionName"> @SafeSubstring(session.ChatSessionName,20) </span>
+                                    </a>
+                                </div>
+                                <div style="text-align:right ;width:100%">
+                                    <a @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
+                                        <i class="bi bi-pencil-fill"></i>
+                                        <span class="oi oi-pencil" aria-hidden="true" style="color: white"></span>
+                                    </a>
+                                    <a @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
+                                        <span class="oi oi-trash" aria-hidden="true" style="color: white"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </nav>
             </div>
-            <div class="vstack gap-3 px-3">
-
-                @foreach (var session in ChatSessions)
-                {
-
-                    <div class="btn @GetChatButtonClass(session.ChatSessionId)">
-
-                        <div class="w-100 p-1" style="text-align:left ">
-                            <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
-                                <span class="oi oi-chat" aria-hidden="true"></span>
-                                <span title="@session.ChatSessionName"> @SafeSubstring(session.ChatSessionName,20) </span>
-                            </a>
-                        </div>
-                        <div style="text-align:right ;width:100%">
-                            <a @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
-                                <i class="bi bi-pencil-fill"></i>
-                                <span class="oi oi-pencil" aria-hidden="true" style="color: white"></span>
-                            </a>
-                            <a @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
-                                <span class="oi oi-trash" aria-hidden="true" style="color: white"></span>
-                            </a>
-                        </div>
-                    </div>
-                }
-        </div>
         }
     </div>
 </div>
@@ -73,8 +77,22 @@
 
 
 @code {
+   
+    [Parameter]
+    public EventCallback<ChatSession> OnChatClicked { get; set; }
 
-    List<ChatSession> ChatSessions;
+    [Parameter]
+    public static List<ChatSession> ChatSessions { get; set; }
+
+
+    [Parameter]
+    public EventCallback OnNavBarVisibilityUpdated { get; set; }
+
+    async private Task ToggleNavMenu()
+    {
+        await OnNavBarVisibilityUpdated.InvokeAsync();
+    }
+
     public ChatSession CurrentSession;
 
     private string SessionID;
@@ -83,9 +101,25 @@
 
     private bool LoadingComplete;
 
-    [Parameter]
-    public EventCallback<ChatSession> OnChatClicked { get; set; }
+    private static event EventHandler<string> OnNavMenuChanged;
 
+
+    protected override async Task OnInitializedAsync()
+    {
+        OnNavMenuChanged += (o, e) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                this.UpdateNavMenu();
+                this.StateHasChanged();
+            });
+        };
+
+    }
+    private async Task UpdateNavMenu()
+    {
+        ChatSessions =  await chatService.GetAllChatSessionsAsync();
+    }
 
     private void OpenConfirmation(string id, string title)
     {
@@ -93,6 +127,15 @@
         SessionID = id;
         PopUpText = "Do you want to delete the chat \""
                   + title + "\"?";
+    }
+
+    //reason is optional
+    public async Task UpdateNavMenuDisplay(string reason="")
+    {
+        if (null != OnNavMenuChanged)
+        {
+            OnNavMenuChanged.Invoke(null, reason);
+        }
     }
 
     private async Task OnConfirmationClose(bool isOk)
@@ -106,8 +149,10 @@
         {
             DeletePopUpOpen = false;
             await chatService.DeleteChatSessionAsync(SessionID);
-            
+
             DeletePopUpOpen = false;
+
+            UpdateNavMenuDisplay("Delete");
 
             if (!updateCurrentChat)
                 return;
@@ -121,10 +166,8 @@
                 CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
                 CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
             }
-
+            
             await LoadCurrentChat();
-            // Inform blazor the UI needs updating
-            InvokeAsync(StateHasChanged);
 
         }
 
@@ -154,12 +197,14 @@
 
             RenamePopUpOpen = false;
 
+            UpdateNavMenuDisplay("Rename");
+
             if (!updateCurrentChat)
                 return;
             
             CurrentSession.ChatSessionName = newName;
             await LoadCurrentChat();
-
+            
         }
         RenamePopUpOpen = false;
     }
@@ -173,6 +218,8 @@
             CurrentSession = ChatSessions[0];
             await LoadCurrentChat();
         }
+
+        UpdateNavMenuDisplay("Add");
     }
 
     protected override async Task OnParametersSetAsync()
