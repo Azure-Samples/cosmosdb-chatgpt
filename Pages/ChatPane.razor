@@ -104,12 +104,31 @@
     [Parameter]
     public ChatSession CurrentChatSession { get; set; }
 
+
+    private static event EventHandler<ChatSession> OnMessagePosted;
+
+
     public async Task ReLoadChatMessages()
     {
         if (CurrentChatSession != null)
             MessagesInChat = await chatService.GetChatSessionMessages(CurrentChatSession.ChatSessionId);
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        OnMessagePosted += (o, e) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                if (e.ChatSessionId == CurrentChatSession.ChatSessionId)
+                {
+                    this.ReLoadChatMessages();
+                    this.StateHasChanged();
+                }
+            });
+        };
+
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -155,6 +174,11 @@
 
             CurrentChatSession.ChatSessionName = newSessionName;
             await OnChatRenamed.InvokeAsync();
+        }
+
+        if (null != OnMessagePosted)
+        {
+            OnMessagePosted.Invoke(null, CurrentChatSession);
         }
 
         ScrollLastChatToView();

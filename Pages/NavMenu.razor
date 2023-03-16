@@ -6,7 +6,10 @@
 
     <div class="flex-column top-row navbar navbar-dark">
         <div class="container-fluid navbar-brand">
-            <h4 class="py-1">Cosmos DB + ChatGPT</h4>
+            <h6 class="py-1">Cosmos DB + ChatGPT</h6>
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
         </div>
     </div>
 
@@ -20,10 +23,10 @@
                             <span class="oi oi-plus" aria-hidden="true"></span> New Chat
                         </NavLink>
                     </div>
-                </nav>
+@*                </nav>
             </div>
-            <div class="vstack gap-3 px-3">
-
+            <div class="vstack gap-3 px-3" >*@
+                
                 @foreach (var session in ChatSessions)
                 {
 
@@ -46,6 +49,8 @@
                         </div>
                     </div>
                 }
+                </nav>
+            </div>
         </div>
         }
     </div>
@@ -73,8 +78,13 @@
 
 
 @code {
+   
+    [Parameter]
+    public EventCallback<ChatSession> OnChatClicked { get; set; }
 
-    List<ChatSession> ChatSessions;
+    [Parameter]
+    public static List<ChatSession> ChatSessions { get; set; }
+
     public ChatSession CurrentSession;
 
     private string SessionID;
@@ -83,9 +93,37 @@
 
     private bool LoadingComplete;
 
-    [Parameter]
-    public EventCallback<ChatSession> OnChatClicked { get; set; }
 
+    private static event EventHandler<string> OnNavMenuChanged;
+
+
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        OnNavMenuChanged += (o, e) =>
+        {
+            this.InvokeAsync(() =>
+            {
+                this.UpdateNavMenu();
+                this.StateHasChanged();
+            });
+        };
+
+    }
+    private async Task UpdateNavMenu()
+    {
+        ChatSessions =  await chatService.GetAllChatSessionsAsync();
+    }
 
     private void OpenConfirmation(string id, string title)
     {
@@ -93,6 +131,15 @@
         SessionID = id;
         PopUpText = "Do you want to delete the chat \""
                   + title + "\"?";
+    }
+
+    //reason is optional
+    public async Task UpdateNavMenuDisplay(string reason="")
+    {
+        if (null != OnNavMenuChanged)
+        {
+            OnNavMenuChanged.Invoke(null, reason);
+        }
     }
 
     private async Task OnConfirmationClose(bool isOk)
@@ -106,8 +153,10 @@
         {
             DeletePopUpOpen = false;
             await chatService.DeleteChatSessionAsync(SessionID);
-            
+
             DeletePopUpOpen = false;
+
+            UpdateNavMenuDisplay("Delete");
 
             if (!updateCurrentChat)
                 return;
@@ -121,10 +170,8 @@
                 CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
                 CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
             }
-
+            
             await LoadCurrentChat();
-            // Inform blazor the UI needs updating
-            InvokeAsync(StateHasChanged);
 
         }
 
@@ -154,12 +201,14 @@
 
             RenamePopUpOpen = false;
 
+            UpdateNavMenuDisplay("Rename");
+
             if (!updateCurrentChat)
                 return;
             
             CurrentSession.ChatSessionName = newName;
             await LoadCurrentChat();
-
+            
         }
         RenamePopUpOpen = false;
     }
@@ -173,6 +222,8 @@
             CurrentSession = ChatSessions[0];
             await LoadCurrentChat();
         }
+
+        UpdateNavMenuDisplay("Add");
     }
 
     protected override async Task OnParametersSetAsync()
