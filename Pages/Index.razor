@@ -4,12 +4,14 @@
 
 @using CosmosDB_ChatGPT.Services
 
-<div class="flex-row justify-content-center" style="min-width:275px">
-    <NavMenu @ref="@navmenu" OnChatClicked="LoadChatEventHandler"  />
-</div>
-
+@if (!IsNavMenuCollapsed)
+{
+    <div class="flex-row justify-content-center sidebar" style="min-width:275px">
+        <NavMenu @ref="@navmenu" OnChatClicked="LoadChatEventHandler" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" />
+    </div>
+}
 <div class="flex-row justify-content-center flex-grow-1">
-    <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" />
+    <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader=IsNavMenuCollapsed />
 </div>
 
 @code {
@@ -22,6 +24,16 @@
     private ChatPane ChatPane;
 
     private NavMenu navmenu;
+
+
+    private bool IsNavMenuCollapsed { get; set; }
+
+
+    async private void UpdateNavBarVisibility()
+    {
+        IsNavMenuCollapsed = !IsNavMenuCollapsed;
+    }
+
 
     async protected override void OnInitialized()
     {

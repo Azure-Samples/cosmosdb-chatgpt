@@ -4,12 +4,12 @@
 
 <div class="sidebar h-100 d-flex flex-column">
 
-    <div class="flex-column top-row navbar navbar-dark">
+    <div class="flex-column top-row navbar bg-dark">
         <div class="container-fluid navbar-brand">
-            <h6 class="py-1">Cosmos DB + ChatGPT</h6>
+            <h6 class="py-1 text-white">Cosmos DB + ChatGPT</h6>
             <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <span class="oi oi-menu" aria-hidden="true"  style="color: white"></span>
+           </button>
         </div>
     </div>
 
@@ -23,33 +23,34 @@
                             <span class="oi oi-plus" aria-hidden="true"></span> New Chat
                         </NavLink>
                     </div>
+
+                    <div class="vstack gap-3 px-3">
+
+                        @foreach (var session in ChatSessions)
+                        {
+
+                            <div class="btn @GetChatButtonClass(session.ChatSessionId)">
+
+                                <div class="w-100 p-1" style="text-align:left ">
+                                    <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
+                                        <span class="oi oi-chat" aria-hidden="true"></span>
+                                        <span title="@session.ChatSessionName"> @SafeSubstring(session.ChatSessionName,20) </span>
+                                    </a>
+                                </div>
+                                <div style="text-align:right ;width:100%">
+                                    <a @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
+                                        <i class="bi bi-pencil-fill"></i>
+                                        <span class="oi oi-pencil" aria-hidden="true" style="color: white"></span>
+                                    </a>
+                                    <a @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
+                                        <span class="oi oi-trash" aria-hidden="true" style="color: white"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </nav>
             </div>
-            <div class="vstack gap-3 px-3" >
-                
-                @foreach (var session in ChatSessions)
-                {
-
-                    <div class="btn @GetChatButtonClass(session.ChatSessionId)">
-
-                        <div class="w-100 p-1" style="text-align:left ">
-                            <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
-                                <span class="oi oi-chat" aria-hidden="true"></span>
-                                <span title="@session.ChatSessionName"> @SafeSubstring(session.ChatSessionName,20) </span>
-                            </a>
-                        </div>
-                        <div style="text-align:right ;width:100%">
-                            <a @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
-                                <i class="bi bi-pencil-fill"></i>
-                                <span class="oi oi-pencil" aria-hidden="true" style="color: white"></span>
-                            </a>
-                            <a @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
-                                <span class="oi oi-trash" aria-hidden="true" style="color: white"></span>
-                            </a>
-                        </div>
-                    </div>
-                }
-        </div>
         }
     </div>
 </div>
@@ -83,6 +84,15 @@
     [Parameter]
     public static List<ChatSession> ChatSessions { get; set; }
 
+
+    [Parameter]
+    public EventCallback OnNavBarVisibilityUpdated { get; set; }
+
+    async private Task ToggleNavMenu()
+    {
+        await OnNavBarVisibilityUpdated.InvokeAsync();
+    }
+
     public ChatSession CurrentSession;
 
     private string SessionID;
@@ -91,19 +101,7 @@
 
     private bool LoadingComplete;
 
-
     private static event EventHandler<string> OnNavMenuChanged;
-
-
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-
 
 
     protected override async Task OnInitializedAsync()
