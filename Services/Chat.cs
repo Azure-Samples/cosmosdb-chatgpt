@@ -13,7 +13,7 @@ namespace cosmosdb_chatgpt.Services
         public string ChatSessionId { get; set; } //partition key
 
         public string ChatSessionName { get; set; }
-
+        [JsonIgnore]
         public List<ChatMessage> Messages { get; set; }
 
 		public ChatSession()
