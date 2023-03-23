@@ -37,6 +37,8 @@ namespace CosmosDB_ChatGPT.Services
 
             List<ChatMessage> chatMessages = new List<ChatMessage>();
 
+            if (chatSessions.Count == 0) return null;
+
             int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
             
             if (chatSessions[index].Messages.Count == 0)
