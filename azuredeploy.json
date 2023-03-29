@@ -82,7 +82,7 @@
     "openAiAccountName": "[format('{0}-openai', parameters('chatAppName'))]",
     "hostingPlanName": "[format('{0}-hostingplan', parameters('chatAppName'))]",
     "webSiteName": "[format('{0}-webapp', parameters('chatAppName'))]",
-    "webSiteRepository": "https://github.com/Azure-Samples/cosmos-chatgpt.git",
+    "webSiteRepository": "https://github.com/Azure-Samples/cosmosdb-chatgpt.git",
     "databaseName": "ChatDatabase",
     "containerName": "ChatContainer",
     "openAiMaxTokens": "3000"
