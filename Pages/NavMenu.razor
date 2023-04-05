@@ -29,7 +29,7 @@
                         @foreach (var session in ChatSessions)
                         {
 
-                            <div class="btn @GetChatButtonClass(session.ChatSessionId)">
+                            <div class="btn @GetChatButtonClass(session.ChatSessionId)" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
 
                                 <div class="w-100 p-1" style="text-align:left ">
                                     <a @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
