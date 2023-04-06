@@ -1,7 +1,7 @@
-# Azure Cosmos DB + Azure Open AI ChatGPT
+# Azure Cosmos DB + OpenAI ChatGPT
 
-This sample application combines Azure Cosmos DB with Azure OpenAI ChatGPT with a Blazor front-end for an intelligent chat bot application that is a minimal clone 
-of the OpenAi ChatGPT experience.
+This sample application combines Azure Cosmos DB with OpenAI ChatGPT with a Blazor Server front-end for an intelligent chat bot application that shows off how you can build a 
+simple chat application with OpenAi ChatGPT and Azure Cosmos DB.
 
 ![Cosmos DB + ChatGPT user interface](cosmos-chatgpt.png)
 
