@@ -208,3 +208,5 @@ resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2021-03-01'
     isManualIntegration: true
   }
 }
+
+output deployedUrl string = appServiceWeb.properties.defaultHostName

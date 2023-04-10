@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.1.55165",
-      "templateHash": "1434778285409528401"
+      "templateHash": "17009169030654896332"
     }
   },
   "parameters": {
@@ -262,5 +262,11 @@
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]"
       ]
     }
-  ]
+  ],
+  "outputs": {
+    "deployedUrl": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name), '2022-03-01').defaultHostName]"
+    }
+  }
 }
