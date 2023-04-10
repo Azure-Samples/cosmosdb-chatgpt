@@ -7,7 +7,7 @@
 			"version": "latest"
 		}
 	},
-	"updateContentCommand": "dotnet build CosmosDB-ChatGPT.sln",
+	"updateContentCommand": "dotnet build cosmoschat.sln",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -15,7 +15,7 @@
 				"vsls-contrib.codetour"
 			],
 			"settings": {
-				"omnisharp.defaultLaunchSolution": "CosmosDB-ChatGPT.sln",
+				"omnisharp.defaultLaunchSolution": "cosmoschat.sln",
 				"csharp.suppressDotnetRestoreNotification": true,
 				"csharp.suppressDotnetInstallWarning": true,
 				"csharp.suppressBuildAssetsNotification": true,
