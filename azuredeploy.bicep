@@ -64,12 +64,11 @@ var appServiceSettings = {
   web: {
     name: '${name}-web'
     git: {
-      repo: 'https://github.com/azure-samples/cosmos-chatgpt.git'
+      repo: 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
+      branch: 'main'
     }
   }
   sku: appServiceSku
-  kind: 'linux'
-  framework: 'DOTNETCORE:6.0'
   capacity: 1
 }
 
@@ -168,76 +167,46 @@ resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments
   }
 }
 
-resource hostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServiceHostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServiceSettings.plan.name
-  dependsOn: [
-    cosmosDbContainer
-    openAiModelDeployment
-  ]
   location: location
   sku: {
     name: appServiceSettings.sku
     capacity: appServiceSettings.capacity
   }
-  kind: 'linux'
-  properties: {
-    reserved: true
-  }
 }
 
-resource webSite 'Microsoft.Web/sites@2022-03-01' = {
+resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
   name: appServiceSettings.web.name
   location: location
   properties: {
-    serverFarmId: hostingPlan.id
+    serverFarmId: appServiceHostingPlan.id
     httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: appServiceSettings.framework
-      appSettings: [
-        {
-          name: 'CosmosUri'
-          value: cosmosDbAccount.properties.documentEndpoint
-        }
-        {
-          name: 'CosmosKey'
-          value: cosmosDbAccount.listKeys().primaryMasterKey
-        }
-        {
-          name: 'CosmosDatabase'
-          value: cosmosDbDatabase.name
-        }
-        {
-          name: 'CosmosContainer'
-          value: cosmosDbContainer.name
-        }
-        {
-          name: 'OpenAiUri'
-          value: openAiAccount.properties.endpoint
-        }
-        {
-          name: 'OpenAiKey'
-          value: openAiAccount.listKeys().key1
-        }
-        {
-          name: 'OpenAiDeployment'
-          value: openAiModelDeployment.name
-        }
-        {
-          name: 'OpenAiMaxTokens'
-          value: openAiSettings.maxTokens
-        }
-      ]
-    }
   }
 }
 
-resource webSiteName_web 'Microsoft.Web/sites/sourcecontrols@2021-03-01' = {
-  parent: webSite
+resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: appServiceWeb
+  name: 'appsettings'
+  kind: 'string'
+  properties: {
+    CosmosUri: cosmosDbAccount.properties.documentEndpoint
+    CosmosKey: cosmosDbAccount.listKeys().primaryMasterKey
+    CosmosDatabase: cosmosDbDatabase.name
+    CosmosContainer: cosmosDbContainer.name
+    OpenAiUri: openAiAccount.properties.endpoint
+    OpenAiKey: openAiAccount.listKeys().key1
+    OpenAiDeployment: openAiModelDeployment.name
+    OpenAiMaxTokens: openAiSettings.maxTokens
+  }
+}
+
+resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2021-03-01' = {
+  parent: appServiceWeb
   name: 'web'
   properties: {
     repoUrl: appServiceSettings.web.git.repo
-    branch: 'main'
+    branch: appServiceSettings.web.git.branch
     isManualIntegration: true
-    isGitHubAction: false
   }
 }
