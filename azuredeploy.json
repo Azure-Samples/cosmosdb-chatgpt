@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.1.55165",
-      "templateHash": "15623040805695287679"
+      "templateHash": "1434778285409528401"
     }
   },
   "parameters": {
@@ -93,8 +93,7 @@
           "branch": "main"
         }
       },
-      "sku": "[parameters('appServiceSku')]",
-      "capacity": 1
+      "sku": "[parameters('appServiceSku')]"
     }
   },
   "resources": [
@@ -210,8 +209,7 @@
       "name": "[variables('appServiceSettings').plan.name]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[variables('appServiceSettings').sku]",
-        "capacity": "[variables('appServiceSettings').capacity]"
+        "name": "[variables('appServiceSettings').sku]"
       }
     },
     {

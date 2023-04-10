@@ -69,7 +69,6 @@ var appServiceSettings = {
     }
   }
   sku: appServiceSku
-  capacity: 1
 }
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
@@ -167,12 +166,11 @@ resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments
   }
 }
 
-resource appServiceHostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServiceSettings.plan.name
   location: location
   sku: {
     name: appServiceSettings.sku
-    capacity: appServiceSettings.capacity
   }
 }
 
@@ -180,7 +178,7 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
   name: appServiceSettings.web.name
   location: location
   properties: {
-    serverFarmId: appServiceHostingPlan.id
+    serverFarmId: appServicePlan.id
     httpsOnly: true
   }
 }
