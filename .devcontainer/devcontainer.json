@@ -11,7 +11,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"ms-dotnettools.csharp"
+				"ms-dotnettools.csharp",
+				"vsls-contrib.codetour"
 			],
 			"settings": {
 				"csharp.suppressDotnetRestoreNotification": true,
