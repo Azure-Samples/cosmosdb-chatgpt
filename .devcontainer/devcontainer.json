@@ -1,0 +1,23 @@
+{
+	"name": "C# (.NET)",
+	"image": "mcr.microsoft.com/devcontainers/dotnet:0-6.0",
+	"features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"installBicep": true,
+			"version": "latest"
+		}
+	},
+	"updateContentCommand": "dotnet build",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csharp"
+			],
+			"settings": {
+				"csharp.suppressDotnetRestoreNotification": true,
+				"csharp.suppressDotnetInstallWarning": true,
+				"csharp.suppressBuildAssetsNotification": true
+			}
+		}
+	}
+}
