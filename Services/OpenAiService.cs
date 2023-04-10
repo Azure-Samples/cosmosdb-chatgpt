@@ -5,47 +5,48 @@ namespace Cosmos.Chat.Services
 {
     public class OpenAiService
     {
+        private readonly OpenAIClient _client;
+        private readonly string _deploymentName;
+        private readonly int _maxTokens;
 
-        private readonly OpenAIClient client;
-        private readonly string deployment;
-        private readonly int maxTokens;
-
-        public OpenAiService(IConfiguration configuration) 
+        public int MaxTokens
         {
-            
+            get => _maxTokens;
+        }
 
-            string openAiUri = configuration["OpenAiUri"];
-            string openAiKey = configuration["OpenAiKey"];
-            deployment = configuration["OpenAiDeployment"];
-            maxTokens = int.Parse(configuration["OpenAiMaxTokens"]);
+        public OpenAiService(string endpoint, string key, string deploymentName, string maxTokens)
+        {
+            ArgumentNullException.ThrowIfNull(endpoint);
+            ArgumentNullException.ThrowIfNull(key);
+            ArgumentNullException.ThrowIfNull(deploymentName);
+            ArgumentNullException.ThrowIfNull(maxTokens);
 
-            client = new(new Uri(openAiUri), new AzureKeyCredential(openAiKey));
+            _deploymentName = deploymentName;
+            _maxTokens = Int32.TryParse(maxTokens, out _maxTokens) ? _maxTokens : 3000;
 
+            OpenAIClient client = new(new Uri(endpoint), new AzureKeyCredential(key));
+
+            _client = client ??
+                throw new ArgumentException("Unable to connect to existing Azure OpenAI endpoint.");
         }
 
         public async Task<string> AskAsync(string chatSessionId, string prompt)
         {
-
-
             CompletionsOptions completionsOptions = new CompletionsOptions()
             {
                 Prompt = { prompt },
                 User = chatSessionId,
-                MaxTokens = maxTokens
-                
+                MaxTokens = _maxTokens
+
                 //Temperature = 1,
                 //Model = "text-davinci-003",
                 //FrequencyPenalty = 0,
                 //PresencePenalty = 0
             };
 
-
-            Response<Completions> completionsResponse = await client.GetCompletionsAsync(deployment, completionsOptions);
+            Response<Completions> completionsResponse = await _client.GetCompletionsAsync(_deploymentName, completionsOptions);
 
             return completionsResponse.Value.Choices[0].Text;
-
         }
-
     }
-
 }

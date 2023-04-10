@@ -32,6 +32,12 @@ param appServiceSku string = 'F1'
 ])
 param openAiSku string = 'S0'
 
+@description('Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository.')
+param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
+
+@description('Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository.')
+param appGetRepositoryBranch string = 'main'
+
 var openAiSettings = {
   name: '${name}-openai'
   sku: openAiSku
@@ -64,8 +70,8 @@ var appServiceSettings = {
   web: {
     name: '${name}-web'
     git: {
-      repo: 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
-      branch: 'main'
+      repo: appGitRepository
+      branch: appGetRepositoryBranch
     }
   }
   sku: appServiceSku
@@ -188,14 +194,14 @@ resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
   name: 'appsettings'
   kind: 'string'
   properties: {
-    CosmosUri: cosmosDbAccount.properties.documentEndpoint
-    CosmosKey: cosmosDbAccount.listKeys().primaryMasterKey
-    CosmosDatabase: cosmosDbDatabase.name
-    CosmosContainer: cosmosDbContainer.name
-    OpenAiUri: openAiAccount.properties.endpoint
-    OpenAiKey: openAiAccount.listKeys().key1
-    OpenAiDeployment: openAiModelDeployment.name
-    OpenAiMaxTokens: openAiSettings.maxTokens
+    COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
+    COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
+    COSMOSDB__DATABASE: cosmosDbDatabase.name
+    COSMOSDB__CONTAINER: cosmosDbContainer.name
+    OPENAI__ENDPOINT: openAiAccount.properties.endpoint
+    OPENAI__KEY: openAiAccount.listKeys().key1
+    OPENAI__DEPLOYMENT: openAiModelDeployment.name
+    OPENAI__MAXTOKENS: openAiSettings.maxTokens
   }
 }
 

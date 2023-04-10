@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.1.55165",
-      "templateHash": "17009169030654896332"
+      "templateHash": "18310464016315796643"
     }
   },
   "parameters": {
@@ -56,6 +56,20 @@
       "metadata": {
         "description": "Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**"
       }
+    },
+    "appGitRepository": {
+      "type": "string",
+      "defaultValue": "https://github.com/azure-samples/cosmosdb-chatgpt.git",
+      "metadata": {
+        "description": "Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository."
+      }
+    },
+    "appGetRepositoryBranch": {
+      "type": "string",
+      "defaultValue": "main",
+      "metadata": {
+        "description": "Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository."
+      }
     }
   },
   "variables": {
@@ -89,8 +103,8 @@
       "web": {
         "name": "[format('{0}-web', parameters('name'))]",
         "git": {
-          "repo": "https://github.com/azure-samples/cosmosdb-chatgpt.git",
-          "branch": "main"
+          "repo": "[parameters('appGitRepository')]",
+          "branch": "[parameters('appGetRepositoryBranch')]"
         }
       },
       "sku": "[parameters('appServiceSku')]"
@@ -231,14 +245,14 @@
       "name": "[format('{0}/{1}', variables('appServiceSettings').web.name, 'appsettings')]",
       "kind": "string",
       "properties": {
-        "CosmosUri": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').documentEndpoint]",
-        "CosmosKey": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]",
-        "CosmosDatabase": "[variables('cosmosDbSettings').database.name]",
-        "CosmosContainer": "[variables('cosmosDbSettings').container.name]",
-        "OpenAiUri": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]",
-        "OpenAiKey": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').key1]",
-        "OpenAiDeployment": "[variables('openAiSettings').model.deployment.name]",
-        "OpenAiMaxTokens": "[variables('openAiSettings').maxTokens]"
+        "COSMOSDB__ENDPOINT": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').documentEndpoint]",
+        "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]",
+        "COSMOSDB__DATABASE": "[variables('cosmosDbSettings').database.name]",
+        "COSMOSDB__CONTAINER": "[variables('cosmosDbSettings').container.name]",
+        "OPENAI__ENDPOINT": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]",
+        "OPENAI__KEY": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').key1]",
+        "OPENAI__DEPLOYMENT": "[variables('openAiSettings').model.deployment.name]",
+        "OPENAI__MAXTOKENS": "[variables('openAiSettings').maxTokens]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]",
