@@ -32,7 +32,7 @@ namespace Cosmos.Chat.Services
 
         public async Task<string> AskAsync(string chatSessionId, string prompt)
         {
-            CompletionsOptions completionsOptions = new CompletionsOptions()
+            CompletionsOptions completionsOptions = new()
             {
                 Prompt = { prompt },
                 User = chatSessionId,

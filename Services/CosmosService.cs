@@ -14,7 +14,7 @@ public class CosmosService
         ArgumentNullException.ThrowIfNull(databaseName);
         ArgumentNullException.ThrowIfNull(containerName);
 
-        CosmosClient client = new CosmosClient(endpoint, key);
+        CosmosClient client = new(endpoint, key);
         Database? database = client?.GetDatabase(databaseName);
         Container? container = database?.GetContainer(containerName);
 
@@ -53,7 +53,7 @@ public class CosmosService
             //if 404, first run, create a new default chat session.
             if (ce.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                ChatSession chatSession = new ChatSession();
+                ChatSession chatSession = new();
                 await InsertChatSessionAsync(chatSession);
                 chatSessions.Add(chatSession);
             }
@@ -89,7 +89,7 @@ public class CosmosService
         FeedIterator<ChatMessage> results = _container.GetItemQueryIterator<ChatMessage>(query);
 
 
-        List<Task> deleteTasks = new List<Task>();
+        List<Task> deleteTasks = new();
 
         while (results.HasMoreResults)
         {
@@ -125,7 +125,7 @@ public class CosmosService
 
         FeedIterator<ChatMessage> results = _container.GetItemQueryIterator<ChatMessage>(query);
 
-        List<ChatMessage> chatMessages = new List<ChatMessage>();
+        List<ChatMessage> chatMessages = new();
 
         while (results.HasMoreResults)
         {

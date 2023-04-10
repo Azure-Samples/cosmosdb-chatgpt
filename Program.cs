@@ -34,19 +34,22 @@ static class ProgramExtensions
     {
         builder.Services.AddOptions<CosmosDb>()
             .Bind(builder.Configuration.GetSection(nameof(CosmosDb)));
-            
+
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
     }
 
     public static void RegisterServices(this IServiceCollection services)
     {
-        services.AddSingleton<CosmosService>((provider) => {
+        services.AddSingleton<CosmosService>((provider) =>
+        {
             var cosmosDbOptions = provider.GetRequiredService<IOptions<CosmosDb>>();
-            if (cosmosDbOptions is null) {
+            if (cosmosDbOptions is null)
+            {
                 throw new ArgumentNullException(nameof(cosmosDbOptions));
             }
-            else {
+            else
+            {
                 return new CosmosService(
                     endpoint: cosmosDbOptions.Value?.Endpoint ?? String.Empty,
                     key: cosmosDbOptions.Value?.Key ?? String.Empty,
@@ -55,12 +58,15 @@ static class ProgramExtensions
                 );
             }
         });
-        services.AddSingleton<OpenAiService>((provider) => {
+        services.AddSingleton<OpenAiService>((provider) =>
+        {
             var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
-            if (openAiOptions is null) {
+            if (openAiOptions is null)
+            {
                 throw new ArgumentNullException(nameof(openAiOptions));
             }
-            else {
+            else
+            {
                 return new OpenAiService(
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
                     key: openAiOptions.Value?.Key ?? String.Empty,
