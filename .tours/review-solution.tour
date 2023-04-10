@@ -25,5 +25,6 @@
       "description": "Finally, the combined chat service",
       "line": 3
     }
-  ]
+  ],
+  "isPrimary": true
 }
