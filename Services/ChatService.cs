@@ -1,4 +1,4 @@
-﻿namespace cosmosdb_chatgpt.Services
+﻿namespace Cosmos.Chat.Services
 {
     public class ChatService 
     {

@@ -3,7 +3,7 @@ using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
 
-namespace cosmosdb_chatgpt.Services
+namespace Cosmos.Chat.Services
 {
     public class CosmosService
     {
