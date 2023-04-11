@@ -37,12 +37,11 @@
                     <div class="row row-cols-1 g-2 px-2 d-flex flex-column align-items-start">
                         @foreach (var session in ChatSessions)
                         {
-                            bool isNotActive = CurrentSession is null || session.ChatSessionId != CurrentSession.ChatSessionId;
                             <div class="col">
-                                <div class="card @(isNotActive ? "bg-primary opacity-50 text-light" : "bg-primary text-light")" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
+                                <div class="card @(IsActiveSession(session.ChatSessionId) ? "bg-primary text-light" : "bg-primary opacity-50 text-light")" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
                                     <div class="card-body">
                                         <a class="card-title text-decoration-none h6" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
-                                            @if(!isNotActive) 
+                                            @if (IsActiveSession(session.ChatSessionId))
                                             {
                                                 <i class="bi bi-chat-right-dots-fill me-2"></i>
                                             }
@@ -151,7 +150,7 @@
 
     public void UpdateNavMenuDisplay(string reason = "")
     {
-        if (null != OnNavMenuChanged)
+        if (OnNavMenuChanged is not null)
         {
             OnNavMenuChanged.Invoke(null, reason);
         }
@@ -161,7 +160,7 @@
     {
         bool updateCurrentChat=false;
 
-        if (CurrentSession!=null & SessionID == CurrentSession?.ChatSessionId)
+        if (CurrentSession is not null & SessionID == CurrentSession?.ChatSessionId)
             updateCurrentChat = true;
 
         if (isOk)
@@ -244,7 +243,7 @@
 
         if (ChatSessions.Count == 1)
         {
-            CurrentSession = ChatSessions[0];
+            CurrentSession = ChatSessions[0] with { };
             await LoadCurrentChatAsync();
         }
 
@@ -316,6 +315,16 @@
         await LoadCurrentChatAsync();
 
         return 0;
+    }
+
+    private bool IsActiveSession(string sessionId)
+    {
+        if (CurrentSession == null)
+            return true;
+        else if (sessionId == CurrentSession.ChatSessionId)
+            return true;
+        else
+            return false;
     }
 
     public string SafeSubstring(string text, int maxLength)

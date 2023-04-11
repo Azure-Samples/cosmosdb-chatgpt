@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Cosmos.Chat.GPT.Models;
 
-public class ChatMessage
+public record ChatMessage
 {
     [JsonProperty(PropertyName = "id")]
     public string Id { get; set; }
@@ -17,13 +17,13 @@ public class ChatMessage
 
     public string Text { get; set; }
 
-    public ChatMessage(string ChatSessionId, string Sender, string Text)
+    public ChatMessage(string chatSessionId, string sender, string text)
     {
-        this.Id = Guid.NewGuid().ToString();
-        this.Type = "ChatMessage";
-        this.ChatSessionId = ChatSessionId; //partition key
-        this.Sender = Sender;
-        this.TimeStamp = DateTime.UtcNow;
-        this.Text = Text;
+        Id = Guid.NewGuid().ToString();
+        Type = "ChatMessage";
+        ChatSessionId = chatSessionId; //partition key
+        Sender = sender;
+        TimeStamp = DateTime.UtcNow;
+        Text = text;
     }
 }
