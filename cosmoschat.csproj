@@ -3,7 +3,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Cosmos.Chat</RootNamespace>
+    <RootNamespace>Cosmos.Chat.GPT</RootNamespace>
     <UserSecretsId>5ddac262-4918-47fb-b308-b8ea810e45b4</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>

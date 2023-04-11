@@ -1,7 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 
-namespace Cosmos.Chat.Services;
+namespace Cosmos.Chat.GPT.Services;
 
 public class OpenAiService
 {

@@ -1,4 +1,4 @@
-namespace Cosmos.Chat.Options;
+namespace Cosmos.Chat.GPT.Options;
 
 public record OpenAi
 {

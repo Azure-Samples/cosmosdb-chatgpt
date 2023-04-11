@@ -1,6 +1,6 @@
-﻿using Cosmos.Chat.Models;
+﻿using Cosmos.Chat.GPT.Models;
 
-namespace Cosmos.Chat.Services;
+namespace Cosmos.Chat.GPT.Services;
 
 public class ChatService
 {

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Cosmos.Chat.Models;
+namespace Cosmos.Chat.GPT.Models;
 
 public class ChatMessage
 {

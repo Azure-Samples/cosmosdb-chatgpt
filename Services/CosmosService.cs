@@ -1,7 +1,7 @@
-﻿using Cosmos.Chat.Models;
+﻿using Cosmos.Chat.GPT.Models;
 using Microsoft.Azure.Cosmos;
 
-namespace Cosmos.Chat.Services;
+namespace Cosmos.Chat.GPT.Services;
 
 public class CosmosService
 {

@@ -1,5 +1,5 @@
-using Cosmos.Chat.Options;
-using Cosmos.Chat.Services;
+using Cosmos.Chat.GPT.Options;
+using Cosmos.Chat.GPT.Services;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
