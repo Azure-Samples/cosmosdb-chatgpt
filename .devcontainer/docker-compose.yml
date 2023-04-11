@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  devenv:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VARIANT: 6.0
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity

@@ -1,31 +1,78 @@
-using cosmosdb_chatgpt.Services;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Cosmos.Chat.GPT.Options;
+using Cosmos.Chat.GPT.Services;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.RegisterConfiguration();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<ChatService>();
+builder.Services.RegisterServices();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-app.Run();
+await app.RunAsync();
+
+static class ProgramExtensions
+{
+    public static void RegisterConfiguration(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddOptions<CosmosDb>()
+            .Bind(builder.Configuration.GetSection(nameof(CosmosDb)));
+
+        builder.Services.AddOptions<OpenAi>()
+            .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+    }
+
+    public static void RegisterServices(this IServiceCollection services)
+    {
+        services.AddSingleton<CosmosService>((provider) =>
+        {
+            var cosmosDbOptions = provider.GetRequiredService<IOptions<CosmosDb>>();
+            if (cosmosDbOptions is null)
+            {
+                throw new ArgumentException($"{nameof(IOptions<CosmosDb>)} was not resolved through dependency injection.");
+            }
+            else
+            {
+                return new CosmosService(
+                    endpoint: cosmosDbOptions.Value?.Endpoint ?? String.Empty,
+                    key: cosmosDbOptions.Value?.Key ?? String.Empty,
+                    databaseName: cosmosDbOptions.Value?.Database ?? String.Empty,
+                    containerName: cosmosDbOptions.Value?.Container ?? String.Empty
+                );
+            }
+        });
+        services.AddSingleton<OpenAiService>((provider) =>
+        {
+            var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
+            if (openAiOptions is null)
+            {
+                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
+            }
+            else
+            {
+                return new OpenAiService(
+                    endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
+                    key: openAiOptions.Value?.Key ?? String.Empty,
+                    deploymentName: openAiOptions.Value?.Deployment ?? String.Empty,
+                    maxTokens: openAiOptions.Value?.MaxTokens ?? String.Empty
+                );
+            }
+        });
+        services.AddSingleton<ChatService>();
+    }
+}
