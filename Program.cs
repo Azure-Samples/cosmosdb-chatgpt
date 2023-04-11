@@ -1,7 +1,5 @@
 using Cosmos.Chat.Options;
 using Cosmos.Chat.Services;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +24,7 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-app.Run();
+await app.RunAsync();
 
 static class ProgramExtensions
 {

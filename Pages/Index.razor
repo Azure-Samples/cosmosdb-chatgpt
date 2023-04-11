@@ -1,18 +1,15 @@
 ﻿@page "/"
 
-
-
-@using Cosmos.Chat.Services
-
-@if (!IsNavMenuCollapsed)
-{
-    <div class="flex-row justify-content-center sidebar" style="min-width:275px">
+<PageTitle>Azure Cosmos DB & Azure OpenAI</PageTitle>
+<main class="h-100 d-flex flex-row justify-content-start">
+    @if (!IsNavMenuCollapsed)
+    {
         <NavMenu @ref="@navmenu" OnChatClicked="LoadChatEventHandler" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" />
-    </div>
-}
-<div class="flex-row justify-content-center flex-grow-1">
-    <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader=IsNavMenuCollapsed />
-</div>
+    }
+    <section class="flex-grow-1">
+        <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader=IsNavMenuCollapsed />
+    </section>
+</main>
 
 @code {
 
@@ -27,7 +24,6 @@
 
 
     private bool IsNavMenuCollapsed { get; set; }
-
 
     async private void UpdateNavBarVisibility()
     {
@@ -52,12 +48,10 @@
     }
 
     async public void ForceRefresh()
-    {    
+    {
         // Inform blazor the UI needs updating
         InvokeAsync(StateHasChanged);
         navmenu.UpdateNavMenuDisplay("Rename by Open AI");
 
     }
-
-    
 }

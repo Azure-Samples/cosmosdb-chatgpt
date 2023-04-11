@@ -5,18 +5,28 @@ namespace Cosmos.Chat.Services;
 
 public class CosmosService
 {
+    private readonly string _endpoint;
+    private readonly string _key;
+    private readonly string _databaseName;
+    private readonly string _containerName;
+
     private readonly Container _container;
 
     public CosmosService(string endpoint, string key, string databaseName, string containerName)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(databaseName);
-        ArgumentNullException.ThrowIfNull(containerName);
+        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
+        ArgumentNullException.ThrowIfNullOrEmpty(containerName);
 
-        CosmosClient client = new(endpoint, key);
-        Database? database = client?.GetDatabase(databaseName);
-        Container? container = database?.GetContainer(containerName);
+        _endpoint = endpoint;
+        _key = key;
+        _databaseName = databaseName;
+        _containerName = containerName;
+
+        CosmosClient client = new(_endpoint, _key);
+        Database? database = client?.GetDatabase(_databaseName);
+        Container? container = database?.GetContainer(_containerName);
 
         _container = container ??
             throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
