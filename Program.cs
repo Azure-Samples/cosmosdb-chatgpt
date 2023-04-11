@@ -46,7 +46,7 @@ static class ProgramExtensions
             var cosmosDbOptions = provider.GetRequiredService<IOptions<CosmosDb>>();
             if (cosmosDbOptions is null)
             {
-                throw new ArgumentNullException(nameof(cosmosDbOptions));
+                throw new ArgumentException($"{nameof(IOptions<CosmosDb>)} was not resolved through dependency injection.");
             }
             else
             {
@@ -63,7 +63,7 @@ static class ProgramExtensions
             var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
             if (openAiOptions is null)
             {
-                throw new ArgumentNullException(nameof(openAiOptions));
+                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
             }
             else
             {

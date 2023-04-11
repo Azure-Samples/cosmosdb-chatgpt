@@ -22,6 +22,7 @@ namespace Cosmos.Chat.Pages
         public void OnGet()
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            _logger.LogError($"An error occurred while processing your request.");
         }
     }
 }
