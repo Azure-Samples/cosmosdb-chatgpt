@@ -55,10 +55,10 @@ var cosmosDbSettings = {
   name: '${name}-cosmos-nosql'
   enableFreeTier: cosmosDbEnableFreeTier
   database: {
-    name: 'chatdb'
+    name: 'chatdatabase'
   }
   container: {
-    name: 'conversations'
+    name: 'chatcontainer'
     throughput: 400
   }
 }

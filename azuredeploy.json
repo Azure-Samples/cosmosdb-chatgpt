@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.1.55165",
-      "templateHash": "18310464016315796643"
+      "templateHash": "6157018923279590383"
     }
   },
   "parameters": {
@@ -89,10 +89,10 @@
       "name": "[format('{0}-cosmos-nosql', parameters('name'))]",
       "enableFreeTier": "[parameters('cosmosDbEnableFreeTier')]",
       "database": {
-        "name": "chatdb"
+        "name": "chatdatabase"
       },
       "container": {
-        "name": "conversations",
+        "name": "chatcontainer",
         "throughput": 400
       }
     },
