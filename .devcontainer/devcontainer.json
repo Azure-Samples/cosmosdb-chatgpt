@@ -1,0 +1,30 @@
+{
+	"name": "C# (.NET)",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "devenv",
+	"workspaceFolder": "/workspace",
+	"features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"installBicep": true,
+			"version": "latest"
+		}
+	},
+	"updateContentCommand": "dotnet build cosmoschat.sln",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csharp",
+				"vsls-contrib.codetour"
+			],
+			"settings": {
+				"omnisharp.defaultLaunchSolution": "cosmoschat.sln",
+				"csharp.suppressDotnetRestoreNotification": true,
+				"csharp.suppressDotnetInstallWarning": true,
+				"csharp.suppressBuildAssetsNotification": true,
+				"codetour.promptForWorkspaceTours": false,
+				"codetour.recordMode": "pattern",
+				"codetour.showMarkers": false
+			}
+		}
+	}
+}

@@ -1,63 +1,59 @@
 ﻿@page "/"
 
-
-
-@using cosmosdb_chatgpt.Services
-
-@if (!IsNavMenuCollapsed)
-{
-    <div class="flex-row justify-content-center sidebar" style="min-width:275px">
-        <NavMenu @ref="@navmenu" OnChatClicked="LoadChatEventHandler" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" />
-    </div>
-}
-<div class="flex-row justify-content-center flex-grow-1">
-    <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefresh" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader=IsNavMenuCollapsed />
-</div>
+<PageTitle>Azure Cosmos DB & Azure OpenAI</PageTitle>
+<main class="h-100 d-flex flex-row justify-content-start">
+    @if (!IsNavMenuCollapsed)
+    {
+        <NavMenu @ref="@NavMenu" OnChatClicked="LoadChatEventHandlerAsync" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" />
+    }
+    <section class="flex-grow-1">
+        <ChatPane @ref="@ChatPane" CurrentChatSession="@CurrentSession" OnChatRenamed="ForceRefreshAsync" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader="@IsNavMenuCollapsed" />
+    </section>
+</main>
 
 @code {
 
-    private ChatSession CurrentSession;//{ get; set; }
+    private ChatSession? CurrentSession;
 
     [Parameter]
-    public EventCallback<string> OnChatRenamed { get; set; }
+    public EventCallback<string> OnChatRenamed { get; set; } = default!;
 
-    private ChatPane ChatPane;
+    private ChatPane? ChatPane = default;
 
-    private NavMenu navmenu;
+    private NavMenu? NavMenu = default;
 
 
     private bool IsNavMenuCollapsed { get; set; }
 
-
-    async private void UpdateNavBarVisibility()
+    private void UpdateNavBarVisibility()
     {
         IsNavMenuCollapsed = !IsNavMenuCollapsed;
     }
 
-
-    async protected override void OnInitialized()
+    protected override void OnInitialized()
     {
-        navmenu = new NavMenu();
+        NavMenu = new NavMenu();
         ChatPane = new ChatPane();
-
     }
-    async public void LoadChatEventHandler(ChatSession session)
+
+    public async void LoadChatEventHandlerAsync(ChatSession session)
     {
         CurrentSession = session;
 
-        ChatPane.CurrentChatSession = session;
+        if (ChatPane is not null)
+        {
+            ChatPane.CurrentChatSession = session;
+        }
 
         // Inform blazor the UI needs updating
-        InvokeAsync(StateHasChanged);
+        await InvokeAsync(StateHasChanged);
     }
 
-    async public void ForceRefresh()
-    {    
+    public async void ForceRefreshAsync()
+    {
         // Inform blazor the UI needs updating
-        InvokeAsync(StateHasChanged);
-        navmenu.UpdateNavMenuDisplay("Rename by Open AI");
+        await InvokeAsync(StateHasChanged);
 
+        NavMenu?.UpdateNavMenuDisplay("Rename by Open AI");
     }
-
-    
 }

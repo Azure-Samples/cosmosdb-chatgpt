@@ -1,48 +1,84 @@
-param location string = resourceGroup().location
-
-@description('Name of the chat application. Needs to be unique for Cosmos DB, App Service and Open AI')
-param chatAppName string
-
-@description('OpenAI region')
+@description('Location where all resources will be deployed. This value defaults to the **East US** region.')
 @allowed([
   'East US'
   'South Central US'
   'West Europe'
 ])
-param openAiRegion string = 'East US'
+param location string = 'East US'
 
-@description('OpenAI SKU')
+@description('''
+Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:
+- Azure Cosmos DB
+- Azure App Service
+- Azure Open AI
+The name defaults to a unique string generated from the resource group identifier.
+''')
+param name string = uniqueString(resourceGroup().id)
+
+@description('Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**.')
+param cosmosDbEnableFreeTier bool = true
+
+@description('Specifies the SKU for the Azure App Service plan. Defaults to **F1**')
+@allowed([
+  'F1'
+  'D1'
+  'B1'
+])
+param appServiceSku string = 'F1'
+
+@description('Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**')
 @allowed([
   'S0'
 ])
 param openAiSku string = 'S0'
 
-@description('The deployment name for the Davinci-003 model used by this application')
-param openAIModelDeploymentName string = ''
+@description('Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository.')
+param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
 
-@description('Specifies App Service Sku (F1 = Free Tier)')
-param appServicesSkuName string = 'F1'
+@description('Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository.')
+param appGetRepositoryBranch string = 'main'
 
-@description('Specifies App Service capacity')
-param appServicesSkuCapacity int = 1
+var openAiSettings = {
+  name: '${name}-openai'
+  sku: openAiSku
+  maxTokens: '3000'
+  model: {
+    name: 'text-davinci-003'
+    version: '1'
+    deployment: {
+      name: 'chatmodel'
+    }
+  }
+}
 
-@description('Enable Cosmos DB Free Tier')
-param cosmosFreeTier bool = true
+var cosmosDbSettings = {
+  name: '${name}-cosmos-nosql'
+  enableFreeTier: cosmosDbEnableFreeTier
+  database: {
+    name: 'chatdatabase'
+  }
+  container: {
+    name: 'chatcontainer'
+    throughput: 400
+  }
+}
 
-@description('Cosmos DB Container Throughput (<1000 for free tier)')
-param cosmosContainerThroughput int = 400
+var appServiceSettings = {
+  plan: {
+    name: '${name}-web-plan'
+  }
+  web: {
+    name: '${name}-web'
+    git: {
+      repo: appGitRepository
+      branch: appGetRepositoryBranch
+    }
+  }
+  sku: appServiceSku
+}
 
-var cosmosDBAccountName = '${chatAppName}-cosmos'
-var openAiAccountName = '${chatAppName}-openai'
-var hostingPlanName = '${chatAppName}-hostingplan'
-var webSiteName = '${chatAppName}-webapp'
-var webSiteRepository = 'https://github.com/Azure-Samples/cosmos-chatgpt.git'
-var databaseName = 'ChatDatabase'
-var containerName = 'ChatContainer'
-var openAiMaxTokens = '3000'
-
-resource cosmosDBAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
-  name: cosmosDBAccountName
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
+  name: cosmosDbSettings.name
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
@@ -50,7 +86,7 @@ resource cosmosDBAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
       defaultConsistencyLevel: 'Session'
     }
     databaseAccountOfferType: 'Standard'
-    enableFreeTier: cosmosFreeTier
+    enableFreeTier: cosmosDbSettings.enableFreeTier
     locations: [
       {
         failoverPriority: 0
@@ -61,22 +97,22 @@ resource cosmosDBAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   }
 }
 
-resource cosmosDBAccountName_database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' = {
-  parent: cosmosDBAccount
-  name: databaseName
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' = {
+  parent: cosmosDbAccount
+  name: cosmosDbSettings.database.name
   properties: {
     resource: {
-      id: databaseName
+      id: cosmosDbSettings.database.name
     }
   }
 }
 
-resource cosmosDBAccountName_databaseName_container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' = {
-  parent: cosmosDBAccountName_database
-  name: containerName
+resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' = {
+  parent: cosmosDbDatabase
+  name: cosmosDbSettings.container.name
   properties: {
     resource: {
-      id: containerName
+      id: cosmosDbSettings.container.name
       partitionKey: {
         paths: [
           '/ChatSessionId'
@@ -103,32 +139,32 @@ resource cosmosDBAccountName_databaseName_container 'Microsoft.DocumentDB/databa
       }
     }
     options: {
-      throughput: cosmosContainerThroughput
+      throughput: cosmosDbSettings.container.throughput
     }
   }
 }
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
-  name: openAiAccountName
-  location: openAiRegion
+  name: openAiSettings.name
+  location: location
   sku: {
-    name: openAiSku
+    name: openAiSettings.sku
   }
   kind: 'OpenAI'
   properties: {
-    customSubDomainName: openAiAccountName
+    customSubDomainName: openAiSettings.name
     publicNetworkAccess: 'Enabled'
   }
 }
 
-resource openAiAccountName_openAIModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = {
+resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = {
   parent: openAiAccount
-  name: openAIModelDeploymentName
+  name: openAiSettings.model.deployment.name
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'text-davinci-003'
-      version: '1'
+      name: openAiSettings.model.name
+      version: openAiSettings.model.version
     }
     scaleSettings: {
       scaleType: 'Standard'
@@ -136,65 +172,47 @@ resource openAiAccountName_openAIModelDeployment 'Microsoft.CognitiveServices/ac
   }
 }
 
-resource hostingPlan 'Microsoft.Web/serverfarms@2020-12-01' = {
-  name: hostingPlanName
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: appServiceSettings.plan.name
   location: location
   sku: {
-    name: appServicesSkuName
-    capacity: appServicesSkuCapacity
+    name: appServiceSettings.sku
   }
 }
 
-resource webSite 'Microsoft.Web/sites@2020-12-01' = {
-  name: webSiteName
+resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
+  name: appServiceSettings.web.name
   location: location
   properties: {
-    serverFarmId: hostingPlan.id
-    siteConfig: {
-      appSettings: [
-        {
-          name: 'CosmosUri'
-          value: cosmosDBAccount.properties.documentEndpoint
-        }
-        {
-          name: 'CosmosKey'
-          value: cosmosDBAccount.listKeys().primaryMasterKey
-        }
-        {
-          name: 'CosmosDatabase'
-          value: databaseName
-        }
-        {
-          name: 'CosmosContainer'
-          value: containerName
-        }
-        {
-          name: 'OpenAiUri'
-          value: openAiAccount.properties.endpoint
-        }
-        {
-          name: 'OpenAiKey'
-          value: openAiAccount.listKeys().key1
-        }
-        {
-          name: 'OpenAiDeployment'
-          value: openAIModelDeploymentName
-        }
-        {
-          name: 'OpenAiMaxTokens'
-          value: openAiMaxTokens
-        }
-      ]
-    }
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
   }
 }
 
-resource webSiteName_web 'Microsoft.Web/sites/sourcecontrols@2020-12-01' = {
-  parent: webSite
+resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+  parent: appServiceWeb
+  name: 'appsettings'
+  kind: 'string'
+  properties: {
+    COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
+    COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
+    COSMOSDB__DATABASE: cosmosDbDatabase.name
+    COSMOSDB__CONTAINER: cosmosDbContainer.name
+    OPENAI__ENDPOINT: openAiAccount.properties.endpoint
+    OPENAI__KEY: openAiAccount.listKeys().key1
+    OPENAI__DEPLOYMENT: openAiModelDeployment.name
+    OPENAI__MAXTOKENS: openAiSettings.maxTokens
+  }
+}
+
+resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2021-03-01' = {
+  parent: appServiceWeb
   name: 'web'
   properties: {
-    repoUrl: webSiteRepository
-    branch: 'main'
+    repoUrl: appServiceSettings.web.git.repo
+    branch: appServiceSettings.web.git.branch
     isManualIntegration: true
   }
 }
+
+output deployedUrl string = appServiceWeb.properties.defaultHostName

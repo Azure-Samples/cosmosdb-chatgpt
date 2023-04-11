@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
 
-namespace cosmosdb_chatgpt.Pages
+namespace Cosmos.Chat.GPT.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     [IgnoreAntiforgeryToken]
@@ -22,6 +22,7 @@ namespace cosmosdb_chatgpt.Pages
         public void OnGet()
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            _logger.LogError($"An error occurred while processing your request.");
         }
     }
 }
