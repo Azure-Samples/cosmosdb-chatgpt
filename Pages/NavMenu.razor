@@ -92,10 +92,10 @@
 @code {
 
     [Parameter]
-    public EventCallback<ChatSession> OnChatClicked { get; set; }
+    public EventCallback<ChatSession> OnChatClicked { get; set; } = default!;
 
     [Parameter]
-    public static List<ChatSession> ChatSessions { get; set; }
+    public static List<ChatSession> ChatSessions { get; set; } = new();
 
 
     [Parameter]
@@ -114,25 +114,24 @@
         await OnThemeUpdated.InvokeAsync();
     }
 
-    public ChatSession CurrentSession;
+    public ChatSession? CurrentSession;
 
-    private string SessionID;
-    private string PopUpText;
+    private string? SessionID;
+    private string? PopUpText;
     private bool DeletePopUpOpen = false;
 
     private bool LoadingComplete;
 
-    private static event EventHandler<string> OnNavMenuChanged;
+    private static event EventHandler<string>? OnNavMenuChanged;
 
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        OnNavMenuChanged += (o, e) =>
+        OnNavMenuChanged += async (o, e) =>
         {
-            this.InvokeAsync(() =>
+            await this.InvokeAsync(async () =>
             {
                 this.StateHasChanged();
-                LoadCurrentChat();
+                await LoadCurrentChatAsync();
             });
         };
 
@@ -146,8 +145,7 @@
                   + title + "\"?";
     }
 
-    //reason is optional
-    public async Task UpdateNavMenuDisplay(string reason="")
+    public void UpdateNavMenuDisplay(string reason = "")
     {
         if (null != OnNavMenuChanged)
         {
@@ -159,7 +157,7 @@
     {
         bool updateCurrentChat=false;
 
-        if (CurrentSession!=null & SessionID == CurrentSession.ChatSessionId)
+        if (CurrentSession!=null & SessionID == CurrentSession?.ChatSessionId)
             updateCurrentChat = true;
 
         if (isOk)
@@ -178,14 +176,17 @@
             CurrentSession.ChatSessionId = "404";
             CurrentSession.ChatSessionName = string.Empty;
 
-            if (ChatSessions != null & ChatSessions.Count > 0)
+            if (ChatSessions is not null & ChatSessions?.Count > 0)
             {
-                CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
-                CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+                var match = ChatSessions?.FirstOrDefault();
+                if (match is not null)
+                {
+                    CurrentSession.ChatSessionId = match.ChatSessionId;
+                    CurrentSession.ChatSessionName = match.ChatSessionName;
+                }
             }
 
-            await LoadCurrentChat();
-
+            await LoadCurrentChatAsync();
         }
 
         DeletePopUpOpen = false;
@@ -207,22 +208,29 @@
         {
             bool updateCurrentChat = false;
 
-            if (SessionID == CurrentSession.ChatSessionId)
+            if (SessionID == CurrentSession?.ChatSessionId)
+            {
                 updateCurrentChat = true;
+            }
 
-            await chatService.RenameChatSessionAsync(SessionID,newName);
+            await chatService.RenameChatSessionAsync(SessionID, newName);
 
             RenamePopUpOpen = false;
 
             UpdateNavMenuDisplay("Rename");
 
             if (!updateCurrentChat)
+            {
                 return;
+            }
 
-            CurrentSession.ChatSessionName = newName;
-            await LoadCurrentChat();
-
+            if (CurrentSession is not null)
+            {
+                CurrentSession.ChatSessionName = newName;
+            }
+            await LoadCurrentChatAsync();
         }
+
         RenamePopUpOpen = false;
     }
 
@@ -233,7 +241,7 @@
         if (ChatSessions.Count == 1)
         {
             CurrentSession = ChatSessions[0];
-            await LoadCurrentChat();
+            await LoadCurrentChatAsync();
         }
 
         UpdateNavMenuDisplay("Add");
@@ -247,35 +255,42 @@
         LoadingComplete = false;
 
         ChatSessions = await chatService.GetAllChatSessionsAsync();
-        if (CurrentSession != null & ChatSessions != null & ChatSessions.Count > 0)
+        if (CurrentSession is not null && ChatSessions is not null & ChatSessions?.Count > 0)
         {
-            CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
-            CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+            var match = ChatSessions?.FirstOrDefault();
+            if (match is not null)
+            {
+                CurrentSession.ChatSessionId = match.ChatSessionId;
+                CurrentSession.ChatSessionName = match.ChatSessionName;
+            }
         }
 
         LoadingComplete = true;
-        LoadCurrentChat();
+        await LoadCurrentChatAsync();
 
     }
 
-    async private Task<int> LoadCurrentChat()
+    private async Task<int> LoadCurrentChatAsync()
     {
         int index = 0;
-        if (CurrentSession != null & ChatSessions != null & ChatSessions.Count > 0)
+        if (CurrentSession is not null & ChatSessions is not null & ChatSessions?.Count > 0)
         {
-            index = ChatSessions.FindIndex(s => s.ChatSessionId == CurrentSession.ChatSessionId);
+            index = ChatSessions?.FindIndex(s => s.ChatSessionId == CurrentSession?.ChatSessionId) ?? 0;
         }
-        if (CurrentSession == null || index<0)
+        if (CurrentSession is null || index<0)
         {
             CurrentSession = new ChatSession();
             CurrentSession.ChatSessionId = "404";
             CurrentSession.ChatSessionName = string.Empty;
 
-            if (ChatSessions != null & ChatSessions.Count > 0)
-            {                
-        
-                CurrentSession.ChatSessionId = ChatSessions.FirstOrDefault().ChatSessionId;
-                CurrentSession.ChatSessionName = ChatSessions.FirstOrDefault().ChatSessionName;
+            if (ChatSessions is not null & ChatSessions?.Count > 0)
+            {   
+                var match = ChatSessions?.FirstOrDefault();
+                if (match is not null)
+                {
+                    CurrentSession.ChatSessionId = match.ChatSessionId;
+                    CurrentSession.ChatSessionName = match.ChatSessionName;
+                }
             }            
         }
 
@@ -286,22 +301,22 @@
 
     async private Task<int> LoadChat(string sessionId, string sessionName)
     {
-        if (ChatSessions == null) return 0;
+        if (ChatSessions is null) return 0;
 
-        if (CurrentSession == null)
+        if (CurrentSession is null)
            CurrentSession = new ChatSession();
 
         CurrentSession.ChatSessionId = sessionId;
         CurrentSession.ChatSessionName = sessionName;            
 
-        await LoadCurrentChat();
+        await LoadCurrentChatAsync();
 
         return 0;
     }
 
     private string GetChatButtonClass(string sessionId)
     {
-        if (CurrentSession == null || sessionId != CurrentSession.ChatSessionId)
+        if (CurrentSession is null || sessionId != CurrentSession.ChatSessionId)
             return "bg-secondary text-dark";
         else
             return "bg-primary text-light";
@@ -309,7 +324,7 @@
 
     public string SafeSubstring(string text, int maxLength)
     {
-        if(text == null) return string.Empty;
+        if(text is null) return string.Empty;
 
         return text.Length > maxLength ? text.Substring(0, maxLength)+"..." : text;
     }

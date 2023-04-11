@@ -30,8 +30,9 @@ public class ChatService
     }
 
     //Returns the chat messages to display on the main web page when the user selects a chat from the left-hand nav
-    public async Task<List<ChatMessage>> GetChatSessionMessagesAsync(string chatSessionId)
+    public async Task<List<ChatMessage>> GetChatSessionMessagesAsync(string? chatSessionId)
     {
+        ArgumentNullException.ThrowIfNull(chatSessionId);
 
         List<ChatMessage> chatMessages = new();
 
@@ -72,8 +73,9 @@ public class ChatService
     }
 
     //User Inputs a chat from "New Chat" to user defined
-    public async Task RenameChatSessionAsync(string chatSessionId, string newChatSessionName)
+    public async Task RenameChatSessionAsync(string? chatSessionId, string newChatSessionName)
     {
+        ArgumentNullException.ThrowIfNull(chatSessionId);
 
         int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
 
@@ -84,8 +86,10 @@ public class ChatService
     }
 
     //User deletes a chat session
-    public async Task DeleteChatSessionAsync(string chatSessionId)
+    public async Task DeleteChatSessionAsync(string? chatSessionId)
     {
+        ArgumentNullException.ThrowIfNull(chatSessionId);
+
         int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
 
         chatSessions.RemoveAt(index);
@@ -96,8 +100,10 @@ public class ChatService
     }
 
     //User prompt to ask _openAiService a question
-    public async Task<string> AskOpenAiAsync(string chatSessionId, string prompt)
+    public async Task<string> AskOpenAiAsync(string? chatSessionId, string prompt)
     {
+        ArgumentNullException.ThrowIfNull(chatSessionId);
+
         await AddPromptMessageAsync(chatSessionId, prompt);
 
         string conversation = GetChatSessionConversation(chatSessionId);
@@ -136,8 +142,10 @@ public class ChatService
         return conversation;
     }
 
-    public async Task<string> SummarizeChatSessionNameAsync(string chatSessionId, string prompt)
+    public async Task<string> SummarizeChatSessionNameAsync(string? chatSessionId, string prompt)
     {
+        ArgumentNullException.ThrowIfNull(chatSessionId);
+
         prompt += "\n\n Summarize this prompt in one or two words to use as a label in a button on a web page";
         string response = await _openAiService.AskAsync(chatSessionId, prompt);
 

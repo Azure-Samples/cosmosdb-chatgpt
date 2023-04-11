@@ -27,15 +27,15 @@
     } 
     <h4 class="text-secondary p-2">@GetChatSessionName()</h4>
     <div class="px-4 pb-4 pt-2 flex-grow-1 overflow-y-auto overflow-x-hidden align-items-stretch" id="MessagesInChatdiv">
-        @if (CurrentChatSession == null)
+        @if (CurrentChatSession is null)
         {
             <div class="alert alert-primary">               
-                <h4 class="alert-heading">
+                <div class="alert-heading">
                     <div class="spinner-border text-primary me-1" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     Loading...
-                </h4>
+                </div>
                 <p class="text-nowrap mb-0 fst-italic">
                     Please wait while your chat loads.
                 </p>
@@ -55,15 +55,15 @@
         }
         else
         {
-            if (MessagesInChat == null || LoadingComplete == false)
+            if (MessagesInChat is null || LoadingComplete == false)
             {
-                <div class="alert alert-primary">               
-                    <h4 class="alert-heading">
+                <div class="alert alert-primary">
+                    <div class="alert-heading">
                         <div class="spinner-border text-primary me-1" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                         Loading...
-                    </h4>
+                    </div>
                     <p class="text-nowrap mb-0 fst-italic">
                         Please wait while your chat loads.
                     </p>
@@ -110,7 +110,7 @@
     <div class="bg-primary text-light px-4 py-2 rounded-top-5 text-dark d-flex flex-column justify-content-center @GetPromptVisibility()">
         <div class="input-group">
             <i class="bi bi-body-text input-group-text" aria-hidden="true"></i>
-            <input class="form-control form-control-sm" type="text" @bind="@UserPromptSet" @onkeydown="@Enter" @oninput="@((e) => { UserPrompt=(string)e.Value;})" rows="1" placeholder="<Your Message>"></input>
+            <input class="form-control form-control-sm" type="text" @bind="@UserPromptSet" @onkeydown="@Enter" @oninput="@((e) => { UserPrompt=e.Value?.ToString();})" rows="1" placeholder="<Your Message>"></input>
             <button type="button" class="btn btn-outline-secondary" @onclick="submitPrompt">
                 <i class="bi bi-send-fill" aria-hidden="true"></i>
             </button>
@@ -124,7 +124,7 @@
     public EventCallback<string> OnChatRenamed { get; set; }
 
     [Parameter]
-    public ChatSession CurrentChatSession { get; set; }
+    public ChatSession? CurrentChatSession { get; set; }
 
     [Parameter]
     public bool ShowHeader { get; set; }
@@ -133,8 +133,8 @@
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
 	
 
-    List<ChatMessage> MessagesInChat;
-    private static event EventHandler<ChatSession> OnMessagePosted;
+    List<ChatMessage>? MessagesInChat;
+    private static event EventHandler<ChatSession>? OnMessagePosted;
     private bool LoadingComplete;
 
 	async private Task ToggleNavMenu()
@@ -142,21 +142,21 @@
         await OnNavBarVisibilityUpdated.InvokeAsync();
     }
 
-    public async Task ReLoadChatMessages()
+    public async Task ReloadChatMessagesAsync()
     {
-        if (CurrentChatSession != null)
+        if (CurrentChatSession is not null)
             MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession.ChatSessionId);
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        OnMessagePosted += (o, e) =>
+        OnMessagePosted += async (o, e) =>
         {
-            this.InvokeAsync(() =>
+            await this.InvokeAsync(async () =>
             {
-                if (e.ChatSessionId == CurrentChatSession.ChatSessionId)
+                if (e.ChatSessionId == CurrentChatSession?.ChatSessionId)
                 {
-                    this.ReLoadChatMessages();
+                    await this.ReloadChatMessagesAsync();
                     this.StateHasChanged();
                 }
             });
@@ -167,11 +167,11 @@
     protected override async Task OnParametersSetAsync()
     {
 
-        if (CurrentChatSession == null)
+        if (CurrentChatSession is null)
             return;
 
-        if (CurrentChatSession.ChatSessionId != "404" & CurrentChatSession.ChatSessionId != null)
-            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession.ChatSessionId);
+        if (CurrentChatSession.ChatSessionId != "404" & CurrentChatSession.ChatSessionId is not null)
+            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession?.ChatSessionId);
 
         LoadingComplete = true;
     }
@@ -186,12 +186,12 @@
         }
     }
 
-    private string UserPrompt { get; set; }
-    private string UserPromptSet { get; set; }
+    private string? UserPrompt { get; set; }
+    private string? UserPromptSet { get; set; }
 
     private async Task submitPrompt()
     {
-        if (CurrentChatSession.ChatSessionId == "404" || UserPrompt == "" || UserPrompt == null)
+        if (CurrentChatSession?.ChatSessionId == "404" || UserPrompt == "" || UserPrompt is null)
             return;
 
         if (UserPrompt!="")
@@ -199,23 +199,26 @@
             UserPromptSet = "";
 
         }
-        await chatService.AskOpenAiAsync(CurrentChatSession.ChatSessionId, UserPrompt);
+        await chatService.AskOpenAiAsync(CurrentChatSession?.ChatSessionId, UserPrompt);
 
-        if(MessagesInChat.Count==2)
+        if(MessagesInChat?.Count == 2)
         {
             string newSessionName;
-            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentChatSession.ChatSessionId, MessagesInChat[0].Text);
+            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentChatSession?.ChatSessionId, MessagesInChat[0].Text);
 
-            CurrentChatSession.ChatSessionName = newSessionName;
+            if (CurrentChatSession is not null)
+            {
+                CurrentChatSession.ChatSessionName = newSessionName;
+            }
             await OnChatRenamed.InvokeAsync();
         }
 
-        if (null != OnMessagePosted)
+        if (OnMessagePosted is not null && CurrentChatSession is not null)
         {
             OnMessagePosted.Invoke(null, CurrentChatSession);
         }
 
-        ScrollLastChatToView();
+        await ScrollLastChatToView();
     }
 
  
@@ -230,7 +233,7 @@
 
     private string GetPromptVisibility()
     {
-        if (CurrentChatSession==null || CurrentChatSession.ChatSessionId == "404" || CurrentChatSession.ChatSessionId == null || LoadingComplete == false)
+        if (CurrentChatSession==null || CurrentChatSession.ChatSessionId == "404" || CurrentChatSession.ChatSessionId is null || LoadingComplete == false)
             return "invisible";
         else
             return "";
@@ -240,6 +243,7 @@
     {
         await ScrollLastChatToView();
     }
+
     private async Task ScrollLastChatToView()
     {
         // TODO: This is a hack to get the scroll to work.  Need to find a better way to do this.

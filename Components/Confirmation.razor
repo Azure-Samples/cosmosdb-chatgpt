@@ -43,8 +43,8 @@
     </div>
 </div>
 @code {
-    [Parameter] public string Caption { get; set; }
-    [Parameter] public string Message { get; set; }
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public string? Message { get; set; }
     [Parameter] public EventCallback<bool> OnClose { get; set; }
     [Parameter] public Category Type { get; set; }
     private Task Cancel()
