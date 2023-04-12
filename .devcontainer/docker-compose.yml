@@ -1,11 +1,10 @@
-version: '3.7'
 services:
   devenv:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        VARIANT: 7.0
+        VARIANT: linux
     volumes:
       - ..:/workspace:cached
     command: sleep infinity
