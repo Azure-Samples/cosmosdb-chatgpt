@@ -6,6 +6,15 @@
 			"VARIANT": "7.0"
 		}
 	},
+	"forwardPorts": [
+		8100
+	],
+	"portsAttributes": {
+		"8100": {
+			"label": "Blazor web application",
+			"onAutoForward": "openPreview"
+		}
+	},
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {
 			"installBicep": true,
@@ -17,7 +26,9 @@
 		"vscode": {
 			"extensions": [
 				"ms-dotnettools.csharp",
-				"vsls-contrib.codetour"
+				"vsls-contrib.codetour",
+				"VisualStudioExptTeam.vscodeintellicode",
+				"ms-azuretools.vscode-cosmosdb"
 			],
 			"settings": {
 				"omnisharp.defaultLaunchSolution": "cosmoschatgpt.sln",
@@ -26,7 +37,13 @@
 				"csharp.suppressBuildAssetsNotification": true,
 				"codetour.promptForWorkspaceTours": false,
 				"codetour.recordMode": "pattern",
-				"codetour.showMarkers": false
+				"codetour.showMarkers": false,
+				"explorer.sortOrder": "type",
+				"explorer.fileNesting.enabled": true,
+				"explorer.fileNesting.patterns": {
+					"*.js": "${capture}.js.map",
+					"*.razor": "${capture}.razor.cs,${capture}.razor.css"
+				}
 			}
 		}
 	}
