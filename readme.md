@@ -1,3 +1,16 @@
+---
+page_type: sample
+languages:
+- csharp
+products:
+- azure-cosmos-db
+- azure-openai
+name: Sample chat app using Azure Cosmos DB for NoSQL and Azure OpenAI
+urlFragment: chat-app
+description: Sample application that implements multiple chat threads using the Azure OpenAI "text-davinci-003" model and Azure Cosmos DB for NoSQL for storage.
+azureDeploy: https://raw.githubusercontent.com/azure-samples/cosmosdb-chatgpt/main/azuredeploy.json
+---
+
 # Azure Cosmos DB + OpenAI ChatGPT
 
 This sample application combines Azure Cosmos DB with OpenAI ChatGPT with a Blazor Server front-end for an intelligent chat bot application that shows off how you can build a 
