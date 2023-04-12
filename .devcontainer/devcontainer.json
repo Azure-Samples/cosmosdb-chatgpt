@@ -12,7 +12,7 @@
 	"portsAttributes": {
 		"8100": {
 			"label": "Blazor web application",
-			"onAutoForward": "openPreview"
+			"onAutoForward": "openBrowser"
 		}
 	},
 	"features": {
@@ -43,7 +43,8 @@
 				"explorer.fileNesting.patterns": {
 					"*.js": "${capture}.js.map",
 					"*.razor": "${capture}.razor.cs,${capture}.razor.css"
-				}
+				},
+				"git.autofetch": true
 			}
 		}
 	}
