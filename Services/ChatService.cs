@@ -4,16 +4,14 @@ namespace Cosmos.Chat.GPT.Services;
 
 public class ChatService
 {
-
     //All data is cached in chatSessions List object.
     private static List<ChatSession> chatSessions = new();
 
-    private readonly CosmosService _cosmosDbService;
-    private readonly OpenAiService _openAiService;
+    private readonly ICosmosService _cosmosDbService;
+    private readonly IOpenAiService _openAiService;
     private readonly int maxConversationLength;
 
-
-    public ChatService(CosmosService cosmosService, OpenAiService openAiService)
+    public ChatService(ICosmosService cosmosService, IOpenAiService openAiService)
     {
         _cosmosDbService = cosmosService;
         _openAiService = openAiService;
@@ -94,9 +92,7 @@ public class ChatService
 
         chatSessions.RemoveAt(index);
 
-        await _cosmosDbService.DeleteChatSessionAsync(chatSessionId);
-
-
+        await _cosmosDbService.DeleteChatSessionAndMessagesAsync(chatSessionId);
     }
 
     //User prompt to ask _openAiService a question
@@ -113,7 +109,6 @@ public class ChatService
         await AddResponseMessageAsync(chatSessionId, response);
 
         return response;
-
     }
 
     private string GetChatSessionConversation(string chatSessionId)
@@ -152,7 +147,6 @@ public class ChatService
         await RenameChatSessionAsync(chatSessionId, response);
 
         return response;
-
     }
 
     // Add human prompt to the chat session message list object and insert into _cosmosDbService.
@@ -165,7 +159,6 @@ public class ChatService
         chatSessions[index].AddMessage(chatMessage);
 
         await _cosmosDbService.InsertChatMessageAsync(chatMessage);
-
     }
 
     // Add _openAiService response to the chat session message list object and insert into _cosmosDbService.
@@ -178,7 +171,5 @@ public class ChatService
         chatSessions[index].AddMessage(chatMessage);
 
         await _cosmosDbService.InsertChatMessageAsync(chatMessage);
-
     }
-
 }
