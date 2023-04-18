@@ -136,7 +136,6 @@ public class CosmosService : ICosmosService
     /// <returns>List of chat message items for the specified session.</returns>
     public async Task<List<ChatMessage>> GetChatSessionMessagesAsync(string chatSessionId)
     {
-        //Get the chat messages for a chat session
         QueryDefinition query = new QueryDefinition("SELECT * FROM c WHERE c.ChatSessionId = @ChatSessionId AND c.Type = @Type")
             .WithParameter("@ChatSessionId", chatSessionId)
             .WithParameter("@Type", "ChatMessage");
