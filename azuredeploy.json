@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "13708119499883994234"
+      "templateHash": "5874238312326515867"
     }
   },
   "parameters": {
@@ -13,8 +13,8 @@
       "type": "string",
       "defaultValue": "South Central US",
       "allowedValues": [
-        "East US",
-        "South Central US"
+        "South Central US",
+        "East US"
       ],
       "metadata": {
         "description": "Location where all resources will be deployed. This value defaults to the **South Central US** region."

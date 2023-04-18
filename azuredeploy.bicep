@@ -1,7 +1,7 @@
 @description('Location where all resources will be deployed. This value defaults to the **South Central US** region.')
 @allowed([
-  'East US'
   'South Central US'
+  'East US'
 ])
 param location string = 'South Central US'
 
