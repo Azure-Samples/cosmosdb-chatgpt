@@ -1,7 +1,4 @@
-﻿using Azure;
-using Azure.AI.OpenAI;
-
-namespace Cosmos.Chat.GPT.Services;
+﻿namespace Cosmos.Chat.GPT.Services;
 
 /// <summary>
 /// Service to access Azure OpenAI.
@@ -10,15 +7,6 @@ public class OpenAiService
 {
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxTokens = default;
-    private readonly OpenAIClient _client;
-    private readonly string _contextText = @"
-        You are an AI assistant that helps people find information.
-        Provide concise answers that are polite and professional.
-        If you do not know an answer, reply with ""I do not know the answer to your question.""
-    ";
-    private readonly string _summaryText = @"
-        Summarize the following text in one or two words to use as a label on a web page.
-    ";
 
     /// <summary>
     /// Gets the maximum number of tokens.
@@ -48,8 +36,6 @@ public class OpenAiService
 
         _deploymentName = deploymentName;
         _maxTokens = Int32.TryParse(maxTokens, out _maxTokens) ? _maxTokens : 3000;
-
-        _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
 
     /// <summary>
@@ -60,32 +46,8 @@ public class OpenAiService
     /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string prompt)
     {
-        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
-        ChatMessage userPrompt = new(ChatRole.User, prompt);
-
-        ChatCompletionsOptions options = new()
-        {
-            Messages = {
-                contextPrompt,
-                userPrompt
-            },
-            User = sessionId,
-            MaxTokens = _maxTokens,
-            Temperature = 0.5f,
-            NucleusSamplingFactor = 0.95f,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0
-        };
-
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
-
-        ChatCompletions completions = completionsResponse.Value;
-
-        return (
-            response: completions.Choices[0].Message.Content,
-            promptTokens: completions.Usage.PromptTokens,
-            responseTokens: completions.Usage.CompletionTokens
-        );
+        await Task.Delay(millisecondsDelay: 250);
+        return ("<BOT RESPONSE HERE>", default!, default!);
     }
 
     /// <summary>
@@ -96,29 +58,7 @@ public class OpenAiService
     /// <returns>Summarization response from the AI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string conversation)
     {
-        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
-        ChatMessage summarizePrompt = new(ChatRole.System, _summaryText);
-        ChatMessage conversationPrompt = new(ChatRole.User, conversation);
-
-        ChatCompletionsOptions options = new()
-        {
-            Messages = {
-                contextPrompt,
-                summarizePrompt,
-                conversationPrompt
-            },
-            User = sessionId,
-            MaxTokens = _maxTokens,
-            Temperature = 0.5f,
-            NucleusSamplingFactor = 0.95f,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0
-        };
-
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
-
-        ChatCompletions completions = completionsResponse.Value;
-
-        return completions.Choices[0].Message.Content;
+        await Task.Delay(millisecondsDelay: 250);
+        return "<BOT SUMMARY HERE>";
     }
 }
