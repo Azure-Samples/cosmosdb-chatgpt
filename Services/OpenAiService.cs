@@ -11,6 +11,14 @@ public class OpenAiService : IOpenAiService
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxTokens = default;
     private readonly OpenAIClient _client;
+    private readonly string _contextText = @"
+        You are an AI assistant that helps people find information.
+        Provide concise answers that are polite and professional.
+        If you do not know an answer, reply with ""I do not know the answer to your question.""
+    ";
+    private readonly string _summaryText = @"
+        Summarize the following text in one or two words to use as a label on a web page.
+    ";
 
     /// <summary>
     /// Gets the maximum number of tokens.
@@ -47,20 +55,70 @@ public class OpenAiService : IOpenAiService
     /// <summary>
     /// Sends a prompt to the AI model deployment and returns the response.
     /// </summary>
-    /// <param name="chatSessionId">Chat session identifier for the current conversation.</param>
+    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="prompt">Prompt message to send to the deployment.</param>
-    /// <returns>Response from the AI model deployment.</returns>
-    public async Task<string> AskAsync(string chatSessionId, string prompt)
+    /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
+    public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string prompt)
     {
-        CompletionsOptions completionsOptions = new()
+        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
+        ChatMessage userPrompt = new(ChatRole.User, prompt);
+
+        ChatCompletionsOptions options = new()
         {
-            User = chatSessionId,
-            MaxTokens = _maxTokens
+            Messages = {
+                contextPrompt,
+                userPrompt
+            },
+            User = sessionId,
+            MaxTokens = _maxTokens,
+            Temperature = 0.5f,
+            NucleusSamplingFactor = 0.95f,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0
         };
-        completionsOptions.Prompts.Add(prompt);
 
-        Response<Completions> completionsResponse = await _client.GetCompletionsAsync(_deploymentName, completionsOptions);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
 
-        return completionsResponse.Value.Choices[0].Text;
+        ChatCompletions completions = completionsResponse.Value;
+
+        return (
+            response: completions.Choices[0].Message.Content,
+            promptTokens: completions.Usage.PromptTokens,
+            responseTokens: completions.Usage.CompletionTokens
+        );
+    }
+
+    /// <summary>
+    /// Sends the existing conversation to the AI model deployment and returns a brief summary.
+    /// </summary>
+    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
+    /// <param name="conversation">Prompt conversation to send to the deployment.</param>
+    /// <returns>Summarization response from the AI model deployment.</returns>
+    public async Task<string> SummarizeAsync(string sessionId, string conversation)
+    {
+        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
+        ChatMessage summarizePrompt = new(ChatRole.System, _summaryText);
+        ChatMessage conversationPrompt = new(ChatRole.User, conversation);
+
+        ChatCompletionsOptions options = new()
+        {
+            Messages = {
+                contextPrompt,
+                summarizePrompt,
+                conversationPrompt
+            },
+            User = sessionId,
+            MaxTokens = _maxTokens,
+            Temperature = 0.5f,
+            NucleusSamplingFactor = 0.95f,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0
+        };
+
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
+
+        ChatCompletions completions = completionsResponse.Value;
+
+        return completions.Choices[0].Message.Content;
     }
 }

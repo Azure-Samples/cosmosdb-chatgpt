@@ -1,175 +1,178 @@
-﻿using Cosmos.Chat.GPT.Models;
+﻿using Cosmos.Chat.GPT.Constants;
+using Cosmos.Chat.GPT.Models;
 
 namespace Cosmos.Chat.GPT.Services;
 
 public class ChatService
 {
-    //All data is cached in chatSessions List object.
-    private static List<ChatSession> chatSessions = new();
-
-    private readonly ICosmosService _cosmosDbService;
+    /// <summary>
+    /// All data is cached in _sessions List object.
+    /// </summary>
+    private readonly List<Session> _sessions = new();
+    private readonly ICosmosDbService _cosmosDbService;
     private readonly IOpenAiService _openAiService;
-    private readonly int maxConversationLength;
+    private readonly int _maxConversationLength;
 
-    public ChatService(ICosmosService cosmosService, IOpenAiService openAiService)
+    public ChatService(ICosmosDbService cosmosDbService, IOpenAiService openAiService)
     {
-        _cosmosDbService = cosmosService;
+        _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
 
-        maxConversationLength = openAiService.MaxTokens / 2;
+        _maxConversationLength = openAiService.MaxTokens / 2;
     }
 
-    // Returns list of chat session ids and names for left-hand nav to bind to (display ChatSessionName and ChatSessionId as hidden)
-    public async Task<List<ChatSession>> GetAllChatSessionsAsync()
+    /// <summary>
+    /// Returns list of chat session ids and names for left-hand nav to bind to (display Name and ChatSessionId as hidden)
+    /// </summary>
+    public async Task<List<Session>> GetAllChatSessionsAsync()
     {
-        chatSessions = await _cosmosDbService.GetChatSessionsAsync();
-
-        return chatSessions;
+        return await _cosmosDbService.GetSessionsAsync();
     }
 
-    //Returns the chat messages to display on the main web page when the user selects a chat from the left-hand nav
-    public async Task<List<ChatMessage>> GetChatSessionMessagesAsync(string? chatSessionId)
+    /// <summary>
+    /// Returns the chat messages to display on the main web page when the user selects a chat from the left-hand nav
+    /// </summary>
+    public async Task<List<Message>> GetChatSessionMessagesAsync(string? sessionId)
     {
-        ArgumentNullException.ThrowIfNull(chatSessionId);
+        ArgumentNullException.ThrowIfNull(sessionId);
 
-        List<ChatMessage> chatMessages = new();
+        List<Message> chatMessages = new();
 
-        if (chatSessions.Count == 0)
+        if (_sessions.Count == 0)
         {
-            return Enumerable.Empty<ChatMessage>().ToList();
+            return Enumerable.Empty<Message>().ToList();
         }
 
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        if (chatSessions[index].Messages.Count == 0)
+        if (_sessions[index].Messages.Count == 0)
         {
-            //Messages are not cached, go read from database
-            chatMessages = await _cosmosDbService.GetChatSessionMessagesAsync(chatSessionId);
+            // Messages are not cached, go read from database
+            chatMessages = await _cosmosDbService.GetSessionMessagesAsync(sessionId);
 
-            //cache results
-            chatSessions[index].Messages = chatMessages;
-
+            // Cache results
+            _sessions[index].Messages = chatMessages;
         }
         else
         {
-            //load from cache
-            chatMessages = chatSessions[index].Messages;
+            // Load from cache
+            chatMessages = _sessions[index].Messages;
         }
-        return chatMessages;
 
+        return chatMessages;
     }
 
-    //User creates a new Chat Session
+    /// <summary>
+    /// User creates a new Chat Session.
+    /// </summary>
     public async Task CreateNewChatSessionAsync()
     {
-        ChatSession chatSession = new();
+        Session session = new();
 
-        chatSessions.Add(chatSession);
+        _sessions.Add(session);
 
-        await _cosmosDbService.InsertChatSessionAsync(chatSession);
-
-    }
-
-    //User Inputs a chat from "New Chat" to user defined
-    public async Task RenameChatSessionAsync(string? chatSessionId, string newChatSessionName)
-    {
-        ArgumentNullException.ThrowIfNull(chatSessionId);
-
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
-
-        chatSessions[index].ChatSessionName = newChatSessionName;
-
-        await _cosmosDbService.UpdateChatSessionAsync(chatSessions[index]);
+        await _cosmosDbService.InsertSessionAsync(session);
 
     }
 
-    //User deletes a chat session
-    public async Task DeleteChatSessionAsync(string? chatSessionId)
+    /// <summary>
+    /// User Inputs a chat from "New Chat" to user defined.
+    /// </summary>
+    public async Task RenameChatSessionAsync(string? sessionId, string newChatSessionName)
     {
-        ArgumentNullException.ThrowIfNull(chatSessionId);
+        ArgumentNullException.ThrowIfNull(sessionId);
 
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        chatSessions.RemoveAt(index);
+        _sessions[index].Name = newChatSessionName;
 
-        await _cosmosDbService.DeleteChatSessionAndMessagesAsync(chatSessionId);
+        await _cosmosDbService.UpdateSessionAsync(_sessions[index]);
     }
 
-    //User prompt to ask _openAiService a question
-    public async Task<string> AskOpenAiAsync(string? chatSessionId, string prompt)
+    /// <summary>
+    /// User deletes a chat session
+    /// </summary>
+    public async Task DeleteChatSessionAsync(string? sessionId)
     {
-        ArgumentNullException.ThrowIfNull(chatSessionId);
+        ArgumentNullException.ThrowIfNull(sessionId);
 
-        await AddPromptMessageAsync(chatSessionId, prompt);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        string conversation = GetChatSessionConversation(chatSessionId);
+        _sessions.RemoveAt(index);
 
-        string response = await _openAiService.AskAsync(chatSessionId, conversation);
+        await _cosmosDbService.DeleteSessionAndMessagesAsync(sessionId);
+    }
 
-        await AddResponseMessageAsync(chatSessionId, response);
+    /// <summary>
+    /// User prompt to ask _openAiService a question
+    /// </summary>
+    public async Task<string> AskOpenAiAsync(string? sessionId, string prompt)
+    {
+        ArgumentNullException.ThrowIfNull(sessionId);
+
+        string conversation = GetChatSessionConversation(sessionId, prompt);
+
+        (string response, int promptTokens, int responseTokens) = await _openAiService.AskAsync(sessionId, conversation);
+
+        await AddPromptMessageAsync(sessionId, promptTokens, prompt);
+
+        await AddResponseMessageAsync(sessionId, responseTokens, response);
 
         return response;
     }
 
-    private string GetChatSessionConversation(string chatSessionId)
+    /// <summary>
+    /// Get current conversation with the user prompt added and truncated
+    /// </summary>
+    private string GetChatSessionConversation(string sessionId, string prompt)
     {
-        string conversation = "";
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
+        string previousConversation = String.Join(Environment.NewLine, _sessions[index].Messages);
+        string currentConversation = previousConversation + Environment.NewLine + prompt;
 
-        if (chatSessions[index].Messages.Count > 0)
-        {
-            List<ChatMessage> chatMessages = chatSessions[index].Messages;
-
-
-            foreach (ChatMessage chatMessage in chatMessages)
-            {
-
-                conversation += chatMessage.Text + "\n";
-
-            }
-
-            if (conversation.Length > maxConversationLength)
-                conversation = conversation.Substring(conversation.Length - maxConversationLength, maxConversationLength);
-
-        }
-
-        return conversation;
+        return currentConversation.Length > _maxConversationLength ?
+            currentConversation.Substring(currentConversation.Length - _maxConversationLength, _maxConversationLength) :
+            currentConversation;
     }
 
-    public async Task<string> SummarizeChatSessionNameAsync(string? chatSessionId, string prompt)
+    public async Task<string> SummarizeChatSessionNameAsync(string? sessionId, string prompt)
     {
-        ArgumentNullException.ThrowIfNull(chatSessionId);
+        ArgumentNullException.ThrowIfNull(sessionId);
 
         prompt += "\n\n Summarize this prompt in one or two words to use as a label in a button on a web page";
-        string response = await _openAiService.AskAsync(chatSessionId, prompt);
+        string response = await _openAiService.SummarizeAsync(sessionId, prompt);
 
-        await RenameChatSessionAsync(chatSessionId, response);
+        await RenameChatSessionAsync(sessionId, response);
 
         return response;
     }
 
-    // Add human prompt to the chat session message list object and insert into _cosmosDbService.
-    private async Task AddPromptMessageAsync(string chatSessionId, string text)
+    /// <summary>
+    /// Add human prompt to the chat session message list object and insert into _cosmosDbService.
+    /// </summary>
+    private async Task AddPromptMessageAsync(string sessionId, int tokens, string text)
     {
-        ChatMessage chatMessage = new(chatSessionId, "Human", text);
+        Message message = new(sessionId, nameof(Participants.Human), tokens, text);
 
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        chatSessions[index].AddMessage(chatMessage);
+        _sessions[index].AddMessage(message);
 
-        await _cosmosDbService.InsertChatMessageAsync(chatMessage);
+        await _cosmosDbService.InsertMessageAsync(message);
     }
 
-    // Add _openAiService response to the chat session message list object and insert into _cosmosDbService.
-    private async Task AddResponseMessageAsync(string chatSessionId, string text)
+    /// <summary>
+    /// Add _openAiService response to the chat session message list object and insert into _cosmosDbService.
+    /// </summary>
+    private async Task AddResponseMessageAsync(string sessionId, int tokens, string text)
     {
-        ChatMessage chatMessage = new(chatSessionId, "AI", text);
+        Message message = new(sessionId, nameof(Participants.Bot), tokens, text);
 
-        int index = chatSessions.FindIndex(s => s.ChatSessionId == chatSessionId);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        chatSessions[index].AddMessage(chatMessage);
+        _sessions[index].AddMessage(message);
 
-        await _cosmosDbService.InsertChatMessageAsync(chatMessage);
+        await _cosmosDbService.InsertMessageAsync(message);
     }
 }

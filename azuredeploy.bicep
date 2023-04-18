@@ -1,16 +1,15 @@
-@description('Location where all resources will be deployed. This value defaults to the **East US** region.')
+@description('Location where all resources will be deployed. This value defaults to the **South Central US** region.')
 @allowed([
   'East US'
   'South Central US'
-  'West Europe'
 ])
-param location string = 'East US'
+param location string = 'South Central US'
 
 @description('''
 Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:
 - Azure Cosmos DB
 - Azure App Service
-- Azure Open AI
+- Azure OpenAI
 The name defaults to a unique string generated from the resource group identifier.
 ''')
 param name string = uniqueString(resourceGroup().id)
@@ -43,8 +42,8 @@ var openAiSettings = {
   sku: openAiSku
   maxTokens: '3000'
   model: {
-    name: 'text-davinci-003'
-    version: '1'
+    name: 'gpt-35-turbo'
+    version: '0301'
     deployment: {
       name: 'chatmodel'
     }
@@ -115,7 +114,7 @@ resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
       id: cosmosDbSettings.container.name
       partitionKey: {
         paths: [
-          '/ChatSessionId'
+          '/sessionId'
         ]
         kind: 'Hash'
         version: 2
@@ -125,10 +124,10 @@ resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
         automatic: true
         includedPaths: [
           {
-            path: '/ChatSessionId/?'
+            path: '/sessionId/?'
           }
           {
-            path: '/Type/?'
+            path: '/type/?'
           }
         ]
         excludedPaths: [
