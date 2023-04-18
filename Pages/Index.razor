@@ -13,15 +13,12 @@
 
 @code {
 
-    private Session? CurrentSession;
-
     [Parameter]
     public EventCallback<string> OnChatRenamed { get; set; } = default!;
 
+    private Session? CurrentSession;
     private ChatPane? ChatPane = default;
-
     private NavMenu? NavMenu = default;
-
     private bool IsNavMenuCollapsed { get; set; }
 
     private void UpdateNavBarVisibility()

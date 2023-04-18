@@ -6,7 +6,7 @@ namespace Cosmos.Chat.GPT.Services;
 /// <summary>
 /// Service to access Azure OpenAI.
 /// </summary>
-public class OpenAiService : IOpenAiService
+public class OpenAiService
 {
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxTokens = default;

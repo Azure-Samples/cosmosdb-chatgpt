@@ -18,11 +18,11 @@ public record Message
 
     public string Sender { get; set; }
 
-    public int Tokens { get; set; }
+    public int? Tokens { get; set; }
 
     public string Text { get; set; }
 
-    public Message(string sessionId, string sender, int tokens, string text)
+    public Message(string sessionId, string sender, int? tokens, string text)
     {
         Id = Guid.NewGuid().ToString();
         Type = nameof(Message);

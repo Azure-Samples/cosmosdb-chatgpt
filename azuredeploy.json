@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "5793614222211534325"
+      "templateHash": "13708119499883994234"
     }
   },
   "parameters": {
@@ -153,7 +153,7 @@
           "id": "[variables('cosmosDbSettings').container.name]",
           "partitionKey": {
             "paths": [
-              "/chatSessionId"
+              "/sessionId"
             ],
             "kind": "Hash",
             "version": 2
@@ -163,7 +163,7 @@
             "automatic": true,
             "includedPaths": [
               {
-                "path": "/chatSessionId/?"
+                "path": "/sessionId/?"
               },
               {
                 "path": "/type/?"

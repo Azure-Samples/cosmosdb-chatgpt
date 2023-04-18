@@ -23,7 +23,7 @@
     </div>
 
     <div class="flex-grow-1 flex-column justify-content-center overflow-y-auto overflow-x-hidden">
-        @if (LoadingComplete == true)
+        @if (_loadingComplete == true)
         {
             <div>
                 <nav class="flex-column">
@@ -74,20 +74,20 @@
 
 
 
-@if (DeletePopUpOpen)
+@if (_deletePopUpOpen)
 {
     <Confirmation Caption="Delete a Chat"
-        Message="@PopUpText"
+        Message="@_popUpText"
         OnClose="@OnConfirmationClose"
         Type="Confirmation.Category.DeleteNot">
     </Confirmation>
 }
 
 
-@if (RenamePopUpOpen)
+@if (_renamePopUpOpen)
 {
     <Input Caption="Rename a Chat"
-        Value="@PopUpText"
+        Value="@_popUpText"
         OnClose="@OnInputClose" >
     </Input>
 }
@@ -101,12 +101,21 @@
     [Parameter]
     public static List<Session> ChatSessions { get; set; } = new();
 
-
     [Parameter]
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
 
     [Parameter]
     public EventCallback OnThemeUpdated { get; set; }
+
+    private string? _sessionId;
+    private string? _popUpText;
+    private bool _deletePopUpOpen = false;
+    private bool _loadingComplete;
+    private bool _renamePopUpOpen = false;
+
+    public Session? CurrentSession;
+
+    private static event EventHandler<string>? OnNavMenuChanged;
 
     async private Task ToggleNavMenu()
     {
@@ -118,16 +127,6 @@
         await OnThemeUpdated.InvokeAsync();
     }
 
-    public Session? CurrentSession;
-
-    private string? SessionID;
-    private string? PopUpText;
-    private bool DeletePopUpOpen = false;
-
-    private bool LoadingComplete;
-
-    private static event EventHandler<string>? OnNavMenuChanged;
-
     protected override void OnInitialized()
     {
         OnNavMenuChanged += async (o, e) =>
@@ -138,15 +137,13 @@
                 await LoadCurrentChatAsync();
             });
         };
-
     }
 
     private void OpenConfirmation(string id, string title)
     {
-        DeletePopUpOpen = true;
-        SessionID = id;
-        PopUpText = "Do you want to delete the chat \""
-                  + title + "\"?";
+        _deletePopUpOpen = true;
+        _sessionId = id;
+        _popUpText = $"Do you want to delete the chat \"{title}\"?";
     }
 
     public void UpdateNavMenuDisplay(string reason = "")
@@ -161,15 +158,15 @@
     {
         bool updateCurrentChat=false;
 
-        if (CurrentSession is not null & SessionID == CurrentSession?.SessionId)
+        if (CurrentSession is not null & _sessionId == CurrentSession?.SessionId)
             updateCurrentChat = true;
 
         if (isOk)
         {
-            DeletePopUpOpen = false;
-            await chatService.DeleteChatSessionAsync(SessionID);
+            _deletePopUpOpen = false;
+            await chatService.DeleteChatSessionAsync(_sessionId);
 
-            DeletePopUpOpen = false;
+            _deletePopUpOpen = false;
 
             UpdateNavMenuDisplay("Delete");
 
@@ -193,18 +190,15 @@
             await LoadCurrentChatAsync();
         }
 
-        DeletePopUpOpen = false;
+        _deletePopUpOpen = false;
     }
-
-    private bool RenamePopUpOpen = false;
 
     private void OpenInput(string id, string title)
     {
-        RenamePopUpOpen = true;
-        SessionID = id;
-        PopUpText = title;
+        _renamePopUpOpen = true;
+        _sessionId = id;
+        _popUpText = title;
     }
-
 
     private async Task OnInputClose(string newName)
     {
@@ -212,14 +206,14 @@
         {
             bool updateCurrentChat = false;
 
-            if (SessionID == CurrentSession?.SessionId)
+            if (_sessionId == CurrentSession?.SessionId)
             {
                 updateCurrentChat = true;
             }
 
-            await chatService.RenameChatSessionAsync(SessionID, newName);
+            await chatService.RenameChatSessionAsync(_sessionId, newName);
 
-            RenamePopUpOpen = false;
+            _renamePopUpOpen = false;
 
             UpdateNavMenuDisplay("Rename");
 
@@ -235,7 +229,7 @@
             await LoadCurrentChatAsync();
         }
 
-        RenamePopUpOpen = false;
+        _renamePopUpOpen = false;
     }
 
     private async Task NewChat()
@@ -253,10 +247,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (LoadingComplete == true)
+        if (_loadingComplete == true)
             return;
 
-        LoadingComplete = false;
+        _loadingComplete = false;
 
         ChatSessions = await chatService.GetAllChatSessionsAsync();
         if (CurrentSession is not null && ChatSessions is not null & ChatSessions?.Count > 0)
@@ -269,7 +263,7 @@
             }
         }
 
-        LoadingComplete = true;
+        _loadingComplete = true;
         await LoadCurrentChatAsync();
 
     }
@@ -303,14 +297,14 @@
         return 0;
     }
 
-    async private Task<int> LoadChat(string sessionId, string sessionName)
+    async private Task<int> LoadChat(string _sessionId, string sessionName)
     {
         if (ChatSessions is null) return 0;
 
         if (CurrentSession is null)
            CurrentSession = new Session();
 
-        CurrentSession.SessionId = sessionId;
+        CurrentSession.SessionId = _sessionId;
         CurrentSession.Name = sessionName;            
 
         await LoadCurrentChatAsync();
@@ -318,10 +312,10 @@
         return 0;
     }
 
-    private bool IsActiveSession(string sessionId) => CurrentSession switch
+    private bool IsActiveSession(string _sessionId) => CurrentSession switch
     {
         null => true,
-        (Session s) when s.SessionId == sessionId => true,
+        (Session s) when s.SessionId == _sessionId => true,
         _ => false
     };
 

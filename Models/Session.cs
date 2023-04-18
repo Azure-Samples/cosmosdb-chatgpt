@@ -34,4 +34,11 @@ public record Session
     {
         Messages.Add(message);
     }
+
+    public void UpdateMessage(Message message)
+    {
+        var match = Messages.Single(m => m.Id == message.Id);
+        var index = Messages.IndexOf(match);
+        Messages[index] = message;
+    }
 }

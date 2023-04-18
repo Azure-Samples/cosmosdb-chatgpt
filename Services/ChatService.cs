@@ -6,14 +6,15 @@ namespace Cosmos.Chat.GPT.Services;
 public class ChatService
 {
     /// <summary>
-    /// All data is cached in _sessions List object.
+    /// All data is cached in the _sessions List object.
     /// </summary>
-    private readonly List<Session> _sessions = new();
-    private readonly ICosmosDbService _cosmosDbService;
-    private readonly IOpenAiService _openAiService;
+    private static List<Session> _sessions = new();
+
+    private readonly CosmosDbService _cosmosDbService;
+    private readonly OpenAiService _openAiService;
     private readonly int _maxConversationLength;
 
-    public ChatService(ICosmosDbService cosmosDbService, IOpenAiService openAiService)
+    public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService)
     {
         _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
@@ -26,7 +27,7 @@ public class ChatService
     /// </summary>
     public async Task<List<Session>> GetAllChatSessionsAsync()
     {
-        return await _cosmosDbService.GetSessionsAsync();
+        return _sessions = await _cosmosDbService.GetSessionsAsync();
     }
 
     /// <summary>
@@ -110,13 +111,13 @@ public class ChatService
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
+        Message promptMessage = await AddPromptMessageAsync(sessionId, prompt);
+
         string conversation = GetChatSessionConversation(sessionId, prompt);
 
         (string response, int promptTokens, int responseTokens) = await _openAiService.AskAsync(sessionId, conversation);
 
-        await AddPromptMessageAsync(sessionId, promptTokens, prompt);
-
-        await AddResponseMessageAsync(sessionId, responseTokens, response);
+        await AddPromptResponseMessagesAsync(sessionId, promptTokens, responseTokens, promptMessage, response);
 
         return response;
     }
@@ -140,7 +141,6 @@ public class ChatService
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
-        prompt += "\n\n Summarize this prompt in one or two words to use as a label in a button on a web page";
         string response = await _openAiService.SummarizeAsync(sessionId, prompt);
 
         await RenameChatSessionAsync(sessionId, response);
@@ -149,30 +149,32 @@ public class ChatService
     }
 
     /// <summary>
-    /// Add human prompt to the chat session message list object and insert into _cosmosDbService.
+    /// Add human prompt to the chat session message list object and insert into the data service.
     /// </summary>
-    private async Task AddPromptMessageAsync(string sessionId, int tokens, string text)
+    private async Task<Message> AddPromptMessageAsync(string sessionId, string promptText)
     {
-        Message message = new(sessionId, nameof(Participants.Human), tokens, text);
+        Message promptMessage = new(sessionId, nameof(Participants.Human), default, promptText);
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        _sessions[index].AddMessage(message);
+        _sessions[index].AddMessage(promptMessage);
 
-        await _cosmosDbService.InsertMessageAsync(message);
+        return await _cosmosDbService.InsertMessageAsync(promptMessage);
     }
 
     /// <summary>
-    /// Add _openAiService response to the chat session message list object and insert into _cosmosDbService.
+    /// Add human prompt and AI response to the chat session message list object and insert into the data service.
     /// </summary>
-    private async Task AddResponseMessageAsync(string sessionId, int tokens, string text)
+    private async Task AddPromptResponseMessagesAsync(string sessionId, int promptTokens, int responseTokens, Message promptMessage, string responseText)
     {
-        Message message = new(sessionId, nameof(Participants.Bot), tokens, text);
+        Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
+        Message responseMessage = new(sessionId, nameof(Participants.Bot), responseTokens, responseText);
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        _sessions[index].AddMessage(message);
+        _sessions[index].UpdateMessage(updatedPromptMessage);
+        _sessions[index].AddMessage(responseMessage);
 
-        await _cosmosDbService.InsertMessageAsync(message);
+        await _cosmosDbService.UpsertMessagesBatchAsync(promptMessage, responseMessage);
     }
 }
