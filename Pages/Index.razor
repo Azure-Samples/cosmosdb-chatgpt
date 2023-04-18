@@ -42,7 +42,7 @@
 
         if (ChatPane is not null)
         {
-            ChatPane.CurrentChatSession = session;
+            ChatPane.ChangeCurrentChatSession(session);
         }
 
         // Inform blazor the UI needs updating
