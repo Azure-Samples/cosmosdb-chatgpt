@@ -167,14 +167,17 @@ public class ChatService
     /// </summary>
     private async Task AddPromptResponseMessagesAsync(string sessionId, int promptTokens, int responseTokens, Message promptMessage, string responseText)
     {
-        Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
-        Message responseMessage = new(sessionId, nameof(Participants.Bot), responseTokens, responseText);
-
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-
-        _sessions[index].UpdateMessage(updatedPromptMessage);
+        
+        Message responseMessage = new(sessionId, nameof(Participants.Bot), responseTokens, responseText);
         _sessions[index].AddMessage(responseMessage);
 
-        await _cosmosDbService.UpsertMessagesBatchAsync(promptMessage, responseMessage);
+        if (promptMessage is not null)
+        {
+            Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
+            _sessions[index].UpdateMessage(updatedPromptMessage);
+
+            await _cosmosDbService.UpsertMessagesBatchAsync(promptMessage, responseMessage);
+        }
     }
 }
