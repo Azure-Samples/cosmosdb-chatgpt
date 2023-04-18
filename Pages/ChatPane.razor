@@ -131,7 +131,6 @@
 	[Parameter]
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
 	
-
     List<ChatMessage>? MessagesInChat;
     private static event EventHandler<ChatSession>? OnMessagePosted;
     private bool LoadingComplete;
@@ -175,7 +174,10 @@
         LoadingComplete = true;
     }
 
-
+    public void ChangeCurrentChatSession(ChatSession chatSession)
+    {
+        CurrentChatSession = chatSession;
+    }
 
     public async Task Enter(KeyboardEventArgs e)
     {
@@ -219,8 +221,6 @@
 
         await ScrollLastChatToView();
     }
-
- 
 
     private string GetChatSessionName()
     {
