@@ -18,10 +18,10 @@ public class OpenAiService
 
     public OpenAiService(string endpoint, string key, string deploymentName, string maxTokens)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(deploymentName);
-        ArgumentNullException.ThrowIfNull(maxTokens);
+        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(maxTokens);
 
         _endpoint = endpoint;
         _key = key;
