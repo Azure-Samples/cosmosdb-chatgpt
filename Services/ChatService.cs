@@ -117,7 +117,7 @@ public class ChatService
 
         (string response, int promptTokens, int responseTokens) = await _openAiService.AskAsync(sessionId, conversation);
 
-        await AddPromptResponseMessagesAsync(sessionId, promptTokens, responseTokens, promptMessage, response);
+        await AddPromptCompletionMessagesAsync(sessionId, promptTokens, responseTokens, promptMessage, response);
 
         return response;
     }
@@ -165,19 +165,19 @@ public class ChatService
     /// <summary>
     /// Add human prompt and AI response to the chat session message list object and insert into the data service.
     /// </summary>
-    private async Task AddPromptResponseMessagesAsync(string sessionId, int promptTokens, int responseTokens, Message promptMessage, string responseText)
+    private async Task AddPromptCompletionMessagesAsync(string sessionId, int promptTokens, int completionTokens, Message promptMessage, string completionText)
     {
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
         
-        Message responseMessage = new(sessionId, nameof(Participants.Assistant), responseTokens, responseText);
-        _sessions[index].AddMessage(responseMessage);
+        Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionTokens, completionText);
+        _sessions[index].AddMessage(completionMessage);
 
         if (promptMessage is not null)
         {
             Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
             _sessions[index].UpdateMessage(updatedPromptMessage);
 
-            await _cosmosDbService.UpsertMessagesBatchAsync(promptMessage, responseMessage);
+            await _cosmosDbService.UpsertMessagesBatchAsync(updatedPromptMessage, completionMessage);
         }
     }
 }
