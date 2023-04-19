@@ -153,7 +153,7 @@ public class ChatService
     /// </summary>
     private async Task<Message> AddPromptMessageAsync(string sessionId, string promptText)
     {
-        Message promptMessage = new(sessionId, nameof(Participants.Human), default, promptText);
+        Message promptMessage = new(sessionId, nameof(Participants.User), default, promptText);
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
@@ -169,7 +169,7 @@ public class ChatService
     {
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
         
-        Message responseMessage = new(sessionId, nameof(Participants.Bot), responseTokens, responseText);
+        Message responseMessage = new(sessionId, nameof(Participants.Assistant), responseTokens, responseText);
         _sessions[index].AddMessage(responseMessage);
 
         if (promptMessage is not null)
