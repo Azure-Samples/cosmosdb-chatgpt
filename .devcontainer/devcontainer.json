@@ -25,7 +25,8 @@
 				"ms-dotnettools.csharp",
 				"vsls-contrib.codetour",
 				"VisualStudioExptTeam.vscodeintellicode",
-				"ms-azuretools.vscode-cosmosdb"
+				"ms-azuretools.vscode-cosmosdb",
+				"ms-azuretools.vscode-bicep"
 			],
 			"settings": {
 				"omnisharp.defaultLaunchSolution": "cosmoschatgpt.sln",
