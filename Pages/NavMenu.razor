@@ -1,4 +1,5 @@
-﻿@using Cosmos.Chat.GPT.Services
+﻿@using Cosmos.Chat.GPT.Constants
+@using Cosmos.Chat.GPT.Services
 @inject ChatService chatService
 
 
@@ -22,7 +23,7 @@
     </div>
 
     <div class="flex-grow-1 flex-column justify-content-center overflow-y-auto overflow-x-hidden">
-        @if (LoadingComplete == true)
+        @if (_loadingComplete == true)
         {
             <div>
                 <nav class="flex-column">
@@ -38,25 +39,25 @@
                         @foreach (var session in ChatSessions)
                         {
                             <div class="col">
-                                <div class="card @(IsActiveSession(session.ChatSessionId) ? "bg-primary text-light" : "bg-primary opacity-50 text-light")" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
+                                <div class="card @(IsActiveSession(session.SessionId) ? "bg-primary text-light" : "bg-primary opacity-50 text-light")" @onclick="@(e => LoadChat(session.SessionId,session.Name))">
                                     <div class="card-body">
-                                        <a class="card-title text-decoration-none h6" @onclick="@(e => LoadChat(session.ChatSessionId,session.ChatSessionName))">
-                                            @if (IsActiveSession(session.ChatSessionId))
+                                        <a class="card-title text-decoration-none h6" @onclick="@(e => LoadChat(session.SessionId,session.Name))">
+                                            @if (IsActiveSession(session.SessionId))
                                             {
                                                 <i class="bi bi-chat-right-dots-fill me-2"></i>
                                             }
-                                            <span title="@session.ChatSessionName" class="ms-1">
-                                                @SafeSubstring(session.ChatSessionName,20)
+                                            <span title="@session.Name" class="ms-1">
+                                                @SafeSubstring(session.Name,20)
                                             </span>
                                         </a>
                                     </div>
                                     <div class="card-footer d-flex align-items-between">
                                         <span class="flex-grow-1"></span>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenInput(session.ChatSessionId,session.ChatSessionName))">
+                                            <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenInput(session.SessionId,session.Name))">
                                                 <i class="bi bi-pencil-fill me-1"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenConfirmation(session.ChatSessionId,session.ChatSessionName))">
+                                            <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenConfirmation(session.SessionId,session.Name))">
                                                 <i class="bi bi-trash-fill ms-1"></i>
                                             </button>
                                         </div>
@@ -73,20 +74,20 @@
 
 
 
-@if (DeletePopUpOpen)
+@if (_deletePopUpOpen)
 {
     <Confirmation Caption="Delete a Chat"
-        Message="@PopUpText"
+        Message="@_popUpText"
         OnClose="@OnConfirmationClose"
         Type="Confirmation.Category.DeleteNot">
     </Confirmation>
 }
 
 
-@if (RenamePopUpOpen)
+@if (_renamePopUpOpen)
 {
     <Input Caption="Rename a Chat"
-        Value="@PopUpText"
+        Value="@_popUpText"
         OnClose="@OnInputClose" >
     </Input>
 }
@@ -95,17 +96,26 @@
 @code {
 
     [Parameter]
-    public EventCallback<ChatSession> OnChatClicked { get; set; } = default!;
+    public EventCallback<Session> OnChatClicked { get; set; } = default!;
 
     [Parameter]
-    public static List<ChatSession> ChatSessions { get; set; } = new();
-
+    public static List<Session> ChatSessions { get; set; } = new();
 
     [Parameter]
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
 
     [Parameter]
     public EventCallback OnThemeUpdated { get; set; }
+
+    private string? _sessionId;
+    private string? _popUpText;
+    private bool _deletePopUpOpen = false;
+    private bool _loadingComplete;
+    private bool _renamePopUpOpen = false;
+
+    public Session? CurrentSession;
+
+    private static event EventHandler<string>? OnNavMenuChanged;
 
     async private Task ToggleNavMenu()
     {
@@ -117,16 +127,6 @@
         await OnThemeUpdated.InvokeAsync();
     }
 
-    public ChatSession? CurrentSession;
-
-    private string? SessionID;
-    private string? PopUpText;
-    private bool DeletePopUpOpen = false;
-
-    private bool LoadingComplete;
-
-    private static event EventHandler<string>? OnNavMenuChanged;
-
     protected override void OnInitialized()
     {
         OnNavMenuChanged += async (o, e) =>
@@ -137,15 +137,13 @@
                 await LoadCurrentChatAsync();
             });
         };
-
     }
 
     private void OpenConfirmation(string id, string title)
     {
-        DeletePopUpOpen = true;
-        SessionID = id;
-        PopUpText = "Do you want to delete the chat \""
-                  + title + "\"?";
+        _deletePopUpOpen = true;
+        _sessionId = id;
+        _popUpText = $"Do you want to delete the chat \"{title}\"?";
     }
 
     public void UpdateNavMenuDisplay(string reason = "")
@@ -160,50 +158,47 @@
     {
         bool updateCurrentChat=false;
 
-        if (CurrentSession is not null & SessionID == CurrentSession?.ChatSessionId)
+        if (CurrentSession is not null & _sessionId == CurrentSession?.SessionId)
             updateCurrentChat = true;
 
         if (isOk)
         {
-            DeletePopUpOpen = false;
-            await chatService.DeleteChatSessionAsync(SessionID);
+            _deletePopUpOpen = false;
+            await chatService.DeleteChatSessionAsync(_sessionId);
 
-            DeletePopUpOpen = false;
+            _deletePopUpOpen = false;
 
             UpdateNavMenuDisplay("Delete");
 
             if (!updateCurrentChat)
                 return;
 
-            CurrentSession = new ChatSession();
-            CurrentSession.ChatSessionId = "404";
-            CurrentSession.ChatSessionName = string.Empty;
+            CurrentSession = new Session();
+            CurrentSession.SessionId = Interface.EMPTY_SESSION;
+            CurrentSession.Name = string.Empty;
 
             if (ChatSessions is not null & ChatSessions?.Count > 0)
             {
                 var match = ChatSessions?.FirstOrDefault();
                 if (match is not null)
                 {
-                    CurrentSession.ChatSessionId = match.ChatSessionId;
-                    CurrentSession.ChatSessionName = match.ChatSessionName;
+                    CurrentSession.SessionId = match.SessionId;
+                    CurrentSession.Name = match.Name;
                 }
             }
 
             await LoadCurrentChatAsync();
         }
 
-        DeletePopUpOpen = false;
+        _deletePopUpOpen = false;
     }
-
-    private bool RenamePopUpOpen = false;
 
     private void OpenInput(string id, string title)
     {
-        RenamePopUpOpen = true;
-        SessionID = id;
-        PopUpText = title;
+        _renamePopUpOpen = true;
+        _sessionId = id;
+        _popUpText = title;
     }
-
 
     private async Task OnInputClose(string newName)
     {
@@ -211,14 +206,14 @@
         {
             bool updateCurrentChat = false;
 
-            if (SessionID == CurrentSession?.ChatSessionId)
+            if (_sessionId == CurrentSession?.SessionId)
             {
                 updateCurrentChat = true;
             }
 
-            await chatService.RenameChatSessionAsync(SessionID, newName);
+            await chatService.RenameChatSessionAsync(_sessionId, newName);
 
-            RenamePopUpOpen = false;
+            _renamePopUpOpen = false;
 
             UpdateNavMenuDisplay("Rename");
 
@@ -229,12 +224,12 @@
 
             if (CurrentSession is not null)
             {
-                CurrentSession.ChatSessionName = newName;
+                CurrentSession.Name = newName;
             }
             await LoadCurrentChatAsync();
         }
 
-        RenamePopUpOpen = false;
+        _renamePopUpOpen = false;
     }
 
     private async Task NewChat()
@@ -252,10 +247,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (LoadingComplete == true)
+        if (_loadingComplete == true)
             return;
 
-        LoadingComplete = false;
+        _loadingComplete = false;
 
         ChatSessions = await chatService.GetAllChatSessionsAsync();
         if (CurrentSession is not null && ChatSessions is not null & ChatSessions?.Count > 0)
@@ -263,12 +258,12 @@
             var match = ChatSessions?.FirstOrDefault();
             if (match is not null)
             {
-                CurrentSession.ChatSessionId = match.ChatSessionId;
-                CurrentSession.ChatSessionName = match.ChatSessionName;
+                CurrentSession.SessionId = match.SessionId;
+                CurrentSession.Name = match.Name;
             }
         }
 
-        LoadingComplete = true;
+        _loadingComplete = true;
         await LoadCurrentChatAsync();
 
     }
@@ -278,21 +273,21 @@
         int index = 0;
         if (CurrentSession is not null & ChatSessions is not null & ChatSessions?.Count > 0)
         {
-            index = ChatSessions?.FindIndex(s => s.ChatSessionId == CurrentSession?.ChatSessionId) ?? 0;
+            index = ChatSessions?.FindIndex(s => s.SessionId == CurrentSession?.SessionId) ?? 0;
         }
-        if (CurrentSession is null || index<0)
+        if (CurrentSession is null || index < 0)
         {
-            CurrentSession = new ChatSession();
-            CurrentSession.ChatSessionId = "404";
-            CurrentSession.ChatSessionName = string.Empty;
+            CurrentSession = new Session();
+            CurrentSession.SessionId = Interface.EMPTY_SESSION;
+            CurrentSession.Name = string.Empty;
 
             if (ChatSessions is not null & ChatSessions?.Count > 0)
             {   
                 var match = ChatSessions?.FirstOrDefault();
                 if (match is not null)
                 {
-                    CurrentSession.ChatSessionId = match.ChatSessionId;
-                    CurrentSession.ChatSessionName = match.ChatSessionName;
+                    CurrentSession.SessionId = match.SessionId;
+                    CurrentSession.Name = match.Name;
                 }
             }            
         }
@@ -302,36 +297,31 @@
         return 0;
     }
 
-    async private Task<int> LoadChat(string sessionId, string sessionName)
+    async private Task<int> LoadChat(string _sessionId, string sessionName)
     {
         if (ChatSessions is null) return 0;
 
         if (CurrentSession is null)
-           CurrentSession = new ChatSession();
+           CurrentSession = new Session();
 
-        CurrentSession.ChatSessionId = sessionId;
-        CurrentSession.ChatSessionName = sessionName;            
+        CurrentSession.SessionId = _sessionId;
+        CurrentSession.Name = sessionName;            
 
         await LoadCurrentChatAsync();
 
         return 0;
     }
 
-    private bool IsActiveSession(string sessionId)
+    private bool IsActiveSession(string _sessionId) => CurrentSession switch
     {
-        if (CurrentSession == null)
-            return true;
-        else if (sessionId == CurrentSession.ChatSessionId)
-            return true;
-        else
-            return false;
-    }
+        null => true,
+        (Session s) when s.SessionId == _sessionId => true,
+        _ => false
+    };
 
-    public string SafeSubstring(string text, int maxLength)
+    public string SafeSubstring(string text, int maxLength) => text switch
     {
-        if(text is null) return string.Empty;
-
-        return text.Length > maxLength ? text.Substring(0, maxLength)+"..." : text;
-    }
-
+        null => string.Empty,
+        _ => text.Length > maxLength ? text.Substring(0, maxLength) + "..." : text
+    };
 }

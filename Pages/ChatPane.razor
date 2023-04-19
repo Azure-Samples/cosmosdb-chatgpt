@@ -1,4 +1,5 @@
-﻿@using Cosmos.Chat.GPT.Services
+﻿@using Cosmos.Chat.GPT.Constants
+@using Cosmos.Chat.GPT.Services
 @using Humanizer
 @inject ChatService chatService
 @inject IJSRuntime JSRuntime
@@ -27,7 +28,7 @@
     } 
     <h6 class="px-4 display-6 text-secondary p-2">@GetChatSessionName()</h6>
     <div class="px-4 pb-4 pt-2 flex-grow-1 overflow-y-auto overflow-x-hidden align-items-stretch" id="MessagesInChatdiv">
-        @if (CurrentChatSession is null)
+        @if (CurrentSession is null)
         {
             <div class="alert alert-primary">               
                 <div class="alert-heading">
@@ -41,7 +42,7 @@
                 </p>
             </div>
         }
-        else if (CurrentChatSession.ChatSessionId == "404")
+        else if (CurrentSession.SessionId == Interface.EMPTY_SESSION)
         {
             <div class="alert alert-warning">                
                 <h4 class="alert-heading">
@@ -55,7 +56,7 @@
         }
         else
         {
-            if (MessagesInChat is null || LoadingComplete == false)
+            if (_messagesInChat is null || _loadingComplete == false)
             {
                 <div class="alert alert-primary">
                     <div class="alert-heading">
@@ -71,7 +72,7 @@
             }
             else
             {
-                if (MessagesInChat.Count == 0)
+                if (_messagesInChat.Count == 0)
                 {
                     <div class="alert alert-info">                
                         <h4 class="alert-heading">
@@ -86,17 +87,18 @@
                 else
                 {
                     <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch">
-                        @foreach (var msg in MessagesInChat)
+                        @foreach (var msg in _messagesInChat)
                         {
-                            <div class="toast fade show w-75 rounded-3 @(msg.Sender == "AI" ? "align-self-end" : "align-self-start")">
-                                <div class="toast-header @(msg.Sender == "AI" ? "bg-success text-dark" : "bg-primary text-light")">
-                                    <i class="bi  @(msg.Sender == "AI" ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
+                            <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Bot) ? "align-self-end" : "align-self-start")">
+                                <div class="toast-header @(msg.Sender == nameof(Participants.Bot) ? "bg-success text-dark" : "bg-primary text-light")">
+                                    <i class="bi  @(msg.Sender == nameof(Participants.Bot) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
                                     <strong class="me-auto">
                                         @msg.Sender
                                     </strong>
                                     <small>@msg.TimeStamp.Humanize()</small>
                                 </div>
                                 <div class="toast-body">
+                                    <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
                                     @msg.Text
                                 </div>
                             </div>
@@ -106,11 +108,11 @@
             }
         }            			
 	</div>
-    <div class="bg-primary text-light px-4 py-2 rounded-top-5 text-dark d-flex flex-column justify-content-center @GetPromptVisibility()">
+    <div class="bg-primary text-light px-4 py-2 rounded-top-5 text-dark d-flex flex-column justify-content-center">
         <div class="input-group">
             <i class="bi bi-body-text input-group-text" aria-hidden="true"></i>
             <input class="form-control form-control-sm" type="text" @bind="@UserPromptSet" @onkeydown="@Enter" @oninput="@((e) => { UserPrompt=e.Value?.ToString();})" rows="1" placeholder="<Your Message>"></input>
-            <button type="button" class="btn btn-outline-secondary" @onclick="submitPrompt">
+            <button type="button" class="btn btn-outline-secondary" @onclick="SubmitPromptAsync">
                 <i class="bi bi-send-fill" aria-hidden="true"></i>
             </button>
         </div>
@@ -123,17 +125,21 @@
     public EventCallback<string> OnChatRenamed { get; set; }
 
     [Parameter]
-    public ChatSession? CurrentChatSession { get; set; }
+    public Session? CurrentSession { get; set; }
 
     [Parameter]
     public bool ShowHeader { get; set; }
 
 	[Parameter]
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
+
+    private string? UserPrompt { get; set; }
+
+    private string? UserPromptSet { get; set; }
 	
-    List<ChatMessage>? MessagesInChat;
-    private static event EventHandler<ChatSession>? OnMessagePosted;
-    private bool LoadingComplete;
+    private List<Message>? _messagesInChat;
+    private static event EventHandler<Session>? _onMessagePosted;
+    private bool _loadingComplete;
 
 	async private Task ToggleNavMenu()
     {
@@ -142,110 +148,106 @@
 
     public async Task ReloadChatMessagesAsync()
     {
-        if (CurrentChatSession is not null)
-            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession.ChatSessionId);
+        if (CurrentSession is not null)
+        {
+            _messagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentSession.SessionId);
+        }
     }
 
     protected override void OnInitialized()
     {
-        OnMessagePosted += async (o, e) =>
+        _onMessagePosted += async (o, e) =>
         {
             await this.InvokeAsync(async () =>
             {
-                if (e.ChatSessionId == CurrentChatSession?.ChatSessionId)
+                if (e.SessionId == CurrentSession?.SessionId)
                 {
                     await this.ReloadChatMessagesAsync();
                     this.StateHasChanged();
                 }
             });
         };
-
     }
 
     protected override async Task OnParametersSetAsync()
     {
-
-        if (CurrentChatSession is null)
+        if (CurrentSession is null)
+        {
             return;
+        }
 
-        if (CurrentChatSession.ChatSessionId != "404" & CurrentChatSession.ChatSessionId is not null)
-            MessagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentChatSession?.ChatSessionId);
+        if (CurrentSession.SessionId != Interface.EMPTY_SESSION & CurrentSession.SessionId is not null)
+        {
+            _messagesInChat = await chatService.GetChatSessionMessagesAsync(CurrentSession?.SessionId);
+        }
 
-        LoadingComplete = true;
+        _loadingComplete = true;
     }
 
-    public void ChangeCurrentChatSession(ChatSession chatSession)
+    public void ChangeCurrentChatSession(Session session)
     {
-        CurrentChatSession = chatSession;
+        CurrentSession = session;
     }
 
     public async Task Enter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
-            await submitPrompt();
+            await SubmitPromptAsync();
         }
     }
 
-    private string? UserPrompt { get; set; }
-    private string? UserPromptSet { get; set; }
-
-    private async Task submitPrompt()
+    private async Task SubmitPromptAsync()
     {
-        if (CurrentChatSession?.ChatSessionId == "404" || UserPrompt == "" || UserPrompt is null)
+        if (CurrentSession?.SessionId == Interface.EMPTY_SESSION || UserPrompt == String.Empty || UserPrompt is null)
+        {
             return;
-
-        if (UserPrompt!="")
-        {           
-            UserPromptSet = "";
-
         }
-        await chatService.AskOpenAiAsync(CurrentChatSession?.ChatSessionId, UserPrompt);
 
-        if(MessagesInChat?.Count == 2)
+        if (UserPrompt != String.Empty)
+        {           
+            UserPromptSet = String.Empty;
+        }
+
+        await chatService.AskOpenAiAsync(CurrentSession?.SessionId, UserPrompt);
+
+        if(_messagesInChat?.Count == 2)
         {
             string newSessionName;
-            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentChatSession?.ChatSessionId, MessagesInChat[0].Text);
+            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentSession?.SessionId, String.Join(Environment.NewLine, _messagesInChat.Select(m => m.Text)));
 
-            if (CurrentChatSession is not null)
+            if (CurrentSession is not null)
             {
-                CurrentChatSession.ChatSessionName = newSessionName;
+                CurrentSession.Name = newSessionName;
             }
             await OnChatRenamed.InvokeAsync();
         }
 
-        if (OnMessagePosted is not null && CurrentChatSession is not null)
+        if (_onMessagePosted is not null && CurrentSession is not null)
         {
-            OnMessagePosted.Invoke(null, CurrentChatSession);
+            _onMessagePosted.Invoke(null, CurrentSession);
         }
 
         await ScrollLastChatToView();
     }
 
-    private string GetChatSessionName()
+    private string GetChatSessionName() => CurrentSession switch 
     {
-        if (CurrentChatSession==null|| CurrentChatSession.ChatSessionId == "404")
-            return "";
-        else
-            return CurrentChatSession.ChatSessionName;
-    }
-
-    private string GetPromptVisibility()
-    {
-        if (CurrentChatSession==null || CurrentChatSession.ChatSessionId == "404" || CurrentChatSession.ChatSessionId is null || LoadingComplete == false)
-            return "invisible";
-        else
-            return "";
-    }
+        null => String.Empty,
+        (Session s) when s.SessionId == Interface.EMPTY_SESSION => String.Empty,
+        _ => CurrentSession.Name
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await ScrollLastChatToView();
     }
 
+    /// <remarks>
+    /// This is a hack to get the scroll to work.  Need to find a better way to do this.
+    /// </remarks>
     private async Task ScrollLastChatToView()
     {
-        // TODO: This is a hack to get the scroll to work.  Need to find a better way to do this.
         await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
     }
 }

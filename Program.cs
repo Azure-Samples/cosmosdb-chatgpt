@@ -39,7 +39,7 @@ static class ProgramExtensions
 
     public static void RegisterServices(this IServiceCollection services)
     {
-        services.AddSingleton<CosmosService>((provider) =>
+        services.AddSingleton<CosmosDbService, CosmosDbService>((provider) =>
         {
             var cosmosDbOptions = provider.GetRequiredService<IOptions<CosmosDb>>();
             if (cosmosDbOptions is null)
@@ -48,7 +48,7 @@ static class ProgramExtensions
             }
             else
             {
-                return new CosmosService(
+                return new CosmosDbService(
                     endpoint: cosmosDbOptions.Value?.Endpoint ?? String.Empty,
                     key: cosmosDbOptions.Value?.Key ?? String.Empty,
                     databaseName: cosmosDbOptions.Value?.Database ?? String.Empty,
@@ -56,7 +56,7 @@ static class ProgramExtensions
                 );
             }
         });
-        services.AddSingleton<OpenAiService>((provider) =>
+        services.AddSingleton<OpenAiService, OpenAiService>((provider) =>
         {
             var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
             if (openAiOptions is null)

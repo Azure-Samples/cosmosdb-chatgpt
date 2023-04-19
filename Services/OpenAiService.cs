@@ -3,19 +3,42 @@ using Azure.AI.OpenAI;
 
 namespace Cosmos.Chat.GPT.Services;
 
+/// <summary>
+/// Service to access Azure OpenAI.
+/// </summary>
 public class OpenAiService
 {
-    private readonly string _endpoint;
-    private readonly string _key;
-    private readonly string _deploymentName;
-    private readonly int _maxTokens;
+    private readonly string _deploymentName = String.Empty;
+    private readonly int _maxTokens = default;
     private readonly OpenAIClient _client;
+    private readonly string _contextText = @"
+        You are an AI assistant that helps people find information.
+        Provide concise answers that are polite and professional.
+        If you do not know an answer, reply with ""I do not know the answer to your question.""
+    ";
+    private readonly string _summaryText = @"
+        Summarize the following text in one or two words to use as a label on a web page.
+    ";
 
+    /// <summary>
+    /// Gets the maximum number of tokens.
+    /// </summary>
     public int MaxTokens
     {
         get => _maxTokens;
     }
 
+    /// <summary>
+    /// Creates a new instance of the service.
+    /// </summary>
+    /// <param name="endpoint">Endpoint URI.</param>
+    /// <param name="key">Account key.</param>
+    /// <param name="deploymentName">Name of the deployment access.</param>
+    /// <param name="maxTokens">Maximum number of tokens per request.</param>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, deploymentName, or maxTokens is either null or empty.</exception>
+    /// <remarks>
+    /// This constructor will validate credentials and create a HTTP client instance.
+    /// </remarks>
     public OpenAiService(string endpoint, string key, string deploymentName, string maxTokens)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
@@ -23,33 +46,79 @@ public class OpenAiService
         ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
         ArgumentNullException.ThrowIfNullOrEmpty(maxTokens);
 
-        _endpoint = endpoint;
-        _key = key;
         _deploymentName = deploymentName;
         _maxTokens = Int32.TryParse(maxTokens, out _maxTokens) ? _maxTokens : 3000;
 
-        OpenAIClient client = new(new Uri(_endpoint), new AzureKeyCredential(_key));
-
-        _client = client ??
-            throw new ArgumentException("Unable to connect to existing Azure OpenAI endpoint.");
+        _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
 
-    public async Task<string> AskAsync(string chatSessionId, string prompt)
+    /// <summary>
+    /// Sends a prompt to the AI model deployment and returns the response.
+    /// </summary>
+    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
+    /// <param name="prompt">Prompt message to send to the deployment.</param>
+    /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
+    public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string prompt)
     {
-        CompletionsOptions completionsOptions = new()
-        {
-            Prompt = { prompt },
-            User = chatSessionId,
-            MaxTokens = _maxTokens
+        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
+        ChatMessage userPrompt = new(ChatRole.User, prompt);
 
-            //Temperature = 1,
-            //Model = "text-davinci-003",
-            //FrequencyPenalty = 0,
-            //PresencePenalty = 0
+        ChatCompletionsOptions options = new()
+        {
+            Messages = {
+                contextPrompt,
+                userPrompt
+            },
+            User = sessionId,
+            MaxTokens = _maxTokens,
+            Temperature = 0.5f,
+            NucleusSamplingFactor = 0.95f,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0
         };
 
-        Response<Completions> completionsResponse = await _client.GetCompletionsAsync(_deploymentName, completionsOptions);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
 
-        return completionsResponse.Value.Choices[0].Text;
+        ChatCompletions completions = completionsResponse.Value;
+
+        return (
+            response: completions.Choices[0].Message.Content,
+            promptTokens: completions.Usage.PromptTokens,
+            responseTokens: completions.Usage.CompletionTokens
+        );
+    }
+
+    /// <summary>
+    /// Sends the existing conversation to the AI model deployment and returns a brief summary.
+    /// </summary>
+    /// <param name="sessionId">Chat session identifier for the current conversation.</param>
+    /// <param name="conversation">Prompt conversation to send to the deployment.</param>
+    /// <returns>Summarization response from the AI model deployment.</returns>
+    public async Task<string> SummarizeAsync(string sessionId, string conversation)
+    {
+        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
+        ChatMessage summarizePrompt = new(ChatRole.System, _summaryText);
+        ChatMessage conversationPrompt = new(ChatRole.User, conversation);
+
+        ChatCompletionsOptions options = new()
+        {
+            Messages = {
+                contextPrompt,
+                summarizePrompt,
+                conversationPrompt
+            },
+            User = sessionId,
+            MaxTokens = _maxTokens,
+            Temperature = 0.5f,
+            NucleusSamplingFactor = 0.95f,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0
+        };
+
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
+
+        ChatCompletions completions = completionsResponse.Value;
+
+        return completions.Choices[0].Message.Content;
     }
 }

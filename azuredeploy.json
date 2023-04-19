@@ -4,28 +4,27 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.16.1.55165",
-      "templateHash": "6157018923279590383"
+      "version": "0.16.2.56959",
+      "templateHash": "5874238312326515867"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
-      "defaultValue": "East US",
+      "defaultValue": "South Central US",
       "allowedValues": [
-        "East US",
         "South Central US",
-        "West Europe"
+        "East US"
       ],
       "metadata": {
-        "description": "Location where all resources will be deployed. This value defaults to the **East US** region."
+        "description": "Location where all resources will be deployed. This value defaults to the **South Central US** region."
       }
     },
     "name": {
       "type": "string",
       "defaultValue": "[uniqueString(resourceGroup().id)]",
       "metadata": {
-        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure Open AI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
+        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
       }
     },
     "cosmosDbEnableFreeTier": {
@@ -78,8 +77,8 @@
       "sku": "[parameters('openAiSku')]",
       "maxTokens": "3000",
       "model": {
-        "name": "text-davinci-003",
-        "version": "1",
+        "name": "gpt-35-turbo",
+        "version": "0301",
         "deployment": {
           "name": "chatmodel"
         }
@@ -154,7 +153,7 @@
           "id": "[variables('cosmosDbSettings').container.name]",
           "partitionKey": {
             "paths": [
-              "/ChatSessionId"
+              "/sessionId"
             ],
             "kind": "Hash",
             "version": 2
@@ -164,10 +163,10 @@
             "automatic": true,
             "includedPaths": [
               {
-                "path": "/ChatSessionId/?"
+                "path": "/sessionId/?"
               },
               {
-                "path": "/Type/?"
+                "path": "/type/?"
               }
             ],
             "excludedPaths": [
