@@ -91,11 +91,18 @@
                         {
                             <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Assistant) ? "align-self-end" : "align-self-start")">
                                 <div class="toast-header @(msg.Sender == nameof(Participants.Assistant) ? "bg-success text-dark" : "bg-primary text-light")">
-                                    <i class="bi  @(msg.Sender == nameof(Participants.Assistant) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
+                                    <i class="bi @(msg.Sender == nameof(Participants.Assistant) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
                                     <strong class="me-auto text-capitalize">
                                         @msg.Sender
                                     </strong>
-                                    <small>@msg.TimeStamp.Humanize()</small>
+                                    @if(msg.Tokens is not null) {
+                                        <span class="me-2 badge rounded-pill bg-light">
+                                            Tokens: @msg.Tokens
+                                        </span>
+                                    }
+                                    <small>
+                                        @msg.TimeStamp.Humanize()
+                                    </small>
                                 </div>
                                 <div class="toast-body">
                                     <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
