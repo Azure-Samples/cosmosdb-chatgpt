@@ -11,14 +11,12 @@ public class OpenAiService
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxTokens = default;
     private readonly OpenAIClient _client;
-    private readonly string _contextText = @"
+    private readonly string _SystemPromptText = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional.
         If you do not know an answer, reply with ""I do not know the answer to your question.""
     ";
-    private readonly string _summaryText = @"
-        Summarize the following text in one or two words to use as a label on a web page.
-    ";
+    private readonly string _summarizePromptText = @"Please summarize the following text into two words.";
 
     /// <summary>
     /// Gets the maximum number of tokens.
@@ -60,13 +58,13 @@ public class OpenAiService
     /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string prompt)
     {
-        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
+        ChatMessage systemPrompt = new(ChatRole.System, _SystemPromptText);
         ChatMessage userPrompt = new(ChatRole.User, prompt);
 
         ChatCompletionsOptions options = new()
         {
             Messages = {
-                contextPrompt,
+                systemPrompt,
                 userPrompt
             },
             User = sessionId,
@@ -94,18 +92,18 @@ public class OpenAiService
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="conversation">Prompt conversation to send to the deployment.</param>
     /// <returns>Summarization response from the AI model deployment.</returns>
-    public async Task<string> SummarizeAsync(string sessionId, string conversation)
+    public async Task<string> SummarizeAsync(string sessionId, string prompt)
     {
-        ChatMessage contextPrompt = new(ChatRole.System, _contextText);
-        ChatMessage summarizePrompt = new(ChatRole.System, _summaryText);
-        ChatMessage conversationPrompt = new(ChatRole.User, conversation);
+        ChatMessage systemPrompt = new(ChatRole.System, _SystemPromptText);
+        ChatMessage summarizePrompt = new(ChatRole.User, _summarizePromptText);
+        ChatMessage userPrompt = new(ChatRole.User, prompt);
 
         ChatCompletionsOptions options = new()
         {
             Messages = {
-                contextPrompt,
+                //systemPrompt,
                 summarizePrompt,
-                conversationPrompt
+                userPrompt
             },
             User = sessionId,
             MaxTokens = _maxTokens,
@@ -119,6 +117,8 @@ public class OpenAiService
 
         ChatCompletions completions = completionsResponse.Value;
 
-        return completions.Choices[0].Message.Content;
+        string summary =  completions.Choices[0].Message.Content.TrimEnd('.');
+
+        return summary;
     }
 }
