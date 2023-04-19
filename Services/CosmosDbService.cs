@@ -1,6 +1,4 @@
 ﻿using Cosmos.Chat.GPT.Models;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -9,8 +7,6 @@ namespace Cosmos.Chat.GPT.Services;
 /// </summary>
 public class CosmosDbService
 {
-    private readonly Container _container;
-
     /// <summary>
     /// Creates a new instance of the service.
     /// </summary>
@@ -24,25 +20,8 @@ public class CosmosDbService
     /// </remarks>
     public CosmosDbService(string endpoint, string key, string databaseName, string containerName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
         ArgumentNullException.ThrowIfNullOrEmpty(containerName);
-
-        CosmosSerializationOptions options = new()
-        {
-            PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-        };
-
-        CosmosClient client = new CosmosClientBuilder(endpoint, key)
-            .WithSerializerOptions(options)
-            .Build();
-
-        Database? database = client?.GetDatabase(databaseName);
-        Container? container = database?.GetContainer(containerName);
-
-        _container = container ??
-            throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
     }
 
     /// <summary>
@@ -51,18 +30,8 @@ public class CosmosDbService
     /// <returns>List of distinct chat session items.</returns>
     public async Task<List<Session>> GetSessionsAsync()
     {
-        QueryDefinition query = new QueryDefinition("SELECT DISTINCT * FROM c WHERE c.type = @type")
-            .WithParameter("@type", nameof(Session));
-
-        FeedIterator<Session> response = _container.GetItemQueryIterator<Session>(query);
-
-        List<Session> output = new();
-        while (response.HasMoreResults)
-        {
-            FeedResponse<Session> results = await response.ReadNextAsync();
-            output.AddRange(results);
-        }
-        return output;
+        await Task.Delay(millisecondsDelay: 500);
+        return Enumerable.Empty<Session>().ToList();
     }
 
     /// <summary>
@@ -72,19 +41,8 @@ public class CosmosDbService
     /// <returns>List of chat message items for the specified session.</returns>
     public async Task<List<Message>> GetSessionMessagesAsync(string sessionId)
     {
-        QueryDefinition query = new QueryDefinition("SELECT * FROM c WHERE c.sessionId = @sessionId AND c.type = @type")
-            .WithParameter("@sessionId", sessionId)
-            .WithParameter("@type", nameof(Message));
-
-        FeedIterator<Message> results = _container.GetItemQueryIterator<Message>(query);
-
-        List<Message> output = new();
-        while (results.HasMoreResults)
-        {
-            FeedResponse<Message> response = await results.ReadNextAsync();
-            output.AddRange(response);
-        }
-        return output;
+        await Task.Delay(millisecondsDelay: 500);
+        return Enumerable.Empty<Message>().ToList();
     }
 
     /// <summary>
@@ -94,11 +52,8 @@ public class CosmosDbService
     /// <returns>Newly created chat session item.</returns>
     public async Task<Session> InsertSessionAsync(Session session)
     {
-        PartitionKey partitionKey = new(session.SessionId);
-        return await _container.CreateItemAsync<Session>(
-            item: session,
-            partitionKey: partitionKey
-        );
+        await Task.Delay(millisecondsDelay: 500);
+        return default!;
     }
 
     /// <summary>
@@ -108,11 +63,8 @@ public class CosmosDbService
     /// <returns>Newly created chat message item.</returns>
     public async Task<Message> InsertMessageAsync(Message message)
     {
-        PartitionKey partitionKey = new(message.SessionId);
-        return await _container.CreateItemAsync<Message>(
-            item: message,
-            partitionKey: partitionKey
-        );
+        await Task.Delay(millisecondsDelay: 500);
+        return default!;
     }
 
     /// <summary>
@@ -122,12 +74,8 @@ public class CosmosDbService
     /// <returns>Revised created chat session item.</returns>
     public async Task<Session> UpdateSessionAsync(Session session)
     {
-        PartitionKey partitionKey = new(session.SessionId);
-        return await _container.ReplaceItemAsync(
-            item: session,
-            id: session.Id,
-            partitionKey: partitionKey
-        );
+        await Task.Delay(millisecondsDelay: 500);
+        return default!;
     }
 
     /// <summary>
@@ -136,20 +84,7 @@ public class CosmosDbService
     /// <param name="messages">Chat message items to create or replace.</param>
     public async Task UpsertMessagesBatchAsync(params Message[] messages)
     {
-        if (messages.Select(m => m.SessionId).Distinct().Count() > 1)
-        {
-            throw new ArgumentException("All items must have the same partition key.");
-        }
-
-        PartitionKey partitionKey = new(messages.First().SessionId);
-        TransactionalBatch batch = _container.CreateTransactionalBatch(partitionKey);
-        foreach (var message in messages)
-        {
-            batch.UpsertItem(
-                item: message
-            );
-        }
-        await batch.ExecuteAsync();
+        await Task.Delay(millisecondsDelay: 500);
     }
 
     /// <summary>
@@ -158,26 +93,6 @@ public class CosmosDbService
     /// <param name="sessionId">Chat session identifier used to flag messages and sessions for deletion.</param>
     public async Task DeleteSessionAndMessagesAsync(string sessionId)
     {
-        PartitionKey partitionKey = new(sessionId);
-
-        // TODO: await container.DeleteAllItemsByPartitionKeyStreamAsync(partitionKey);
-
-        QueryDefinition query = new QueryDefinition("SELECT c.id FROM c WHERE c.sessionId = @sessionId")
-                .WithParameter("@sessionId", sessionId);
-
-        FeedIterator<Message> response = _container.GetItemQueryIterator<Message>(query);
-
-        TransactionalBatch batch = _container.CreateTransactionalBatch(partitionKey);
-        while (response.HasMoreResults)
-        {
-            FeedResponse<Message> results = await response.ReadNextAsync();
-            foreach (var item in results)
-            {
-                batch.DeleteItem(
-                    id: item.Id
-                );
-            }
-        }
-        await batch.ExecuteAsync();
+        await Task.Delay(millisecondsDelay: 500);
     }
 }
