@@ -9,7 +9,7 @@
 	"portsAttributes": {
 		"8100": {
 			"label": "Blazor web application",
-			"onAutoForward": "openBrowser"
+			"onAutoForward": "openPreview"
 		}
 	},
 	"features": {
