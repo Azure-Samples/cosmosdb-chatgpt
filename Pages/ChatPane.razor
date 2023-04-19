@@ -89,10 +89,10 @@
                     <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch">
                         @foreach (var msg in _messagesInChat)
                         {
-                            <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Bot) ? "align-self-end" : "align-self-start")">
-                                <div class="toast-header @(msg.Sender == nameof(Participants.Bot) ? "bg-success text-dark" : "bg-primary text-light")">
-                                    <i class="bi  @(msg.Sender == nameof(Participants.Bot) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
-                                    <strong class="me-auto">
+                            <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Assistant) ? "align-self-end" : "align-self-start")">
+                                <div class="toast-header @(msg.Sender == nameof(Participants.Assistant) ? "bg-success text-dark" : "bg-primary text-light")">
+                                    <i class="bi  @(msg.Sender == nameof(Participants.Assistant) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
+                                    <strong class="me-auto text-capitalize">
                                         @msg.Sender
                                     </strong>
                                     <small>@msg.TimeStamp.Humanize()</small>
