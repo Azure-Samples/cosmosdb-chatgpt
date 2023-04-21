@@ -16,7 +16,7 @@ public class OpenAiService
         Provide concise answers that are polite and professional.
         If you do not know an answer, reply with ""I do not know the answer to your question.""
     ";
-    private readonly string _summarizePromptText = @"Please summarize the following text into two words.";
+    private readonly string _summarizePromptText = @"You are a helpful assistant for text summarization. Summarize this next prompt. Two words maximum. No punctuation";
 
     /// <summary>
     /// Gets the maximum number of tokens.
@@ -106,9 +106,9 @@ public class OpenAiService
                 userPrompt
             },
             User = sessionId,
-            MaxTokens = _maxTokens,
-            Temperature = 0.5f,
-            NucleusSamplingFactor = 0.95f,
+            MaxTokens = 100,
+            Temperature = 0.3f,
+            NucleusSamplingFactor = 1.0f,
             FrequencyPenalty = 0,
             PresencePenalty = 0
         };
