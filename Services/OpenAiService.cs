@@ -11,7 +11,7 @@ public class OpenAiService
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxTokens = default;
     private readonly OpenAIClient _client;
-    private readonly string _SystemPromptText = @"
+    private readonly string _systemPromptText = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional.
         If you do not know an answer, reply with ""I do not know the answer to your question.""
@@ -58,7 +58,7 @@ public class OpenAiService
     /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string prompt)
     {
-        ChatMessage systemPrompt = new(ChatRole.System, _SystemPromptText);
+        ChatMessage systemPrompt = new(ChatRole.System, _systemPromptText);
         ChatMessage userPrompt = new(ChatRole.User, prompt);
 
         ChatCompletionsOptions options = new()
@@ -94,7 +94,7 @@ public class OpenAiService
     /// <returns>Summarization response from the AI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string prompt)
     {
-        ChatMessage systemPrompt = new(ChatRole.System, _SystemPromptText);
+        ChatMessage systemPrompt = new(ChatRole.System, _systemPromptText);
         ChatMessage summarizePrompt = new(ChatRole.User, _summarizePromptText);
         ChatMessage userPrompt = new(ChatRole.User, prompt);
 

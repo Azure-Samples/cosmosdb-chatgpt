@@ -3,16 +3,13 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"VARIANT": "7.0"
+			"VARIANT": "7.0.203"
 		}
 	},
-	"forwardPorts": [
-		8100
-	],
 	"portsAttributes": {
 		"8100": {
 			"label": "Blazor web application",
-			"onAutoForward": "openBrowser"
+			"onAutoForward": "openPreview"
 		}
 	},
 	"features": {
@@ -28,7 +25,8 @@
 				"ms-dotnettools.csharp",
 				"vsls-contrib.codetour",
 				"VisualStudioExptTeam.vscodeintellicode",
-				"ms-azuretools.vscode-cosmosdb"
+				"ms-azuretools.vscode-cosmosdb",
+				"ms-azuretools.vscode-bicep"
 			],
 			"settings": {
 				"omnisharp.defaultLaunchSolution": "cosmoschatgpt.sln",
