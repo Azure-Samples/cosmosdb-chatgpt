@@ -1,4 +1,5 @@
-﻿using Cosmos.Chat.GPT.Constants;
+﻿using Azure.AI.OpenAI;
+using Cosmos.Chat.GPT.Constants;
 using Cosmos.Chat.GPT.Models;
 
 namespace Cosmos.Chat.GPT.Services;
@@ -113,7 +114,7 @@ public class ChatService
 
         Message promptMessage = await AddPromptMessageAsync(sessionId, prompt);
 
-        string conversation = GetChatSessionConversation(sessionId, prompt);
+        string conversation = GetChatSessionConversation(sessionId);
 
         (string response, int promptTokens, int responseTokens) = await _openAiService.AskAsync(sessionId, conversation);
 
@@ -125,16 +126,23 @@ public class ChatService
     /// <summary>
     /// Get current conversation with the user prompt added and truncated
     /// </summary>
-    private string GetChatSessionConversation(string sessionId, string prompt)
+    private string GetChatSessionConversation(string sessionId)
     {
+
+        string conversation = "";
+
+
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        string previousConversation = String.Join(Environment.NewLine, _sessions[index].Messages);
-        string currentConversation = previousConversation + Environment.NewLine + prompt;
 
-        return currentConversation.Length > _maxConversationLength ?
-            currentConversation.Substring(currentConversation.Length - _maxConversationLength, _maxConversationLength) :
-            currentConversation;
+        conversation = String.Join(Environment.NewLine, _sessions[index].Messages.Select(s => s.Text));
+        
+
+        return conversation.Length > _maxConversationLength ?
+            conversation.Substring(conversation.Length - _maxConversationLength, _maxConversationLength) :
+            conversation;
+
+
     }
 
     public async Task<string> SummarizeChatSessionNameAsync(string? sessionId, string prompt)
