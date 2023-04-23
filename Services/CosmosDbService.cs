@@ -29,6 +29,7 @@ public class CosmosDbService
         ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
         ArgumentNullException.ThrowIfNullOrEmpty(containerName);
 
+
         CosmosSerializationOptions options = new()
         {
             PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
@@ -131,10 +132,10 @@ public class CosmosDbService
     }
 
     /// <summary>
-    /// Batch create or update chat messages.
+    /// Batch create or update chat messages and session.
     /// </summary>
-    /// <param name="messages">Chat message items to create or replace.</param>
-    public async Task UpsertMessagesBatchAsync(params Message[] messages)
+    /// <param name="messages">Chat message and session items to create or replace.</param>
+    public async Task UpsertSessionBatchAsync(params dynamic[] messages)
     {
         if (messages.Select(m => m.SessionId).Distinct().Count() > 1)
         {

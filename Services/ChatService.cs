@@ -13,14 +13,14 @@ public class ChatService
 
     private readonly CosmosDbService _cosmosDbService;
     private readonly OpenAiService _openAiService;
-    private readonly int _maxConversationLength;
+    private readonly int _maxConversationTokens;
 
     public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService)
     {
         _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
 
-        _maxConversationLength = openAiService.MaxTokens / 2;
+        _maxConversationTokens = openAiService.MaxConversationTokens;
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// User Inputs a chat from "New Chat" to user defined.
+    /// Rename the Chat Ssssion from "New Chat" to the summary provided by OpenAI
     /// </summary>
     public async Task RenameChatSessionAsync(string? sessionId, string newChatSessionName)
     {
@@ -106,9 +106,9 @@ public class ChatService
     }
 
     /// <summary>
-    /// User prompt to ask _openAiService a question
+    /// Get a completion from _openAiService
     /// </summary>
-    public async Task<string> AskOpenAiAsync(string? sessionId, string prompt)
+    public async Task<string> GetChatCompletionAsync(string? sessionId, string prompt)
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
@@ -116,7 +116,7 @@ public class ChatService
 
         string conversation = GetChatSessionConversation(sessionId);
 
-        (string response, int promptTokens, int responseTokens) = await _openAiService.AskAsync(sessionId, conversation);
+        (string response, int promptTokens, int responseTokens) = await _openAiService.GetChatCompletionAsync(sessionId, conversation);
 
         await AddPromptCompletionMessagesAsync(sessionId, promptTokens, responseTokens, promptMessage, response);
 
@@ -124,23 +124,39 @@ public class ChatService
     }
 
     /// <summary>
-    /// Get current conversation with the user prompt added and truncated
+    /// Get current conversation from newest to oldest up to max conversation tokens and add to the prompt
     /// </summary>
     private string GetChatSessionConversation(string sessionId)
     {
 
         string conversation = "";
-
+        int? tokensUsed = 0;
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
 
-        conversation = String.Join(Environment.NewLine, _sessions[index].Messages.Select(s => s.Text));
-        
+        List<Message> messages = _sessions[index].Messages;
 
-        return conversation.Length > _maxConversationLength ?
-            conversation.Substring(conversation.Length - _maxConversationLength, _maxConversationLength) :
-            conversation;
+        //Start at the end of the list and work backwards
+        for(int i = messages.Count - 1; i >= 0; i--) 
+        { 
+            
+            tokensUsed += messages[i].Tokens;
+
+            if(tokensUsed + messages[i].Tokens > _maxConversationTokens)
+            {
+                break;
+            }
+            else
+            {
+            
+                conversation += messages[i].Text + Environment.NewLine;
+            
+            }
+            
+        }
+
+        return conversation;
 
 
     }
@@ -157,7 +173,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// Add human prompt to the chat session message list object and insert into the data service.
+    /// Add user prompt to the chat session message list object and insert into the data service.
     /// </summary>
     private async Task<Message> AddPromptMessageAsync(string sessionId, string promptText)
     {
@@ -171,21 +187,29 @@ public class ChatService
     }
 
     /// <summary>
-    /// Add human prompt and AI response to the chat session message list object and insert into the data service.
+    /// Add user prompt and AI assistance response to the chat session message list object and insert into the data service as a transaction.
     /// </summary>
     private async Task AddPromptCompletionMessagesAsync(string sessionId, int promptTokens, int completionTokens, Message promptMessage, string completionText)
     {
+
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
         
+        //Create completion message, add to the cache
         Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionTokens, completionText);
         _sessions[index].AddMessage(completionMessage);
 
-        if (promptMessage is not null)
-        {
-            Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
-            _sessions[index].UpdateMessage(updatedPromptMessage);
+        
+        //Update prompt message with tokens used and insert into the cache
+        Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
+        _sessions[index].UpdateMessage(updatedPromptMessage);
 
-            await _cosmosDbService.UpsertMessagesBatchAsync(updatedPromptMessage, completionMessage);
-        }
+
+        //Update session with tokens users and udate the cache
+        _sessions[index].TokensUsed += updatedPromptMessage.Tokens;
+        _sessions[index].TokensUsed += completionMessage.Tokens;
+
+
+        await _cosmosDbService.UpsertSessionBatchAsync(updatedPromptMessage, completionMessage, _sessions[index]);
+        
     }
 }

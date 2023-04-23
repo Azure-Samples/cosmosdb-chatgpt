@@ -216,7 +216,7 @@
             UserPromptSet = String.Empty;
         }
 
-        await chatService.AskOpenAiAsync(CurrentSession?.SessionId, UserPrompt);
+        await chatService.GetChatCompletionAsync(CurrentSession?.SessionId, UserPrompt);
 
         if(_messagesInChat?.Count == 2)
         {
