@@ -10,20 +10,27 @@ namespace Cosmos.Chat.GPT.Services;
 public class OpenAiService
 {
     private readonly string _deploymentName = String.Empty;
-    private readonly int _maxTokens = default;
+    private readonly int _maxConversationTokens = default;
     private readonly OpenAIClient _client;
+
+
+    //System prompt to send with user prompts to instruct the model for chat session
     private readonly string _systemPrompt = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional." + Environment.NewLine;
+    
+    
+    //System prompt to send with user prompts to instruct the model for summarization
     private readonly string _summarizePrompt = @"
         Summarize this prompt in one or two words to use as a label in a button on a web page" + Environment.NewLine;
 
+
     /// <summary>
-    /// Gets the maximum number of tokens.
+    /// Gets the maximum number of tokens to limit chat conversation length.
     /// </summary>
-    public int MaxTokens
+    public int MaxConversationTokens
     {
-        get => _maxTokens;
+        get => _maxConversationTokens;
     }
 
     /// <summary>
@@ -37,28 +44,28 @@ public class OpenAiService
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string deploymentName, string maxTokens)
+    public OpenAiService(string endpoint, string key, string deploymentName, string maxConversationTokens)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
-        ArgumentNullException.ThrowIfNullOrEmpty(maxTokens);
+        ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
 
         _deploymentName = deploymentName;
-        _maxTokens = Int32.TryParse(maxTokens, out _maxTokens) ? _maxTokens : 3000;
+        _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 3000;
 
         _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
 
     /// <summary>
-    /// Sends a prompt to the AI model deployment and returns the response.
+    /// Sends a prompt to the deployed OpenAI LLM model and returns the response.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="prompt">Prompt message to send to the deployment.</param>
-    /// <returns>Response from the AI model deployment along with tokens for the prompt and response.</returns>
-    public async Task<(string response, int promptTokens, int responseTokens)> AskAsync(string sessionId, string userPrompt)
+    /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
+    public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
-
+        //Concatenate system prompt to instruct the model with user prompt
         string prompt = _systemPrompt + userPrompt;
         
         CompletionsOptions options = new()
@@ -90,13 +97,14 @@ public class OpenAiService
     }
 
     /// <summary>
-    /// Sends the existing conversation to the AI model deployment and returns a brief summary.
+    /// Sends the existing conversation to the OpenAI model and returns a two word summary.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="conversation">Prompt conversation to send to the deployment.</param>
-    /// <returns>Summarization response from the AI model deployment.</returns>
+    /// <returns>Summarization response from the OpenAI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
+        //Concatenate system prompt to instruct the model with user prompt
         string prompt = _summarizePrompt + userPrompt;
         
         CompletionsOptions options = new()

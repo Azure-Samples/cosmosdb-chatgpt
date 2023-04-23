@@ -8,5 +8,5 @@ public record OpenAi
 
     public required string Deployment { get; init; }
 
-    public required string MaxTokens { get; init; }
-};
+    public string? MaxConversationTokens { get; init; }
+}

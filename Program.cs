@@ -69,7 +69,7 @@ static class ProgramExtensions
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
                     key: openAiOptions.Value?.Key ?? String.Empty,
                     deploymentName: openAiOptions.Value?.Deployment ?? String.Empty,
-                    maxTokens: openAiOptions.Value?.MaxTokens ?? String.Empty
+                    maxConversationTokens: openAiOptions.Value?.MaxConversationTokens ?? String.Empty
                 );
             }
         });
