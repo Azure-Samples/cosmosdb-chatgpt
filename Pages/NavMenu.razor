@@ -51,13 +51,10 @@
                                             </span>
                                         </a>
                                     </div>
-                                    <div class="card-footer d-flex align-items-between">
-                                        <span class="flex-grow-1"></span>
-                                        <div class="align-items-between">
-                                        <span class="me-2 badge rounded-pill bg-light" >
+                                    <div class="card-footer d-flex align-items-center justify-content-between">
+                                        <span class="badge bg-light me-2">
                                             Tokens Used: @session.TokensUsed
                                         </span>
-                                        </div>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenInput(session.SessionId,session.Name))">
                                                 <i class="bi bi-pencil-fill me-1"></i>
