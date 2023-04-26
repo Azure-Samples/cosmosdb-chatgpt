@@ -7,14 +7,14 @@
         <NavMenu @ref="@NavMenu" OnChatClicked="LoadChatEventHandlerAsync" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" />
     }
     <section class="flex-grow-1">
-        <ChatPane @ref="@ChatPane" CurrentSession="@CurrentSession" OnChatRenamed="ForceRefreshAsync" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader="@IsNavMenuCollapsed" />
+        <ChatPane @ref="@ChatPane" CurrentSession="@CurrentSession" OnChatUpdated="ForceRefreshAsync" OnNavBarVisibilityUpdated="UpdateNavBarVisibility" ShowHeader="@IsNavMenuCollapsed" />
     </section>
 </main>
 
 @code {
 
     [Parameter]
-    public EventCallback<string> OnChatRenamed { get; set; } = default!;
+    public EventCallback<string> OnChatUpdated { get; set; } = default!;
 
     private Session? CurrentSession;
     private ChatPane? ChatPane = default;

@@ -129,7 +129,7 @@
 @code {
 
     [Parameter]
-    public EventCallback<string> OnChatRenamed { get; set; }
+    public EventCallback<string> OnChatUpdated { get; set; }
 
     [Parameter]
     public Session? CurrentSession { get; set; }
@@ -227,8 +227,8 @@
             {
                 CurrentSession.Name = newSessionName;
             }
-            await OnChatRenamed.InvokeAsync();
         }
+        await OnChatUpdated.InvokeAsync();
 
         if (_onMessagePosted is not null && CurrentSession is not null)
         {
