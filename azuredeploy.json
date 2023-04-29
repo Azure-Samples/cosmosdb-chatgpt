@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "5874238312326515867"
+      "templateHash": "17621165066116285839"
     }
   },
   "parameters": {
@@ -24,7 +24,7 @@
       "type": "string",
       "defaultValue": "[uniqueString(resourceGroup().id)]",
       "metadata": {
-        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
+        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\n- Azure Cosmos DB\n- Azure App Service\n- Azure OpenAI\nThe name defaults to a unique string generated from the resource group identifier.\n"
       }
     },
     "cosmosDbEnableFreeTier": {
@@ -75,10 +75,10 @@
     "openAiSettings": {
       "name": "[format('{0}-openai', parameters('name'))]",
       "sku": "[parameters('openAiSku')]",
-      "maxTokens": "3000",
+      "maxConversationTokens": "2000",
       "model": {
-        "name": "text-davinci-003",
-        "version": "1",
+        "name": "gpt-35-turbo",
+        "version": "0301",
         "deployment": {
           "name": "chatmodel"
         }
@@ -251,7 +251,7 @@
         "OPENAI__ENDPOINT": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]",
         "OPENAI__KEY": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').key1]",
         "OPENAI__DEPLOYMENT": "[variables('openAiSettings').model.deployment.name]",
-        "OPENAI__MAXTOKENS": "[variables('openAiSettings').maxTokens]"
+        "OPENAI__MAXCONVERSATIONTOKENS": "[variables('openAiSettings').maxConversationTokens]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]",

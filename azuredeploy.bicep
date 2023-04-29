@@ -40,10 +40,10 @@ param appGetRepositoryBranch string = 'main'
 var openAiSettings = {
   name: '${name}-openai'
   sku: openAiSku
-  maxTokens: '3000'
+  maxConversationTokens: '2000'
   model: {
-    name: 'text-davinci-003'
-    version: '1'
+    name: 'gpt-35-turbo'
+    version: '0301'
     deployment: {
       name: 'chatmodel'
     }
@@ -200,7 +200,7 @@ resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
     OPENAI__ENDPOINT: openAiAccount.properties.endpoint
     OPENAI__KEY: openAiAccount.listKeys().key1
     OPENAI__DEPLOYMENT: openAiModelDeployment.name
-    OPENAI__MAXTOKENS: openAiSettings.maxTokens
+    OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
   }
 }
 

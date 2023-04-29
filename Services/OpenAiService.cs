@@ -65,32 +65,33 @@ public class OpenAiService
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
-        //Concatenate system prompt to instruct the model with user prompt
-        string prompt = _systemPrompt + userPrompt;
         
-        CompletionsOptions options = new()
+        ChatMessage systemMessage = new(ChatRole.System, _systemPrompt);
+        ChatMessage userMessage = new(ChatRole.User, userPrompt);
+        
+        ChatCompletionsOptions options = new()
         {
             
-            Prompts =
+            Messages =
             {
-                prompt
+                systemMessage,
+                userMessage
             },
             User = sessionId,
             MaxTokens = 256,
             Temperature = 0.3f,
             NucleusSamplingFactor = 0.5f,
             FrequencyPenalty = 0,
-            PresencePenalty = 0,
-            ChoicesPerPrompt = 1
+            PresencePenalty = 0
         };
 
-        Response<Completions> completionsResponse = await _client.GetCompletionsAsync(_deploymentName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
 
 
-        Completions completions = completionsResponse.Value;
+        ChatCompletions completions = completionsResponse.Value;
 
         return (
-            response: completions.Choices[0].Text,
+            response: completions.Choices[0].Message.Content,
             promptTokens: completions.Usage.PromptTokens,
             responseTokens: completions.Usage.CompletionTokens
         );
@@ -104,28 +105,29 @@ public class OpenAiService
     /// <returns>Summarization response from the OpenAI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
-        //Concatenate system prompt to instruct the model with user prompt
-        string prompt = _summarizePrompt + userPrompt;
         
-        CompletionsOptions options = new()
+        ChatMessage systemMessage = new(ChatRole.System, _summarizePrompt);
+        ChatMessage userMessage = new(ChatRole.User, userPrompt);
+        
+        ChatCompletionsOptions options = new()
         {
-            Prompts = { 
-                prompt 
+            Messages = { 
+                systemMessage,
+                userMessage
             },
             User = sessionId,
             MaxTokens = 200,
             Temperature = 0.0f,
             NucleusSamplingFactor = 1.0f,
             FrequencyPenalty = 0,
-            PresencePenalty = 0,
-            ChoicesPerPrompt = 1
+            PresencePenalty = 0
         };
 
-        Response<Completions> completionsResponse = await _client.GetCompletionsAsync(_deploymentName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
 
-        Completions completions = completionsResponse.Value;
+        ChatCompletions completions = completionsResponse.Value;
 
-        string summary =  completions.Choices[0].Text;
+        string summary =  completions.Choices[0].Message.Content;
 
         return summary;
     }

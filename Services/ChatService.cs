@@ -133,36 +133,25 @@ public class ChatService
 
         List<string> conversationBuilder = new List<string>();
         
-
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-
 
         List<Message> messages = _sessions[index].Messages;
 
         //Start at the end of the list and work backwards
         for(int i = messages.Count - 1; i >= 0; i--) 
-        { 
-            
+        {             
             tokensUsed += messages[i].Tokens is null ? 0 : messages[i].Tokens;
 
             if(tokensUsed > _maxConversationTokens)
-            {
                 break;
-            }
-            else
-            {
             
-                conversationBuilder.Add(messages[i].Text);
-            
-            }
-
+            conversationBuilder.Add(messages[i].Text);
         }
 
         //Invert the chat messages to put back into chronological order and output as string.        
         string conversation = string.Join(Environment.NewLine, conversationBuilder.Reverse<string>());
 
         return conversation;
-
 
     }
 
