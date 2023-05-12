@@ -1,0 +1,40 @@
+@page "/Callback"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+
+
+@inject IConfiguration Configuration
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var code = uri.Query.Split('&')
+            .FirstOrDefault(q => q.Contains("code="))
+            ?.Split('=')[1];
+
+        if (code != null)
+        {
+            var scopes = Configuration.GetValue<string>("AzureAd:Scopes")?.Split(' ');
+            var tokenResult = await TokenProvider.RequestAccessToken(
+                new AccessTokenRequestOptions
+                {
+                    Scopes = scopes
+                });
+
+            if (tokenResult.TryGetToken(out var token))
+            {
+                var user = await AuthStateProvider.GetAuthenticationStateAsync();
+                var identity = user.User.Identity as System.Security.Claims.ClaimsIdentity;
+                identity?.AddClaim(new System.Security.Claims.Claim("access_token", token.Value));
+
+                Navigation.NavigateTo("/", true);
+            }
+        }
+    }
+}

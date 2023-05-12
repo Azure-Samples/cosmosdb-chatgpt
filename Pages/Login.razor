@@ -1,23 +1,15 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@page "/login"
 
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <CascadingAuthenticationState>
     <AuthorizeView>
         <Authorized>
-            <Router AppAssembly="@typeof(App).Assembly">
-                <Found Context="routeData">
-                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-                </Found>
-                <NotFound>
-                    <PageTitle>Not found</PageTitle>
-                    <LayoutView Layout="@typeof(MainLayout)">
-                        <p role="alert">Sorry, there's nothing at this address.</p>
-                    </LayoutView>
-                </NotFound>
-            </Router>
+            <p>You are already logged in.</p>
+            <p><a href="/">Go to the home page</a></p>
         </Authorized>
         <NotAuthorized>
             <h1>Login</h1>
