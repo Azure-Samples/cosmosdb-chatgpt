@@ -1,10 +1,18 @@
 using Cosmos.Chat.GPT.Options;
 using Cosmos.Chat.GPT.Services;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+
 builder.RegisterConfiguration();
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.RegisterServices();
@@ -17,9 +25,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
@@ -35,6 +47,8 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+
+
     }
 
     public static void RegisterServices(this IServiceCollection services)

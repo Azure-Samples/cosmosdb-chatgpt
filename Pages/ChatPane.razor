@@ -3,6 +3,8 @@
 @using Humanizer
 @inject ChatService chatService
 @inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
 
 <div class="h-100 mh-100 d-flex flex-column overflow-hidden justify-content-start">
     @if (ShowHeader)

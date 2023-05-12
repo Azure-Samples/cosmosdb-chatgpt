@@ -1,12 +1,43 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            <Router AppAssembly="@typeof(App).Assembly">
+                <Found Context="routeData">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </Found>
+                <NotFound>
+                    <PageTitle>Not found</PageTitle>
+                    <LayoutView Layout="@typeof(MainLayout)">
+                        <p role="alert">Sorry, there's nothing at this address.</p>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </Authorized>
+        <NotAuthorized>
+                <li><a href="#" @onclick="Login">Login</a></li>
+                    <PageTitle>Not found</PageTitle>
+                    <LayoutView Layout="@typeof(MainLayout)">
+                        <p role="alert">Sorry, please login.</p>
+                        <li><a href="#" @onclick="Login">Login</a></li>
+
+                    </LayoutView>
+
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@inject NavigationManager NavigationManager
+
+@code {
+    private void Login()
+{
+    var redirectUri = NavigationManager.ToAbsoluteUri("/index");
+
+    // Redirect the user to the Azure Active Directory login page
+    NavigationManager.NavigateTo("https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/authorize?client_id=e37d0960-0608-405a-9995-7be3694c042a&response_type=code&redirect_uri=https://cc3v5zieullli-web.azurewebsites.net/&response_mode=query&scope=openid%20profile%20offline_access");
+}
+}
