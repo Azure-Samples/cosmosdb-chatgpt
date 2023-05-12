@@ -74,7 +74,7 @@ public class OpenAiService
             
             Messages =
             {
-                systemMessage,
+                //systemMessage,
                 userMessage
             },
             User = sessionId,

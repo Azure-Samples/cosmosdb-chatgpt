@@ -106,7 +106,10 @@
                                 </div>
                                 <div class="toast-body">
                                     <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
-                                    @msg.Text
+                                    @{
+                                        MarkupString html = new MarkupString(msg.Text.Replace("\n", "<br />"));
+                                    }
+                                    @html
                                 </div>
                             </div>
                         }
