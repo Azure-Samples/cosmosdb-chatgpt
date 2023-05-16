@@ -1,0 +1,180 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Overview",
+  "isPrimary": true,
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": "Welcome to our ASP.NET Core Blazor + Azure Cosmos DB for NoSQL + Azure OpenAI sample application. This application has had all of it's user interface code completed ahead of time with stub methods for **you** to implement a service to connect to Azure Cosmos DB for NoSQL or Azure OpenAI using their .NET SDKs.\n\nBefore you start coding, let's walk through this application and highlight some important components you need to understand to be successful in this project."
+    },
+    {
+      "directory": "Models",
+      "description": "First, we have the **Models** folder. This folder contains two classes representing `Messages` and `Sessions`. These classes are used by the data service you will implement to serialize data back-and-forth between Azure Cosmos DB for NoSQL and ASP.NET Core Blazor."
+    },
+    {
+      "file": "Models/Session.cs",
+      "line": 5,
+      "description": "First, we have the `Session` record. A session is a conversation between you and the AI assistant where you may ask the assistant multiple questions."
+    },
+    {
+      "file": "Models/Session.cs",
+      "selection": {
+        "start": {
+          "line": 7,
+          "character": 1
+        },
+        "end": {
+          "line": 10,
+          "character": 35
+        }
+      },
+      "description": "All items in Azure Cosmos DB must have a unique identifier, so the `Session` includes an `Id` property that uniquely identifies it."
+    },
+    {
+      "file": "Models/Session.cs",
+      "line": 12,
+      "description": "Since we are storing multiple types of data in a single container in Azure Cosmos DB, it makes sense to have a `Type` property so we know what type of data we're storing. In this example, we are going to store the value `Session` for a session's type."
+    },
+    {
+      "file": "Models/Session.cs",
+      "selection": {
+        "start": {
+          "line": 14,
+          "character": 1
+        },
+        "end": {
+          "line": 17,
+          "character": 42
+        }
+      },
+      "description": "All containers in Azure Cosmos DB have a partition key path that is used by the platform to scale your data. Here, we want to logically partition our data using the `SessionId` property. "
+    },
+    {
+      "file": "Models/Session.cs",
+      "selection": {
+        "start": {
+          "line": 21,
+          "character": 1
+        },
+        "end": {
+          "line": 22,
+          "character": 48
+        }
+      },
+      "description": "While there are many other useful properties here, we also wanted to call out the `Messages` property. This property contains a collection of messages that are part of a single conversation (or session) between yourself and the AI assistant.\n\nWe use the `JsonIgnore` attribute to tell Azure Cosmos DB that we will serialize the messages seperately from the session item.\n\nNow, let's look at the `Message` record a bit deeper."
+    },
+    {
+      "file": "Models/Message.cs",
+      "line": 3,
+      "description": "Here is the `Message` record. This class represents a specific prompt (question) that you send to the AI assistant or a completion (response) that you get back from the AI assistant."
+    },
+    {
+      "file": "Models/Message.cs",
+      "selection": {
+        "start": {
+          "line": 5,
+          "character": 1
+        },
+        "end": {
+          "line": 15,
+          "character": 42
+        }
+      },
+      "description": "There's a couple of things to call out here.\n\nFirst, the `Message` type includes `Id` and `SessionId` properties because items in Azure Cosmos DB require a unique identifier and partition key value.\n\nAdditionally, we also have a `Type` property since we are colocating types in a single container. For a `Session` the type would be the string `\"Session\"`. Here, the type would be `\"Message\"`. This type property will make it easier for us to query sessions or messages later on."
+    },
+    {
+      "file": "Models/Message.cs",
+      "line": 19,
+      "description": "Our `Message` type includes a `Sender` property where we can identify who sent the message.\n\nDid the message come from the user?\n\nOr, did it come from the AI assistant?"
+    },
+    {
+      "file": "Models/Message.cs",
+      "line": 21,
+      "description": "Tokens are a unit of currency within Azure OpenAI to help us figure out how much a prompt or completion will cost in the aggregate.\n\nHere, we define a `Tokens` property so you can track the amount of tokens used for each message."
+    },
+    {
+      "file": "azuredeploy.bicep",
+      "selection": {
+        "start": {
+          "line": 1,
+          "character": 1
+        },
+        "end": {
+          "line": 218,
+          "character": 1
+        }
+      },
+      "description": "If you are curious, this solution includes the Bicep file that was used to deploy the services and sample running application.\n\nLooking through this file, you can learn a lot about how the overall project works."
+    },
+    {
+      "file": "azuredeploy.bicep",
+      "selection": {
+        "start": {
+          "line": 44,
+          "character": 1
+        },
+        "end": {
+          "line": 50,
+          "character": 4
+        }
+      },
+      "description": "For example, the tutorial makes it clear that we are using the **ChatGPT** (`gpt-35-turbo`) model with Azure OpenAI."
+    },
+    {
+      "file": "azuredeploy.bicep",
+      "selection": {
+        "start": {
+          "line": 115,
+          "character": 1
+        },
+        "end": {
+          "line": 138,
+          "character": 8
+        }
+      },
+      "description": "The template also illuminates how the Azure Cosmos DB for NoSQL container was configured.\n\nHere, you can see the partition key path and indexing policy for the container."
+    },
+    {
+      "file": "azuredeploy.bicep",
+      "selection": {
+        "start": {
+          "line": 196,
+          "character": 1
+        },
+        "end": {
+          "line": 203,
+          "character": 48
+        }
+      },
+      "description": "There's also a section where you can see how the output from various resource deployments was used to craft Azure Cosmos DB and Azure OpenAI credentials that we will use in this project."
+    },
+    {
+      "directory": "Services",
+      "description": "Finally, let's take a look at the **Services** folder. This folder contains the two files you are expected to modify as part of this project:\n\n- `Services/CosmosDbService.cs`\n- `Services/OpenAiService.cs`"
+    },
+    {
+      "file": "Services/CosmosDbService.cs",
+      "line": 8,
+      "description": "First, `CosmosDbService`. This class contains seven methods you will implement to store sessions and messages in a container.\n\nYou will also update the constructor to create a client instance and reference your target container.\n\nFor now, the methods effectively do nothing."
+    },
+    {
+      "file": "Services/OpenAiService.cs",
+      "line": 6,
+      "description": "Finally, `OpenAiService`. This class will also require you to implement a new client in the constructor before adding functionality to each method."
+    },
+    {
+      "file": "Services/OpenAiService.cs",
+      "line": 45,
+      "description": "For fun, we've implemented a simple `AskAsync` method that will always return the string `\"<RESPONSE>\"` from our *pretend* AI assistant. You will improve this later in this project."
+    },
+    {
+      "file": "Services/OpenAiService.cs",
+      "line": 57,
+      "description": "We've also implemented a stub for the `SummarizeAsync` method that will alway summarize conversations with the title `\"<SUMMARY>\"`."
+    },
+    {
+      "title": "Outro",
+      "description": "That's the end of the tour!\n\nNow that you have walked through the application, you should have everything you need to start implementing an Azure Cosmos DB for NoSQL and Azure OpenAI service."
+    }
+  ]
+}
