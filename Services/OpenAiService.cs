@@ -1,6 +1,4 @@
-﻿using Azure;
-using Azure.AI.OpenAI;
-using Cosmos.Chat.GPT.Models;
+﻿using Cosmos.Chat.GPT.Models;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -11,21 +9,6 @@ public class OpenAiService
 {
     private readonly string _deploymentName = String.Empty;
     private readonly int _maxConversationTokens = default;
-    private readonly OpenAIClient _client;
-
-    /// <summary>
-    /// System prompt to send with user prompts to instruct the model for chat session
-    /// </summary>
-    private readonly string _systemPrompt = @"
-        You are an AI assistant that helps people find information.
-        Provide concise answers that are polite and professional." + Environment.NewLine;
-    
-    /// <summary>    
-    /// System prompt to send with user prompts to instruct the model for summarization
-    /// </summary>
-    private readonly string _summarizePrompt = @"
-        Summarize this prompt in one or two words to use as a label in a button on a web page" + Environment.NewLine;
-
 
     /// <summary>
     /// Gets the maximum number of tokens to limit chat conversation length.
@@ -50,13 +33,6 @@ public class OpenAiService
     {
         ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
         ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
-        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
-
-        _deploymentName = deploymentName;
-        _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 3000;
-
-        _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
 
     /// <summary>
@@ -67,36 +43,8 @@ public class OpenAiService
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
-        
-        ChatMessage systemMessage = new(ChatRole.System, _systemPrompt);
-        ChatMessage userMessage = new(ChatRole.User, userPrompt);
-        
-        ChatCompletionsOptions options = new()
-        {
-            
-            Messages =
-            {
-                //systemMessage,
-                userMessage
-            },
-            User = sessionId,
-            MaxTokens = 256,
-            Temperature = 0.3f,
-            NucleusSamplingFactor = 0.5f,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0
-        };
-
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
-
-
-        ChatCompletions completions = completionsResponse.Value;
-
-        return (
-            response: completions.Choices[0].Message.Content,
-            promptTokens: completions.Usage.PromptTokens,
-            responseTokens: completions.Usage.CompletionTokens
-        );
+        await Task.Delay(millisecondsDelay: 500);
+        return ("<RESPONSE>", 0, 0);
     }
 
     /// <summary>
@@ -107,30 +55,7 @@ public class OpenAiService
     /// <returns>Summarization response from the OpenAI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
-        
-        ChatMessage systemMessage = new(ChatRole.System, _summarizePrompt);
-        ChatMessage userMessage = new(ChatRole.User, userPrompt);
-        
-        ChatCompletionsOptions options = new()
-        {
-            Messages = { 
-                systemMessage,
-                userMessage
-            },
-            User = sessionId,
-            MaxTokens = 200,
-            Temperature = 0.0f,
-            NucleusSamplingFactor = 1.0f,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0
-        };
-
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
-
-        ChatCompletions completions = completionsResponse.Value;
-
-        string summary =  completions.Choices[0].Message.Content;
-
-        return summary;
+        await Task.Delay(millisecondsDelay: 500);
+        return "<SUMMARY>";
     }
 }
