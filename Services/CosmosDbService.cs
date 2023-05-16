@@ -135,7 +135,7 @@ public class CosmosDbService
     /// Batch create or update chat messages and session.
     /// </summary>
     /// <param name="messages">Chat message and session items to create or replace.</param>
-    public async Task UpsertSessionBatchAsync(params dynamic[] messages)
+    public async Task UpsertSessionBatchAsync(params Message[] messages)
     {
         if (messages.Select(m => m.SessionId).Distinct().Count() > 1)
         {
@@ -164,12 +164,12 @@ public class CosmosDbService
         QueryDefinition query = new QueryDefinition("SELECT c.id FROM c WHERE c.sessionId = @sessionId")
                 .WithParameter("@sessionId", sessionId);
 
-        FeedIterator<dynamic> response = _container.GetItemQueryIterator<dynamic>(query);
+        FeedIterator<Message> response = _container.GetItemQueryIterator<Message>(query);
 
         TransactionalBatch batch = _container.CreateTransactionalBatch(partitionKey);
         while (response.HasMoreResults)
         {
-            FeedResponse<dynamic> results = await response.ReadNextAsync();
+            FeedResponse<Message> results = await response.ReadNextAsync();
             foreach (var item in results)
             {
                 batch.DeleteItem(
