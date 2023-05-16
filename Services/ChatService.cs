@@ -1,5 +1,4 @@
-﻿using Azure.AI.OpenAI;
-using Cosmos.Chat.GPT.Constants;
+﻿using Cosmos.Chat.GPT.Constants;
 using Cosmos.Chat.GPT.Models;
 
 namespace Cosmos.Chat.GPT.Services;
