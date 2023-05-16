@@ -27,7 +27,7 @@ When a new prompt is sent to the Azure OpenAI service, some of the conversation 
 as though it is having a conversation. The length of this conversation history can be configured from appsettings.json 
 with the `OpenAiMaxTokens` value that is then translated to a maximum conversation string length that is 1/2 of this value. 
 
-Please note that the "text-davinci-003" model used by this sample has a maximum of 4096 tokens. Token are used in both the request and reponse from the service. Overriding the maxConversationLength to values approaching maximum token value could result in completions that contain little to no text if all of it has been used in the request.
+Please note that the "gpt-35-turbo" model used by this sample has a maximum of 4096 tokens. Token are used in both the request and reponse from the service. Overriding the maxConversationLength to values approaching maximum token value could result in completions that contain little to no text if all of it has been used in the request.
 
 The history for all prompts and completions for each chat session is stored in Azure Cosmos DB. Deleting a chat session in the UI will delete it's corresponding data as well.
 
@@ -35,7 +35,6 @@ The application will also summarize the name of the chat session by asking ChatG
 identity different chat sessions.
 
 Please note this is a sample application. It is intended to demonstrate how to use Azure Cosmos DB and Azure OpenAI ChatGPT together. It is not intended for production or other large scale use
-
 
 ## Getting Started
 
@@ -45,14 +44,12 @@ Please note this is a sample application. It is intended to demonstrate how to u
 - Subscription access to Azure OpenAI service. Start here to [Request Acces to Azure OpenAI Service](https://customervoice.microsoft.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR7en2Ais5pxKtso_Pz4b1_xUOFA5Qk1UWDRBMjg0WFhPMkIzTzhKQ1dWNyQlQCN0PWcu)
 - Visual Studio, VS Code, or some editor if you want to edit or view the source for this sample.
 
-
 ### Installation
 
 1. Fork this repository to your own GitHub account.
 1. Depending on whether you deploy using the ARM Template or Bicep, modify this variable in one of those files to point to your fork of this repository, "webSiteRepository": "https://github.com/Azure-Samples/cosmosdb-chatgpt.git" 
 1. If using the Deploy to Azure button below, also modify this README.md file to change the path for the Deploy To Azure button to your local repository.
 1. If you deploy this application without making either of these changes, you can update the repository by disconnecting and connecting an external git repository pointing to your fork.
-
 
 The provided ARM or Bicep Template will provision the following resources:
 1. Azure Cosmos DB account with database and container at 400 RU/s. This can optionally be configured to run on the Cosmos DB free tier if available for your subscription.
@@ -65,13 +62,11 @@ All connection information for Azure Cosmos DB and Open AI is zero-touch and inj
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy.json)
 
-
 ### Quickstart
 
 1. After deployment, go to the resource group for your deployment and open the Azure App Service in the Azure Portal. Click the web url to launch the website.
 1. Click + New Chat to create a new chat session.
 1. Type your question in the text box and press Enter.
-
 
 ## Clean up
 

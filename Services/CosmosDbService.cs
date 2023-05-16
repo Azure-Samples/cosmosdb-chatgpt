@@ -24,11 +24,10 @@ public class CosmosDbService
     /// </remarks>
     public CosmosDbService(string endpoint, string key, string databaseName, string containerName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
         ArgumentNullException.ThrowIfNullOrEmpty(containerName);
-
+        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(key);
 
         CosmosSerializationOptions options = new()
         {
@@ -110,6 +109,7 @@ public class CosmosDbService
     public async Task<Message> InsertMessageAsync(Message message)
     {
         PartitionKey partitionKey = new(message.SessionId);
+        Message newMessage = message with { TimeStamp = DateTime.UtcNow };
         return await _container.CreateItemAsync<Message>(
             item: message,
             partitionKey: partitionKey
@@ -161,17 +161,15 @@ public class CosmosDbService
     {
         PartitionKey partitionKey = new(sessionId);
 
-        // TODO: await container.DeleteAllItemsByPartitionKeyStreamAsync(partitionKey);
-
         QueryDefinition query = new QueryDefinition("SELECT c.id FROM c WHERE c.sessionId = @sessionId")
                 .WithParameter("@sessionId", sessionId);
 
-        FeedIterator<Message> response = _container.GetItemQueryIterator<Message>(query);
+        FeedIterator<dynamic> response = _container.GetItemQueryIterator<dynamic>(query);
 
         TransactionalBatch batch = _container.CreateTransactionalBatch(partitionKey);
         while (response.HasMoreResults)
         {
-            FeedResponse<Message> results = await response.ReadNextAsync();
+            FeedResponse<dynamic> results = await response.ReadNextAsync();
             foreach (var item in results)
             {
                 batch.DeleteItem(

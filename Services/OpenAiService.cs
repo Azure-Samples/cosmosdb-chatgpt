@@ -13,14 +13,16 @@ public class OpenAiService
     private readonly int _maxConversationTokens = default;
     private readonly OpenAIClient _client;
 
-
-    //System prompt to send with user prompts to instruct the model for chat session
+    /// <summary>
+    /// System prompt to send with user prompts to instruct the model for chat session
+    /// </summary>
     private readonly string _systemPrompt = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional." + Environment.NewLine;
     
-    
-    //System prompt to send with user prompts to instruct the model for summarization
+    /// <summary>    
+    /// System prompt to send with user prompts to instruct the model for summarization
+    /// </summary>
     private readonly string _summarizePrompt = @"
         Summarize this prompt in one or two words to use as a label in a button on a web page" + Environment.NewLine;
 
@@ -46,10 +48,10 @@ public class OpenAiService
     /// </remarks>
     public OpenAiService(string endpoint, string key, string deploymentName, string maxConversationTokens)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
         ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
+        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentNullException.ThrowIfNullOrEmpty(key);
 
         _deploymentName = deploymentName;
         _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 3000;
