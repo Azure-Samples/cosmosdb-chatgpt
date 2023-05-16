@@ -53,7 +53,7 @@ public class CosmosDbService
     public async Task<Session> InsertSessionAsync(Session session)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return default!;
+        return session;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class CosmosDbService
     public async Task<Message> InsertMessageAsync(Message message)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return default!;
+        return message;
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class CosmosDbService
     public async Task<Session> UpdateSessionAsync(Session session)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return default!;
+        return session;
     }
 
     /// <summary>
