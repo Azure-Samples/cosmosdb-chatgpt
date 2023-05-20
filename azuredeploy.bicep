@@ -2,6 +2,7 @@
 @allowed([
   'South Central US'
   'East US'
+  'France Central'
 ])
 param location string = 'South Central US'
 
