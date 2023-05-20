@@ -9,7 +9,7 @@ namespace Cosmos.Chat.GPT.Services;
 /// </summary>
 public class OpenAiService
 {
-    private readonly string _deploymentName = String.Empty;
+    private readonly string _modelName = String.Empty;
     private readonly int _maxConversationTokens = default;
     private readonly OpenAIClient _client;
 
@@ -40,20 +40,20 @@ public class OpenAiService
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
     /// <param name="key">Account key.</param>
-    /// <param name="deploymentName">Name of the deployment access.</param>
+    /// <param name="modelName">Name of the deployed Azure OpenAI model.</param>
     /// <param name="maxTokens">Maximum number of tokens per request.</param>
-    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, deploymentName, or maxTokens is either null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, modelName, or maxTokens is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string deploymentName, string maxConversationTokens)
+    public OpenAiService(string endpoint, string key, string modelName, string maxConversationTokens)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(modelName);
         ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
 
-        _deploymentName = deploymentName;
+        _modelName = modelName;
         _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 3000;
 
         _client = new(new Uri(endpoint), new AzureKeyCredential(key));
@@ -80,14 +80,14 @@ public class OpenAiService
                 userMessage
             },
             User = sessionId,
-            MaxTokens = 256,
+            MaxTokens = 4000, //Maximum tokens for gpt-35-turbo
             Temperature = 0.3f,
             NucleusSamplingFactor = 0.5f,
             FrequencyPenalty = 0,
             PresencePenalty = 0
         };
 
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_modelName, options);
 
 
         ChatCompletions completions = completionsResponse.Value;
@@ -125,7 +125,7 @@ public class OpenAiService
             PresencePenalty = 0
         };
 
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_deploymentName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_modelName, options);
 
         ChatCompletions completions = completionsResponse.Value;
 
