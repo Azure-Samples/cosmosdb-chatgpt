@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "17621165066116285839"
+      "templateHash": "11936244614901531818"
     }
   },
   "parameters": {
@@ -14,7 +14,8 @@
       "defaultValue": "South Central US",
       "allowedValues": [
         "South Central US",
-        "East US"
+        "East US",
+        "France Central"
       ],
       "metadata": {
         "description": "Location where all resources will be deployed. This value defaults to the **South Central US** region."
@@ -24,7 +25,7 @@
       "type": "string",
       "defaultValue": "[uniqueString(resourceGroup().id)]",
       "metadata": {
-        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\n- Azure Cosmos DB\n- Azure App Service\n- Azure OpenAI\nThe name defaults to a unique string generated from the resource group identifier.\n"
+        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
       }
     },
     "cosmosDbEnableFreeTier": {

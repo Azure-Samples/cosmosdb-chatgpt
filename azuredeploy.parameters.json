@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "East US"
+        },
+        "cosmosDbEnableFreeTier": {
+            "value": false
+        },
+        "appServiceSku": {
+            "value": "D1"
+        },
+        "openAiSku": {
+            "value": "S0"
+        },
+        "appGitRepository": {
+            "value": "https://github.com/azure-samples/cosmosdb-chatgpt.git"
+        },
+        "appGetRepositoryBranch": {
+            "value": "main"
+        }
+    }
+}
