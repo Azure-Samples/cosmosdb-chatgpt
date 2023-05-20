@@ -68,7 +68,7 @@ static class ProgramExtensions
                 return new OpenAiService(
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
                     key: openAiOptions.Value?.Key ?? String.Empty,
-                    deploymentName: openAiOptions.Value?.Deployment ?? String.Empty,
+                    modelName: openAiOptions.Value?.ModelName ?? String.Empty,
                     maxConversationTokens: openAiOptions.Value?.MaxConversationTokens ?? String.Empty
                 );
             }
