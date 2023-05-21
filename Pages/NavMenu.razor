@@ -50,8 +50,12 @@
                                             {
                                                 <i class="bi bi-chat-right-dots-fill me-2"></i>
                                             }
-                                            <span title="@session.Name" class="ms-1">
-                                                @SafeSubstring(session.Name,20)
+                                            <span title="@session.Name" class="ms-1">                                                
+                                                @{
+                                                    string substring = SafeSubstring(session.Name, 20);
+                                                    MarkupString html = new MarkupString(substring);
+                                                }
+                                                @html
                                             </span>
                                         </a>
                                     </div>
