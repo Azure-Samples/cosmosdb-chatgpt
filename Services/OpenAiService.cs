@@ -10,7 +10,6 @@ namespace Cosmos.Chat.GPT.Services;
 public class OpenAiService
 {
     private readonly string _modelName = String.Empty;
-    private readonly int _maxConversationTokens = default;
     private readonly OpenAIClient _client;
 
     /// <summary>
@@ -26,15 +25,6 @@ public class OpenAiService
     private readonly string _summarizePrompt = @"
         Summarize this prompt in one or two words to use as a label in a button on a web page" + Environment.NewLine;
 
-
-    /// <summary>
-    /// Gets the maximum number of tokens to limit chat conversation length.
-    /// </summary>
-    public int MaxConversationTokens
-    {
-        get => _maxConversationTokens;
-    }
-
     /// <summary>
     /// Creates a new instance of the service.
     /// </summary>
@@ -46,15 +36,13 @@ public class OpenAiService
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string modelName, string maxConversationTokens)
+    public OpenAiService(string endpoint, string key, string modelName)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(modelName);
-        ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
 
         _modelName = modelName;
-        _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 3000;
 
         _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
@@ -80,7 +68,7 @@ public class OpenAiService
                 userMessage
             },
             User = sessionId,
-            MaxTokens = 4000, //Maximum tokens for gpt-35-turbo
+            MaxTokens = 4000,
             Temperature = 0.3f,
             NucleusSamplingFactor = 0.5f,
             FrequencyPenalty = 0,
