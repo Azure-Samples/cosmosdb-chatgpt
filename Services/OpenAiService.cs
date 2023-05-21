@@ -44,7 +44,7 @@ public class OpenAiService
     public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return ("<RESPONSE>", 0, 0);
+        return ("&ltRESPONSE&gt;", 0, 0);
     }
 
     /// <summary>
@@ -56,6 +56,6 @@ public class OpenAiService
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return "<SUMMARY>";
+        return "&ltSUMMARY&gt;";
     }
 }
