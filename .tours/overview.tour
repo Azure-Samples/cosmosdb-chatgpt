@@ -159,17 +159,17 @@
     },
     {
       "file": "Services/OpenAiService.cs",
-      "line": 6,
+      "line": 8,
       "description": "Finally, `OpenAiService`. This class will also require you to implement a new client in the constructor before adding functionality to each method."
     },
     {
       "file": "Services/OpenAiService.cs",
-      "line": 45,
-      "description": "For fun, we've implemented a simple `AskAsync` method that will always return the string `\"<RESPONSE>\"` from our *pretend* AI assistant. You will improve this later in this project."
+      "line": 44,
+      "description": "For fun, we've implemented a simple `GetChatCompletionAsync` method that will always return the string `\"<RESPONSE>\"` from our *pretend* AI assistant. You will improve this later in this project."
     },
     {
       "file": "Services/OpenAiService.cs",
-      "line": 57,
+      "line": 56,
       "description": "We've also implemented a stub for the `SummarizeAsync` method that will alway summarize conversations with the title `\"<SUMMARY>\"`."
     },
     {
