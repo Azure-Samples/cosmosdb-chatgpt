@@ -14,12 +14,12 @@ public class ChatService
     private readonly OpenAiService _openAiService;
     private readonly int _maxConversationTokens;
 
-    public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService)
+    public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService, string maxConversationTokens)
     {
         _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
-
-        _maxConversationTokens = openAiService.MaxConversationTokens;
+        
+        _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 4000;
     }
 
     /// <summary>

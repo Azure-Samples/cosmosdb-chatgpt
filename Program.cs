@@ -68,11 +68,27 @@ static class ProgramExtensions
                 return new OpenAiService(
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
                     key: openAiOptions.Value?.Key ?? String.Empty,
-                    modelName: openAiOptions.Value?.ModelName ?? String.Empty,
+                    modelName: openAiOptions.Value?.ModelName ?? String.Empty
+                );
+            }
+        });
+        services.AddSingleton<ChatService>((provider) =>
+        {
+            var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
+            if (openAiOptions is null)
+            {
+                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
+            }
+            else
+            {
+                var cosmosDbService = provider.GetRequiredService<CosmosDbService>();
+                var openAiService = provider.GetRequiredService<OpenAiService>();
+                return new ChatService(
+                    openAiService: openAiService,
+                    cosmosDbService: cosmosDbService,
                     maxConversationTokens: openAiOptions.Value?.MaxConversationTokens ?? String.Empty
                 );
             }
         });
-        services.AddSingleton<ChatService>();
     }
 }
