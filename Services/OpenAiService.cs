@@ -31,8 +31,7 @@ public class OpenAiService
     /// <param name="endpoint">Endpoint URI.</param>
     /// <param name="key">Account key.</param>
     /// <param name="modelName">Name of the deployed Azure OpenAI model.</param>
-    /// <param name="maxTokens">Maximum number of tokens per request.</param>
-    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, modelName, or maxTokens is either null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, or modelName is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
