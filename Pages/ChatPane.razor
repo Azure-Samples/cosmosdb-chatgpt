@@ -1,6 +1,7 @@
 ﻿@using Cosmos.Chat.GPT.Constants
 @using Cosmos.Chat.GPT.Services
 @using Humanizer
+@using System.Text.RegularExpressions;
 @inject ChatService chatService
 @inject IJSRuntime JSRuntime
 
@@ -111,7 +112,18 @@
                                 <div class="toast-body">
                                     <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
                                     @{
-                                        MarkupString html = new MarkupString(msg.Text.Replace("\n", "<br />"));
+                                        var text = msg.Text.Replace("\n", "<br />");
+                                        Regex rgx = new Regex("```");
+                                        var matches = rgx.Matches(text);
+                                        if(matches.Count() > 0)
+                                            for(int i = 0; i < matches.Count; i++)
+                                                if(i % 2 == 0)
+                                                    // even = start code block tag
+                                                    text = rgx.Replace(text, "<pre><code>", 1, i);
+                                                else
+                                                    // odd = end code block tag
+                                                    text = rgx.Replace(text, "</pre></code>", 1, i);
+                                        MarkupString html = new MarkupString(text);
                                     }
                                     @html
                                 </div>

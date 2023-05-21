@@ -7,7 +7,7 @@ namespace Cosmos.Chat.GPT.Services;
 /// </summary>
 public class OpenAiService
 {
-    private readonly string _deploymentName = String.Empty;
+    private readonly string _modelName = String.Empty;
     private readonly int _maxConversationTokens = default;
 
     /// <summary>
@@ -23,15 +23,15 @@ public class OpenAiService
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
     /// <param name="key">Account key.</param>
-    /// <param name="deploymentName">Name of the deployment access.</param>
+    /// <param name="modelName">Name of the deployed Azure OpenAI model.</param>
     /// <param name="maxTokens">Maximum number of tokens per request.</param>
-    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, deploymentName, or maxTokens is either null or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint, key, modelName, or maxTokens is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string deploymentName, string maxConversationTokens)
+    public OpenAiService(string endpoint, string key, string modelName, string maxConversationTokens)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(deploymentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(modelName);
         ArgumentNullException.ThrowIfNullOrEmpty(maxConversationTokens);
     }
 
