@@ -42,7 +42,10 @@
 					"*.js": "${capture}.js.map",
 					"*.razor": "${capture}.razor.cs,${capture}.razor.css"
 				},
-				"git.autofetch": true
+				"git.autofetch": true,
+				"editor.minimap.enabled": false,
+				"files.autoSaveDelay": 1000,
+				"files.autoSave": "afterDelay"
 			}
 		}
 	}
