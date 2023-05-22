@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.16.2.56959",
-      "templateHash": "11936244614901531818"
+      "version": "0.17.1.54307",
+      "templateHash": "896273124122291408"
     }
   },
   "parameters": {
@@ -251,7 +251,7 @@
         "COSMOSDB__CONTAINER": "[variables('cosmosDbSettings').container.name]",
         "OPENAI__ENDPOINT": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]",
         "OPENAI__KEY": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').key1]",
-        "OPENAI__DEPLOYMENT": "[variables('openAiSettings').model.deployment.name]",
+        "OPENAI__MODELNAME": "[variables('openAiSettings').model.deployment.name]",
         "OPENAI__MAXCONVERSATIONTOKENS": "[variables('openAiSettings').maxConversationTokens]"
       },
       "dependsOn": [
