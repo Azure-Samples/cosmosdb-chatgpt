@@ -200,7 +200,7 @@ resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
     COSMOSDB__CONTAINER: cosmosDbContainer.name
     OPENAI__ENDPOINT: openAiAccount.properties.endpoint
     OPENAI__KEY: openAiAccount.listKeys().key1
-    OPENAI__DEPLOYMENT: openAiModelDeployment.name
+    OPENAI__MODELNAME: openAiModelDeployment.name
     OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
   }
 }
