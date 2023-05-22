@@ -1,13 +1,15 @@
 ﻿using Cosmos.Chat.GPT.Models;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Cosmos.Chat.GPT.Services;
 
 public class CosmosDbService
 {
+    private readonly Container _container = default!;
+
     public CosmosDbService(string endpoint, string key, string databaseName, string containerName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
-        ArgumentNullException.ThrowIfNullOrEmpty(containerName);
     }
 
     public async Task<List<Session>> GetSessionsAsync()
