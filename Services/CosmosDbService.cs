@@ -73,15 +73,12 @@ public class CosmosDbService
     public async Task<Message> InsertMessageAsync(Message message)
     {
         /*
-        public async Task<Message> InsertMessageAsync(Message message)
-        {
-            PartitionKey partitionKey = new(message.SessionId);
-            Message newMessage = message with { TimeStamp = DateTime.UtcNow };
-            return await _container.CreateItemAsync<Message>(
-                item: newMessage,
-                partitionKey: partitionKey
-            );  
-        }
+        PartitionKey partitionKey = new(message.SessionId);
+        Message newMessage = message with { TimeStamp = DateTime.UtcNow };
+        return await _container.CreateItemAsync<Message>(
+            item: newMessage,
+            partitionKey: partitionKey
+        );
         */
         
         // Remove this placeholder code
