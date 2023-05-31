@@ -32,7 +32,7 @@
         </div>
     } 
     <h6 class="px-4 display-6 text-secondary p-2">@GetChatSessionName()</h6>
-    <div class="px-4 pb-4 pt-2 flex-grow-1 overflow-y-auto overflow-x-hidden align-items-stretch" id="MessagesInChatdiv">
+    <div class="px-4 pb-4 pt-2 flex-grow-1 overflow-y-auto overflow-x-hidden align-items-stretch" id="chatMessages">
         @if (CurrentSession is null)
         {
             <div class="alert alert-primary">               
@@ -258,6 +258,7 @@
         }
 
         await ScrollLastChatToView();
+        await UpdateHighlight();
     }
 
     private string GetChatSessionName() => CurrentSession switch 
@@ -270,13 +271,16 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await ScrollLastChatToView();
+        await UpdateHighlight();
     }
 
-    /// <remarks>
-    /// This is a hack to get the scroll to work.  Need to find a better way to do this.
-    /// </remarks>
     private async Task ScrollLastChatToView()
     {
-        await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
+        await JSRuntime.InvokeVoidAsync("scrollToLastMessage");
+    }
+    
+    private async Task UpdateHighlight()
+    {
+        await JSRuntime.InvokeVoidAsync("updateHiglight");
     }
 }
