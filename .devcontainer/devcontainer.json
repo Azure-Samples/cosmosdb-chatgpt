@@ -46,7 +46,7 @@
 				"editor.minimap.enabled": false,
 				"files.autoSaveDelay": 1000,
 				"files.autoSave": "afterDelay",
-    			"extensions.ignoreRecommendations": true
+				"extensions.ignoreRecommendations": true
 			}
 		}
 	}
