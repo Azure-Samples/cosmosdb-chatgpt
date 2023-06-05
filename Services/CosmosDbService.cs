@@ -46,6 +46,35 @@ public class CosmosDbService
     }
 
     /// <summary>
+    /// Creates a new chat session.
+    /// </summary>
+    /// <param name="session">Chat session item to create.</param>
+    /// <returns>Newly created chat session item.</returns>
+    public async Task<Session> InsertSessionAsync(Session session)
+    {
+        PartitionKey partitionKey = new(session.SessionId);
+        return await _container.CreateItemAsync<Session>(
+            item: session,
+            partitionKey: partitionKey
+        );
+    }
+
+    /// <summary>
+    /// Creates a new chat message.
+    /// </summary>
+    /// <param name="message">Chat message item to create.</param>
+    /// <returns>Newly created chat message item.</returns>
+    public async Task<Message> InsertMessageAsync(Message message)
+    {
+        PartitionKey partitionKey = new(message.SessionId);
+        Message newMessage = message with { TimeStamp = DateTime.UtcNow };
+        return await _container.CreateItemAsync<Message>(
+            item: message,
+            partitionKey: partitionKey
+        );
+    }
+
+    /// <summary>
     /// Gets a list of all current chat sessions.
     /// </summary>
     /// <returns>List of distinct chat session items.</returns>
@@ -85,35 +114,6 @@ public class CosmosDbService
             output.AddRange(response);
         }
         return output;
-    }
-
-    /// <summary>
-    /// Creates a new chat session.
-    /// </summary>
-    /// <param name="session">Chat session item to create.</param>
-    /// <returns>Newly created chat session item.</returns>
-    public async Task<Session> InsertSessionAsync(Session session)
-    {
-        PartitionKey partitionKey = new(session.SessionId);
-        return await _container.CreateItemAsync<Session>(
-            item: session,
-            partitionKey: partitionKey
-        );
-    }
-
-    /// <summary>
-    /// Creates a new chat message.
-    /// </summary>
-    /// <param name="message">Chat message item to create.</param>
-    /// <returns>Newly created chat message item.</returns>
-    public async Task<Message> InsertMessageAsync(Message message)
-    {
-        PartitionKey partitionKey = new(message.SessionId);
-        Message newMessage = message with { TimeStamp = DateTime.UtcNow };
-        return await _container.CreateItemAsync<Message>(
-            item: message,
-            partitionKey: partitionKey
-        );
     }
 
     /// <summary>
