@@ -45,7 +45,8 @@
 				"git.autofetch": true,
 				"editor.minimap.enabled": false,
 				"files.autoSaveDelay": 1000,
-				"files.autoSave": "afterDelay"
+				"files.autoSave": "afterDelay",
+				"extensions.ignoreRecommendations": true
 			}
 		}
 	}
