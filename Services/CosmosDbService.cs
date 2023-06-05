@@ -10,18 +10,6 @@ public class CosmosDbService
         ArgumentNullException.ThrowIfNullOrEmpty(containerName);
     }
 
-    public async Task<List<Session>> GetSessionsAsync()
-    {
-        await Task.Delay(millisecondsDelay: 500);
-        return Enumerable.Empty<Session>().ToList();
-    }
-
-    public async Task<List<Message>> GetSessionMessagesAsync(string sessionId)
-    {
-        await Task.Delay(millisecondsDelay: 500);
-        return Enumerable.Empty<Message>().ToList();
-    }
-
     public async Task<Session> InsertSessionAsync(Session session)
     {
         await Task.Delay(millisecondsDelay: 500);
@@ -32,6 +20,18 @@ public class CosmosDbService
     {
         await Task.Delay(millisecondsDelay: 500);
         return message;
+    }
+
+    public async Task<List<Session>> GetSessionsAsync()
+    {
+        await Task.Delay(millisecondsDelay: 500);
+        return Enumerable.Empty<Session>().ToList();
+    }
+
+    public async Task<List<Message>> GetSessionMessagesAsync(string sessionId)
+    {
+        await Task.Delay(millisecondsDelay: 500);
+        return Enumerable.Empty<Message>().ToList();
     }
 
     public async Task<Session> UpdateSessionAsync(Session session)
