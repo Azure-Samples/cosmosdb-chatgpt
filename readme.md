@@ -23,7 +23,7 @@ simple chat application with OpenAi ChatGPT and Azure Cosmos DB.
 This application has individual chat sessions which are displayed and can be selected in the left-hand nav. Clicking on a session will show the messages that contain
 human prompts and AI completions. 
 
-When a new prompt is sent to the Azure OpenAI service, some of the conversation history is sent with it. This provides context allowing ChatGPT to respond 
+When a new prompt is sent to the Azure OpenAI Service, some of the conversation history is sent with it. This provides context allowing ChatGPT to respond 
 as though it is having a conversation. The length of this conversation history can be configured from appsettings.json 
 with the `OpenAiMaxTokens` value that is then translated to a maximum conversation string length that is 1/2 of this value. 
 
