@@ -54,9 +54,9 @@ Please note this is a sample application. It is intended to demonstrate how to u
 The provided ARM or Bicep Template will provision the following resources:
 1. Azure Cosmos DB account with database and container at 400 RU/s. This can optionally be configured to run on the Cosmos DB free tier if available for your subscription.
 1. Azure App service. This will be configured for CI/CD to your forked GitHub repository. This service can also be configured to run on App Service free tier.
-1. Azure Open AI account. You must also specify a name for the deployment of the "text-davinci-003" model which is used by this application.
+1. Azure OpenAI account. You must also specify a name for the deployment of the "text-davinci-003" model which is used by this application.
 
-Note: You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
+Note: You must have access to Azure OpenAI Service from your subscription before attempting to deploy this application.
 
 All connection information for Azure Cosmos DB and Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
 
@@ -76,5 +76,5 @@ To remove all the resources used by this sample, you must first manually delete 
 
 - [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/)
 - [Azure Cosmos DB Free Trial](https://aka.ms/TryCosmos)
-- [Open AI Platform documentation](https://platform.openai.com/docs/introduction/overview)
-- [Azure Open AI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
+- [OpenAI Platform documentation](https://platform.openai.com/docs/introduction/overview)
+- [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
