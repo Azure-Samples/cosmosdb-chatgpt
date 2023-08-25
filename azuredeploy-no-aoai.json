@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.20.4.51522",
-      "templateHash": "13944955149899393347"
+      "templateHash": "12310353177236113213"
     }
   },
   "parameters": {
@@ -32,7 +32,7 @@
       "type": "string",
       "defaultValue": "[uniqueString(resourceGroup().id)]",
       "metadata": {
-        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
+        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
       }
     },
     "cosmosDbEnableFreeTier": {
@@ -51,17 +51,28 @@
         "B1"
       ],
       "metadata": {
-        "description": "Specifies the SKU for the Azure App Service plan. Defaults to **F1**"
+        "description": "Specifies the SKU for the Azure App Service plan. Defaults to **F1** Free Tier"
       }
     },
-    "openAiSku": {
+    "openAiAccountName": {
       "type": "string",
-      "defaultValue": "S0",
-      "allowedValues": [
-        "S0"
-      ],
+      "defaultValue": "",
       "metadata": {
-        "description": "Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**"
+        "description": "Specifies the Azure OpenAI account name."
+      }
+    },
+    "openAiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Specifies the key for Azure OpenAI account."
+      }
+    },
+    "openAiModelName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Specifies the deployed model name for your Azure OpenAI account completions API."
       }
     },
     "appGitRepository": {
@@ -80,18 +91,7 @@
     }
   },
   "variables": {
-    "openAiSettings": {
-      "name": "[format('{0}-openai', parameters('name'))]",
-      "sku": "[parameters('openAiSku')]",
-      "maxConversationTokens": "2000",
-      "model": {
-        "name": "gpt-35-turbo",
-        "version": "0301",
-        "deployment": {
-          "name": "chatmodel"
-        }
-      }
-    },
+    "openAiEndpoint": "[format('https://{0}.openai.azure.com', parameters('openAiAccountName'))]",
     "cosmosDbSettings": {
       "name": "[format('{0}-cosmos-nosql', parameters('name'))]",
       "enableFreeTier": "[parameters('cosmosDbEnableFreeTier')]",
@@ -193,38 +193,6 @@
       ]
     },
     {
-      "type": "Microsoft.CognitiveServices/accounts",
-      "apiVersion": "2022-12-01",
-      "name": "[variables('openAiSettings').name]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[variables('openAiSettings').sku]"
-      },
-      "kind": "OpenAI",
-      "properties": {
-        "customSubDomainName": "[variables('openAiSettings').name]",
-        "publicNetworkAccess": "Enabled"
-      }
-    },
-    {
-      "type": "Microsoft.CognitiveServices/accounts/deployments",
-      "apiVersion": "2022-12-01",
-      "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').model.deployment.name)]",
-      "properties": {
-        "model": {
-          "format": "OpenAI",
-          "name": "[variables('openAiSettings').model.name]",
-          "version": "[variables('openAiSettings').model.version]"
-        },
-        "scaleSettings": {
-          "scaleType": "Standard"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]"
-      ]
-    },
-    {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2022-03-01",
       "name": "[variables('appServiceSettings').plan.name]",
@@ -256,18 +224,16 @@
         "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]",
         "COSMOSDB__DATABASE": "[variables('cosmosDbSettings').database.name]",
         "COSMOSDB__CONTAINER": "[variables('cosmosDbSettings').container.name]",
-        "OPENAI__ENDPOINT": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]",
-        "OPENAI__KEY": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').key1]",
-        "OPENAI__MODELNAME": "[variables('openAiSettings').model.deployment.name]",
-        "OPENAI__MAXCONVERSATIONTOKENS": "[variables('openAiSettings').maxConversationTokens]"
+        "OPENAI__ENDPOINT": "[variables('openAiEndpoint')]",
+        "OPENAI__KEY": "[parameters('openAiKey')]",
+        "OPENAI__MODELNAME": "[parameters('openAiModelName')]",
+        "OPENAI__MAXCONVERSATIONTOKENS": "2000"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name)]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').container.name)]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]",
-        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').model.deployment.name)]"
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]"
       ]
     },
     {
