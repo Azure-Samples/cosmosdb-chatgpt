@@ -100,7 +100,7 @@
           "character": 1
         },
         "end": {
-          "line": 218,
+          "line": 226,
           "character": 1
         }
       },
@@ -110,11 +110,11 @@
       "file": "azuredeploy.bicep",
       "selection": {
         "start": {
-          "line": 44,
+          "line": 48,
           "character": 1
         },
         "end": {
-          "line": 50,
+          "line": 59,
           "character": 4
         }
       },
@@ -124,11 +124,11 @@
       "file": "azuredeploy.bicep",
       "selection": {
         "start": {
-          "line": 115,
+          "line": 117,
           "character": 1
         },
         "end": {
-          "line": 138,
+          "line": 152,
           "character": 8
         }
       },
@@ -138,11 +138,11 @@
       "file": "azuredeploy.bicep",
       "selection": {
         "start": {
-          "line": 196,
+          "line": 199,
           "character": 1
         },
         "end": {
-          "line": 203,
+          "line": 213,
           "character": 48
         }
       },
