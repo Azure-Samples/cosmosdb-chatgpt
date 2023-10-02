@@ -1,4 +1,4 @@
-using Cosmos.Chat.GPT.Models;
+﻿using Cosmos.Chat.GPT.Models;
 
 namespace Cosmos.Chat.GPT.Services;
 
