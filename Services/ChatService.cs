@@ -18,7 +18,7 @@ public class ChatService
     {
         _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
-        
+
         _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 4000;
     }
 
@@ -131,19 +131,19 @@ public class ChatService
         int? tokensUsed = 0;
 
         List<string> conversationBuilder = new List<string>();
-        
+
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
         List<Message> messages = _sessions[index].Messages;
 
         //Start at the end of the list and work backwards
-        for(int i = messages.Count - 1; i >= 0; i--) 
-        {             
+        for (int i = messages.Count - 1; i >= 0; i--)
+        {
             tokensUsed += messages[i].Tokens is null ? 0 : messages[i].Tokens;
 
-            if(tokensUsed > _maxConversationTokens)
+            if (tokensUsed > _maxConversationTokens)
                 break;
-            
+
             conversationBuilder.Add(messages[i].Text);
         }
 
@@ -186,12 +186,12 @@ public class ChatService
     {
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-        
+
         //Create completion message, add to the cache
         Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionTokens, completionText);
         _sessions[index].AddMessage(completionMessage);
 
-        
+
         //Update prompt message with tokens used and insert into the cache
         Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
         _sessions[index].UpdateMessage(updatedPromptMessage);
@@ -203,6 +203,6 @@ public class ChatService
 
 
         await _cosmosDbService.UpsertSessionBatchAsync(updatedPromptMessage, completionMessage, _sessions[index]);
-        
+
     }
 }

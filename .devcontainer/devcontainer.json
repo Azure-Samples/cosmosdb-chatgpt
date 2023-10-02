@@ -3,7 +3,7 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"VARIANT": "7.0.203"
+			"VARIANT": "8.0"
 		}
 	},
 	"portsAttributes": {
