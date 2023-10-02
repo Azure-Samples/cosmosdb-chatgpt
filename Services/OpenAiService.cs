@@ -18,7 +18,7 @@ public class OpenAiService
     private readonly string _systemPrompt = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional." + Environment.NewLine;
-    
+
     /// <summary>    
     /// System prompt to send with user prompts to instruct the model for summarization
     /// </summary>
@@ -54,13 +54,13 @@ public class OpenAiService
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
     public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
-        
+
         ChatMessage systemMessage = new(ChatRole.System, _systemPrompt);
         ChatMessage userMessage = new(ChatRole.User, userPrompt);
-        
+
         ChatCompletionsOptions options = new()
         {
-            
+
             Messages =
             {
                 //systemMessage,
@@ -94,13 +94,13 @@ public class OpenAiService
     /// <returns>Summarization response from the OpenAI model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
     {
-        
+
         ChatMessage systemMessage = new(ChatRole.System, _summarizePrompt);
         ChatMessage userMessage = new(ChatRole.User, userPrompt);
-        
+
         ChatCompletionsOptions options = new()
         {
-            Messages = { 
+            Messages = {
                 systemMessage,
                 userMessage
             },
@@ -116,7 +116,7 @@ public class OpenAiService
 
         ChatCompletions completions = completionsResponse.Value;
 
-        string summary =  completions.Choices[0].Message.Content;
+        string summary = completions.Choices[0].Message.Content;
 
         return summary;
     }
