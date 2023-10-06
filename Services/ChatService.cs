@@ -1,5 +1,7 @@
 ﻿using Cosmos.Chat.GPT.Constants;
 using Cosmos.Chat.GPT.Models;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using SharpToken;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -77,7 +79,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// Rename the Chat Ssssion from "New Chat" to the summary provided by OpenAI
+    /// Rename the Chat Session from "New Chat" to the summary provided by OpenAI
     /// </summary>
     public async Task RenameChatSessionAsync(string? sessionId, string newChatSessionName)
     {
@@ -107,23 +109,33 @@ public class ChatService
     /// <summary>
     /// Get a completion from _openAiService
     /// </summary>
-    public async Task<string> GetChatCompletionAsync(string? sessionId, string prompt)
+    public async Task<string> GetChatCompletionAsync(string? sessionId, string promptText)
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
-        Message promptMessage = await AddPromptMessageAsync(sessionId, prompt);
+        //Create a message object for the User Prompt and calculate token usage
+        Message prompt = CreatePromptMessage(sessionId, promptText);
 
+        //Grab conversation history up to the maximum configured tokens
         string conversation = GetChatSessionConversation(sessionId);
 
-        (string response, int promptTokens, int responseTokens) = await _openAiService.GetChatCompletionAsync(sessionId, conversation);
+        //Generate a completion and tokens used from the user prompt and conversation
+        (string completionText, int completionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, conversation);
 
-        await AddPromptCompletionMessagesAsync(sessionId, promptTokens, responseTokens, promptMessage, response);
+        //Create a message object for the completion
+        Message completion = CreateCompletionMessage(sessionId, completionTokens, completionText);
 
-        return response;
+        //Update the tokens used in the session
+        Session session = UpdateSessionTokens(sessionId, prompt.Tokens, completion.Tokens);
+
+        //Insert/Update all of it in a transaction to Cosmos
+        await _cosmosDbService.UpsertSessionBatchAsync(prompt, completion, session);
+
+        return completionText;
     }
 
     /// <summary>
-    /// Get current conversation from newest to oldest up to max conversation tokens and add to the prompt
+    /// Get current conversation, including latest user prompt, from newest to oldest up to max conversation tokens
     /// </summary>
     private string GetChatSessionConversation(string sessionId)
     {
@@ -135,8 +147,10 @@ public class ChatService
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
         List<Message> messages = _sessions[index].Messages;
+        
 
         //Start at the end of the list and work backwards
+        //This includes the latest user prompt which is already cached
         for (int i = messages.Count - 1; i >= 0; i--)
         {
             tokensUsed += messages[i].Tokens is null ? 0 : messages[i].Tokens;
@@ -154,55 +168,79 @@ public class ChatService
 
     }
 
-    public async Task<string> SummarizeChatSessionNameAsync(string? sessionId, string prompt)
+    /// <summary>
+    /// Have OpenAI summarize the conversation based upon the prompt and completion text in the session
+    /// </summary>
+    public async Task<string> SummarizeChatSessionNameAsync(string? sessionId, string conversationText)
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
-        string response = await _openAiService.SummarizeAsync(sessionId, prompt);
+        string completionText = await _openAiService.SummarizeAsync(sessionId, conversationText);
 
-        await RenameChatSessionAsync(sessionId, response);
+        await RenameChatSessionAsync(sessionId, completionText);
 
-        return response;
+        return completionText;
     }
 
     /// <summary>
-    /// Add user prompt to the chat session message list object and insert into the data service.
+    /// Calculate token count for prompt text. Add user prompt to the chat session message list object
     /// </summary>
-    private async Task<Message> AddPromptMessageAsync(string sessionId, string promptText)
+    private Message CreatePromptMessage(string sessionId, string promptText)
     {
         Message promptMessage = new(sessionId, nameof(Participants.User), default, promptText);
 
-        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
+        //Calculate tokens for the user prompt message. OpenAI calculates tokens for completion so can get those from there 
+        promptMessage.Tokens = GetTokens(promptText);
 
+        //Add to the cache
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
         _sessions[index].AddMessage(promptMessage);
 
-        return await _cosmosDbService.InsertMessageAsync(promptMessage);
+        return promptMessage;
+
     }
 
     /// <summary>
-    /// Add user prompt and AI assistance response to the chat session message list object and insert into the data service as a transaction.
+    /// Add completion to the chat session message list object
     /// </summary>
-    private async Task AddPromptCompletionMessagesAsync(string sessionId, int promptTokens, int completionTokens, Message promptMessage, string completionText)
+    private Message CreateCompletionMessage(string sessionId, int completionTokens, string completionText)
+    {
+        //Create completion message
+        Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionTokens, completionText);
+
+        //Add to the cache
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
+        _sessions[index].AddMessage(completionMessage);
+
+        return completionMessage;
+    }
+
+    /// <summary>
+    /// Update session with user prompt and completion tokens and update the cache
+    /// </summary>
+    private Session UpdateSessionTokens(string sessionId, int? promptTokens, int? completionTokens)
     {
 
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
-        //Create completion message, add to the cache
-        Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionTokens, completionText);
-        _sessions[index].AddMessage(completionMessage);
+        //Update session with user prompt and completion tokens and update the cache
+        _sessions[index].TokensUsed += promptTokens;
+        _sessions[index].TokensUsed += completionTokens;
 
+        return _sessions[index];
 
-        //Update prompt message with tokens used and insert into the cache
-        Message updatedPromptMessage = promptMessage with { Tokens = promptTokens };
-        _sessions[index].UpdateMessage(updatedPromptMessage);
+    }
 
+    /// <summary>
+    /// Calculate the number of tokens from the user prompt
+    /// </summary>
+    private int GetTokens(string userPrompt)
+    {
+        //Create a new instance of SharpToken
+        var encoding = GptEncoding.GetEncodingForModel("gpt-3.5-turbo");
 
-        //Update session with tokens users and udate the cache
-        _sessions[index].TokensUsed += updatedPromptMessage.Tokens;
-        _sessions[index].TokensUsed += completionMessage.Tokens;
-
-
-        await _cosmosDbService.UpsertSessionBatchAsync(updatedPromptMessage, completionMessage, _sessions[index]);
+        //Get count of vectors on user prompt (return)
+        return encoding.Encode(userPrompt).Count;
 
     }
 }

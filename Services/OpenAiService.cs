@@ -23,7 +23,8 @@ public class OpenAiService
     /// System prompt to send with user prompts to instruct the model for summarization
     /// </summary>
     private readonly string _summarizePrompt = @"
-        Summarize this prompt in one or two words to use as a label in a button on a web page" + Environment.NewLine;
+        Summarize this prompt in one or two words to use as a label in a button on a web page.
+        Do not use any punctuation." + Environment.NewLine;
 
     /// <summary>
     /// Creates a new instance of the service.
@@ -50,9 +51,9 @@ public class OpenAiService
     /// Sends a prompt to the deployed OpenAI LLM model and returns the response.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="prompt">Prompt message to send to the deployment.</param>
+    /// <param name="userPrompt">Prompt message to send to the deployment.</param>
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
-    public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
+    public async Task<(string completionText, int completionTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
 
         ChatMessage systemMessage = new(ChatRole.System, _systemPrompt);
@@ -76,13 +77,11 @@ public class OpenAiService
 
         Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_modelName, options);
 
-
         ChatCompletions completions = completionsResponse.Value;
 
         return (
-            response: completions.Choices[0].Message.Content,
-            promptTokens: completions.Usage.PromptTokens,
-            responseTokens: completions.Usage.CompletionTokens
+            completionText: completions.Choices[0].Message.Content,
+            completionTokens: completions.Usage.CompletionTokens
         );
     }
 
@@ -90,13 +89,13 @@ public class OpenAiService
     /// Sends the existing conversation to the OpenAI model and returns a two word summary.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="conversation">Prompt conversation to send to the deployment.</param>
+    /// <param name="conversationText">conversation history to send to OpenAI.</param>
     /// <returns>Summarization response from the OpenAI model deployment.</returns>
-    public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
+    public async Task<string> SummarizeAsync(string sessionId, string conversationText)
     {
 
         ChatMessage systemMessage = new(ChatRole.System, _summarizePrompt);
-        ChatMessage userMessage = new(ChatRole.User, userPrompt);
+        ChatMessage userMessage = new(ChatRole.User, conversationText);
 
         ChatCompletionsOptions options = new()
         {
@@ -116,8 +115,8 @@ public class OpenAiService
 
         ChatCompletions completions = completionsResponse.Value;
 
-        string summary = completions.Choices[0].Message.Content;
+        string completionText = completions.Choices[0].Message.Content;
 
-        return summary;
+        return completionText;
     }
 }
