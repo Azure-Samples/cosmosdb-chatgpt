@@ -147,7 +147,7 @@ public class ChatService
         int index = _sessions.FindIndex(s => s.SessionId == sessionId);
 
         List<Message> messages = _sessions[index].Messages;
-        
+
 
         //Start at the end of the list and work backwards
         //This includes the latest user prompt which is already cached
