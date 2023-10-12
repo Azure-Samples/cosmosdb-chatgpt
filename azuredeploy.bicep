@@ -23,7 +23,7 @@ The name defaults to a unique string generated from the resource group identifie
 param name string = uniqueString(resourceGroup().id)
 
 @description('Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**.')
-param cosmosDbEnableFreeTier bool = true
+param cosmosDbEnableFreeTier bool = false
 
 @description('Specifies the SKU for the Azure App Service plan. Defaults to **F1**')
 @allowed([
