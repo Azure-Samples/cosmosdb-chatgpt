@@ -4,9 +4,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Cosmos.Chat.GPT</RootNamespace>
+    <UserSecretsId>faca8719-db54-4203-bb6e-cabe9c31df22</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.*" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+    <PackageReference Include="SharpToken" Version="1.*" />
   </ItemGroup>
 </Project>

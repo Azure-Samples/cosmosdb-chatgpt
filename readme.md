@@ -5,31 +5,31 @@ languages:
 products:
 - azure-cosmos-db
 - azure-openai
-name: Sample chat app using Azure Cosmos DB for NoSQL and Azure OpenAI
+name: Sample chat app using Azure Cosmos DB for NoSQL and Azure OpenAI Service
 urlFragment: chat-app
 description: Sample application that implements multiple chat threads using the Azure OpenAI "gpt-35-turbo" model and Azure Cosmos DB for NoSQL for storage.
 azureDeploy: https://raw.githubusercontent.com/azure-samples/cosmosdb-chatgpt/main/azuredeploy.json
 ---
 
-# Azure Cosmos DB + Azure OpenAI ChatGPT
+# Azure Cosmos DB + Azure OpenAI Service ChatGPT
 
-This sample application combines Azure Cosmos DB with Azure OpenAI to build a simple AI-enabled Chat Application. The application is written in C# on .NET 6 with a Blazor Server front-end and is hosted on Azure Web Apps.
+This sample application combines Azure Cosmos DB with Azure OpenAI Service to build a simple AI-enabled Chat Application. The application is written in C# on .NET 8 with a Blazor Server front-end and is hosted on Azure Web Apps.
 
 ![Cosmos DB + ChatGPT user interface](screenshot.png)
 
 ## Features
 
-This application has individual chat sessions which are displayed and can be selected in the left-hand nav. Clicking on a session will show the messages that contain human prompts and AI completions. 
+Individual chat sessions (or conversations) are displayed and can be selected in the left-hand nav. Clicking on a session will show the messages that contain user prompts and OpenAI completions. 
 
-When a new prompt is sent to the Azure OpenAI service, some of the conversation history is sent with it. This provides context allowing ChatGPT to respond as though it is having a conversation. The length of this conversation history can be configured from appsettings.json with the `OpenAiMaxTokens` value that is then translated to a maximum conversation string length that is 1/2 of this value. 
+When a new prompt is sent to the Azure OpenAI Service, some or all of the conversation history is sent with it. This provides context allowing ChatGPT to respond as though it is having a conversation. The length of this conversation history can be configured from appsettings.json with the `OpenAiMaxTokens` value. When a user prompt is entered, the application will cycle from the most recent to the oldest prompts and completions, counting the tokens used for each. When it gets to the `OpenAiMaxTokens` it stops and returns the conversational history as far back as the token limit allows.
 
-Please note that the "gpt-35-turbo" model used by this sample has a maximum of 4096 tokens. Token are used in both the request and reponse from the service. Overriding the maxConversationLength to values approaching maximum token value could result in completions that contain little to no text if all of it has been used in the request.
+The "gpt-35-turbo" model used by this sample has a maximum of 4096 tokens. Token are used in both the request and reponse from the service. Overriding the maxConversationLength to values approaching maximum token value could result in completions that contain little to no text if all of it has been used in the request.
 
-The history for all prompts and completions for each chat session is stored in Azure Cosmos DB. Deleting a chat session in the UI will delete it's corresponding data as well.
+The history for all prompts and completions is stored in Azure Cosmos DB. Deleting a chat session in the UI will delete it's corresponding user prompts and completions.
 
-The application will also summarize the name of the chat session by asking ChatGPT to provide a one or two word summary of the first prompt. This allows you to easily identity different chat sessions.
+The application summarizes the name of the chat session by asking ChatGPT to provide a one or two word summary of the first user prompt and completion. This allows you to easily identity different chat sessions.
 
-Please note this is a sample application. It is intended to demonstrate how to use Azure Cosmos DB and Azure OpenAI ChatGPT together. It is not intended for production or other large scale use.
+Please note this is a sample application. It is intended to demonstrate how to use Azure Cosmos DB and Azure OpenAI Service ChatGPT together. It demonstrates how system prompts are used to define behavior for generation completions in a Generative AI scenario. It also provides an example of how to model data for a chat-based application.
 
 ## Getting Started
 
@@ -66,7 +66,7 @@ All connection information for Azure Cosmos DB and Azure Open AI is zero-touch a
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy.json)
 
-**Note:** If you already have an Azure OpenAI account or wish to use a different one, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the model used for the completions.
+**Note:** If you already have an Azure OpenAI account deployed and wish to use it with this application, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the GPT 3.5 Turbo model used for completions.
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json)
 
 
@@ -76,6 +76,7 @@ All connection information for Azure Cosmos DB and Azure Open AI is zero-touch a
 1. Click + New Chat to create a new chat session.
 1. Type your question in the text box and press Enter.
 1. Create new sessions and ask more questions on different topics.
+1. View the token usage for the prompts and completions and the total for the session.
 
 ## Clean up
 
@@ -83,7 +84,8 @@ To remove all the resources used by this sample, you must first manually delete 
 
 ## Resources
 
-- [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/)
+- [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/chatgpt-azure-cosmos-db/)
 - [Azure Cosmos DB Free Trial](https://aka.ms/TryCosmos)
-- [OpenAI Platform documentation](https://platform.openai.com/docs/introduction/overview)
 - [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
+- [Azure App Service documentation](https://learn.microsoft.com/azure/app-service/)
+- [ASP.NET Core Blazor documentation](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
