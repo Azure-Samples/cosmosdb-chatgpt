@@ -11,13 +11,13 @@ public class OpenAiService
         ArgumentNullException.ThrowIfNullOrEmpty(modelName);
     }
 
-    public async Task<(string response, int promptTokens, int responseTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
+    public async Task<(string completionText, int completionTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
         await Task.Delay(millisecondsDelay: 500);
-        return ("&ltRESPONSE&gt;", 0, 0);
+        return ("&ltRESPONSE&gt;", 0);
     }
 
-    public async Task<string> SummarizeAsync(string sessionId, string userPrompt)
+    public async Task<string> SummarizeAsync(string sessionId, string conversationText)
     {
         await Task.Delay(millisecondsDelay: 500);
         return "&ltSUMMARY&gt;";
