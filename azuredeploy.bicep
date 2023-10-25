@@ -45,6 +45,9 @@ param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatg
 @description('Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository.')
 param appGetRepositoryBranch string = 'main'
 
+@description('Determines if Azure OpenAI should be deployed. Defaults to true.')
+param deployOpenAi bool = true
+
 var openAiSettings = {
   name: '${name}-openai'
   sku: openAiSku
@@ -151,7 +154,7 @@ resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
   }
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (deployOpenAi) {
   name: openAiSettings.name
   location: location
   sku: {
@@ -164,22 +167,23 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   }
 }
 
-resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = {
+resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (deployOpenAi) {
   parent: openAiAccount
   name: openAiSettings.model.deployment.name
+  sku: {
+    name: 'Standard'
+    capacity: 20
+  }
   properties: {
     model: {
       format: 'OpenAI'
       name: openAiSettings.model.name
       version: openAiSettings.model.version
     }
-    scaleSettings: {
-      scaleType: 'Standard'
-    }
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: appServiceSettings.plan.name
   location: location
   sku: {
@@ -187,7 +191,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   }
 }
 
-resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
+resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
   name: appServiceSettings.web.name
   location: location
   properties: {
@@ -196,11 +200,29 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+resource appServiceWebSettingsFramework 'Microsoft.Web/sites/config@2022-09-01' = {
+  parent: appServiceWeb
+  name: 'web'
+  kind: 'string'
+  properties: {
+    netFrameworkVersion: 'v8.0'
+  }
+}
+
+resource appServiceWebSettingsMetadata 'Microsoft.Web/sites/config@2022-09-01' = {
+  parent: appServiceWeb
+  name: 'metadata'
+  kind: 'string'
+  properties: {
+    CURRENT_STACK: 'dotnet'
+  }
+}
+
+resource appServiceWebSettingsApplication 'Microsoft.Web/sites/config@2022-09-01' = {
   parent: appServiceWeb
   name: 'appsettings'
   kind: 'string'
-  properties: {
+  properties: deployOpenAi ? {
     COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
     COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
     COSMOSDB__DATABASE: cosmosDbDatabase.name
@@ -209,6 +231,11 @@ resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
     OPENAI__KEY: openAiAccount.listKeys().key1
     OPENAI__MODELNAME: openAiModelDeployment.name
     OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
+  } : {
+    COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
+    COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
+    COSMOSDB__DATABASE: cosmosDbDatabase.name
+    COSMOSDB__CONTAINER: cosmosDbContainer.name
   }
 }
 
