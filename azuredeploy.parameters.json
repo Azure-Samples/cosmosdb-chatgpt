@@ -19,6 +19,9 @@
         },
         "appGetRepositoryBranch": {
             "value": "main"
+        },
+        "deployOpenAi": {
+            "value": true
         }
     }
 }
