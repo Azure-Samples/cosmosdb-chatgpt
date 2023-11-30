@@ -35,7 +35,7 @@ public class OpenAiService
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string key, string modelName)
+    public OpenAiService(string key, string modelName = "text-davinci-003")
     {
         ArgumentNullException.ThrowIfNullOrEmpty(modelName);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
