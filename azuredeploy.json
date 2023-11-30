@@ -54,16 +54,6 @@
         "description": "Specifies the SKU for the Azure App Service plan. Defaults to **F1**"
       }
     },
-    "openAiSku": {
-      "type": "string",
-      "defaultValue": "S0",
-      "allowedValues": [
-        "S0"
-      ],
-      "metadata": {
-        "description": "Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**"
-      }
-    },
     "appGitRepository": {
       "type": "string",
       "defaultValue": "https://github.com/azure-samples/cosmosdb-chatgpt.git",
@@ -77,28 +67,9 @@
       "metadata": {
         "description": "Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository."
       }
-    },
-    "deployOpenAi": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Determines if Azure OpenAI should be deployed. Defaults to true."
-      }
     }
   },
   "variables": {
-    "openAiSettings": {
-      "name": "[format('{0}-openai', parameters('name'))]",
-      "sku": "[parameters('openAiSku')]",
-      "maxConversationTokens": "2000",
-      "model": {
-        "name": "gpt-35-turbo",
-        "version": "0301",
-        "deployment": {
-          "name": "chatmodel"
-        }
-      }
-    },
     "cosmosDbSettings": {
       "name": "[format('{0}-cosmos-nosql', parameters('name'))]",
       "enableFreeTier": "[parameters('cosmosDbEnableFreeTier')]",
@@ -200,41 +171,6 @@
       ]
     },
     {
-      "condition": "[parameters('deployOpenAi')]",
-      "type": "Microsoft.CognitiveServices/accounts",
-      "apiVersion": "2023-05-01",
-      "name": "[variables('openAiSettings').name]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[variables('openAiSettings').sku]"
-      },
-      "kind": "OpenAI",
-      "properties": {
-        "customSubDomainName": "[variables('openAiSettings').name]",
-        "publicNetworkAccess": "Enabled"
-      }
-    },
-    {
-      "condition": "[parameters('deployOpenAi')]",
-      "type": "Microsoft.CognitiveServices/accounts/deployments",
-      "apiVersion": "2023-05-01",
-      "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').model.deployment.name)]",
-      "sku": {
-        "name": "Standard",
-        "capacity": 20
-      },
-      "properties": {
-        "model": {
-          "format": "OpenAI",
-          "name": "[variables('openAiSettings').model.name]",
-          "version": "[variables('openAiSettings').model.version]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]"
-      ]
-    },
-    {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2022-09-01",
       "name": "[variables('appServiceSettings').plan.name]",
@@ -291,8 +227,6 @@
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name)]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').container.name)]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]",
-        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').model.deployment.name)]"
       ]
     },
     {

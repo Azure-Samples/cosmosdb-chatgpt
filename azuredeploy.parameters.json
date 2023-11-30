@@ -11,17 +11,11 @@
         "appServiceSku": {
             "value": "D1"
         },
-        "openAiSku": {
-            "value": "S0"
-        },
         "appGitRepository": {
             "value": "https://github.com/azure-samples/cosmosdb-chatgpt.git"
         },
         "appGetRepositoryBranch": {
             "value": "main"
-        },
-        "deployOpenAi": {
-            "value": true
         }
     }
 }
