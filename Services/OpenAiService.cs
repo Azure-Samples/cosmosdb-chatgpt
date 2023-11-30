@@ -29,22 +29,20 @@ public class OpenAiService
     /// <summary>
     /// Creates a new instance of the service.
     /// </summary>
-    /// <param name="endpoint">Endpoint URI.</param>
-    /// <param name="key">Account key.</param>
+    /// <param name="key">API key.</param>
     /// <param name="modelName">Name of the deployed Azure OpenAI model.</param>
     /// <exception cref="ArgumentNullException">Thrown when endpoint, key, or modelName is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string modelName)
+    public OpenAiService(string key, string modelName)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(modelName);
-        ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
 
         _modelName = modelName;
 
-        _client = new(new Uri(endpoint), new AzureKeyCredential(key));
+        _client = new(new AzureKeyCredential(key));
     }
 
     /// <summary>

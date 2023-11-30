@@ -36,7 +36,7 @@ Please note this is a sample application. It is intended to demonstrate how to u
 ### Prerequisites
 
 - Azure Subscription
-- Subscription access to Azure OpenAI service. Start here to [Request Acces to Azure OpenAI Service](https://customervoice.microsoft.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR7en2Ais5pxKtso_Pz4b1_xUOFA5Qk1UWDRBMjg0WFhPMkIzTzhKQ1dWNyQlQCN0PWcu)
+<!-- - Subscription access to Azure OpenAI service. Start here to [Request Acces to Azure OpenAI Service](https://customervoice.microsoft.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR7en2Ais5pxKtso_Pz4b1_xUOFA5Qk1UWDRBMjg0WFhPMkIzTzhKQ1dWNyQlQCN0PWcu) -->
 - Visual Studio, VS Code, or some editor if you want to edit or view the source for this sample.
 
 ### Installation from this repository
@@ -58,16 +58,16 @@ The provided ARM or Bicep Template will provision the following resources:
 
 1. **Azure Cosmos DB** account with database and container at 400 RU/s. This can optionally be configured to run on the Cosmos DB free tier if available for your subscription.
 1. **Azure App service** configured for CI/CD to your forked GitHub repository. This service can also be configured to run on App Service free tier.
-1. **Azure OpenAI** You must also specify a name for the deployment of the "gpt-35-turbo" model which is used by this application.
+<!-- 1. **Azure OpenAI** You must also specify a name for the deployment of the "gpt-35-turbo" model which is used by this application.
 
-**Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
+**Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application. -->
 
-All connection information for Azure Cosmos DB and Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
+All connection information for Azure Cosmos DB Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmichaelspinks%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy.json)
 
-**Note:** If you already have an Azure OpenAI account deployed and wish to use it with this application, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the GPT 3.5 Turbo model used for completions.
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json)
+<!-- **Note:** If you already have an Azure OpenAI account deployed and wish to use it with this application, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the GPT 3.5 Turbo model used for completions.
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json) -->
 
 
 ### Quickstart
@@ -86,6 +86,5 @@ To remove all the resources used by this sample, you must first manually delete 
 
 - [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/chatgpt-azure-cosmos-db/)
 - [Azure Cosmos DB Free Trial](https://aka.ms/TryCosmos)
-- [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
 - [Azure App Service documentation](https://learn.microsoft.com/azure/app-service/)
 - [ASP.NET Core Blazor documentation](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
