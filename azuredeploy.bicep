@@ -1,15 +1,28 @@
-@description('Location where all resources will be deployed. This value defaults to the **East US** region.')
+@description('Location where all resources are deployed. Is limited by the regions with Azure OpenAI availability. Defaults to **East US** region.')
 @allowed([
   'Australia East'
+  'Brazil South'
+  'Canada Central'
   'Canada East'
   'East US'
   'East US 2'
   'France Central'
+  'Germany West Central'
   'Japan East'
+  'Korea Central'
   'North Central US'
+  'Norway East'
+  'Poland Central'
+  'South Africa North'
+  'South Central US'
+  'South India'
+  'Sweden Central'
   'Switzerland North'
+  'UAE North'
   'UK South'
   'West Europe'
+  'West US'
+  'West US 3'
 ])
 param location string = 'East US'
 
@@ -22,9 +35,6 @@ The name defaults to a unique string generated from the resource group identifie
 ''')
 param name string = uniqueString(resourceGroup().id)
 
-@description('Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**.')
-param cosmosDbEnableFreeTier bool = true
-
 @description('Specifies the SKU for the Azure App Service plan. Defaults to **F1**')
 @allowed([
   'F1'
@@ -32,12 +42,6 @@ param cosmosDbEnableFreeTier bool = true
   'B1'
 ])
 param appServiceSku string = 'F1'
-
-@description('Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**')
-@allowed([
-  'S0'
-])
-param openAiSku string = 'S0'
 
 @description('Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository.')
 param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
@@ -50,26 +54,24 @@ param deployOpenAi bool = true
 
 var openAiSettings = {
   name: '${name}-openai'
-  sku: openAiSku
+  sku: 'S0'
   maxConversationTokens: '2000'
   model: {
-    name: 'gpt-35-turbo'
-    version: '0301'
+    name: 'gpt-4'
+    version: '0613'
     deployment: {
-      name: 'chatmodel'
+      name: 'gpt4-chat-sample'
     }
   }
 }
 
 var cosmosDbSettings = {
   name: '${name}-cosmos-nosql'
-  enableFreeTier: cosmosDbEnableFreeTier
   database: {
     name: 'chatdatabase'
   }
   container: {
     name: 'chatcontainer'
-    throughput: 400
   }
 }
 
@@ -87,16 +89,16 @@ var appServiceSettings = {
   sku: appServiceSku
 }
 
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   name: cosmosDbSettings.name
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
+    capabilities: [ { name: 'EnableServerless' } ]
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
     }
     databaseAccountOfferType: 'Standard'
-    enableFreeTier: cosmosDbSettings.enableFreeTier
     locations: [
       {
         failoverPriority: 0
@@ -107,7 +109,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   }
 }
 
-resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' = {
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023-04-15' = {
   parent: cosmosDbAccount
   name: cosmosDbSettings.database.name
   properties: {
@@ -117,7 +119,7 @@ resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@20
   }
 }
 
-resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' = {
+resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
   parent: cosmosDbDatabase
   name: cosmosDbSettings.container.name
   properties: {
@@ -149,7 +151,6 @@ resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
       }
     }
     options: {
-      throughput: cosmosDbSettings.container.throughput
     }
   }
 }
@@ -178,7 +179,7 @@ resource openAiModelDeployment 'Microsoft.CognitiveServices/accounts/deployments
     model: {
       format: 'OpenAI'
       name: openAiSettings.model.name
-      version: openAiSettings.model.version
+      version: 'S0'
     }
   }
 }
@@ -222,7 +223,7 @@ resource appServiceWebSettingsApplication 'Microsoft.Web/sites/config@2022-09-01
   parent: appServiceWeb
   name: 'appsettings'
   kind: 'string'
-  properties: deployOpenAi ? {
+  properties: {
     COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
     COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
     COSMOSDB__DATABASE: cosmosDbDatabase.name
@@ -231,15 +232,10 @@ resource appServiceWebSettingsApplication 'Microsoft.Web/sites/config@2022-09-01
     OPENAI__KEY: openAiAccount.listKeys().key1
     OPENAI__MODELNAME: openAiModelDeployment.name
     OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
-  } : {
-    COSMOSDB__ENDPOINT: cosmosDbAccount.properties.documentEndpoint
-    COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
-    COSMOSDB__DATABASE: cosmosDbDatabase.name
-    COSMOSDB__CONTAINER: cosmosDbContainer.name
   }
 }
 
-resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2021-03-01' = {
+resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2022-09-01' = {
   parent: appServiceWeb
   name: 'web'
   properties: {

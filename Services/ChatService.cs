@@ -1,6 +1,5 @@
 ﻿using Cosmos.Chat.GPT.Constants;
 using Cosmos.Chat.GPT.Models;
-using Microsoft.AspNetCore.SignalR.Protocol;
 using SharpToken;
 
 namespace Cosmos.Chat.GPT.Services;
@@ -107,7 +106,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// Get a completion from _openAiService
+    /// Get a completion from Azure OpenAi Service
     /// </summary>
     public async Task<string> GetChatCompletionAsync(string? sessionId, string promptText)
     {
