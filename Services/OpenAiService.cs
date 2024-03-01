@@ -51,31 +51,31 @@ public class OpenAiService
     /// Sends a prompt to the deployed OpenAI LLM model and returns the response.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="userPrompt">Prompt message to send to the deployment.</param>
+    /// <param name="userPrompt">Prompt message and chat history to send to the model.</param>
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
     public async Task<(string completionText, int completionTokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
 
-        ChatMessage systemMessage = new(ChatRole.System, _systemPrompt);
-        ChatMessage userMessage = new(ChatRole.User, userPrompt);
+        ChatRequestSystemMessage systemMessage = new(_systemPrompt);
+        ChatRequestUserMessage userMessage = new(userPrompt);
 
         ChatCompletionsOptions options = new()
         {
-
+            DeploymentName = _modelName,
             Messages =
             {
                 systemMessage,
                 userMessage
             },
             User = sessionId,
-            MaxTokens = 2000,
-            Temperature = 0.3f,
-            NucleusSamplingFactor = 0.5f,
+            MaxTokens = 1000,
+            Temperature = 0.2f,
+            NucleusSamplingFactor = 0.7f,
             FrequencyPenalty = 0,
             PresencePenalty = 0
         };
 
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_modelName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(options);
 
         ChatCompletions completions = completionsResponse.Value;
 
@@ -94,11 +94,12 @@ public class OpenAiService
     public async Task<string> SummarizeAsync(string sessionId, string conversationText)
     {
 
-        ChatMessage systemMessage = new(ChatRole.System, _summarizePrompt);
-        ChatMessage userMessage = new(ChatRole.User, conversationText);
+        ChatRequestSystemMessage systemMessage = new(_summarizePrompt);
+        ChatRequestUserMessage userMessage = new(conversationText);
 
         ChatCompletionsOptions options = new()
         {
+            DeploymentName = _modelName,
             Messages = {
                 systemMessage,
                 userMessage
@@ -111,7 +112,7 @@ public class OpenAiService
             PresencePenalty = 0
         };
 
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(_modelName, options);
+        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(options);
 
         ChatCompletions completions = completionsResponse.Value;
 

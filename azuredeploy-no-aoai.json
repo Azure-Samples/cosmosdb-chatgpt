@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.20.4.51522",
-      "templateHash": "12310353177236113213"
+      "version": "0.25.53.49325",
+      "templateHash": "8421590683852965200"
     }
   },
   "parameters": {
@@ -14,18 +14,31 @@
       "defaultValue": "East US",
       "allowedValues": [
         "Australia East",
+        "Brazil South",
+        "Canada Central",
         "Canada East",
         "East US",
         "East US 2",
         "France Central",
+        "Germany West Central",
         "Japan East",
+        "Korea Central",
         "North Central US",
+        "Norway East",
+        "Poland Central",
+        "South Africa North",
+        "South Central US",
+        "South India",
+        "Sweden Central",
         "Switzerland North",
+        "UAE North",
         "UK South",
-        "West Europe"
+        "West Europe",
+        "West US",
+        "West US 3"
       ],
       "metadata": {
-        "description": "Location where all resources will be deployed. This value defaults to the **East US** region."
+        "description": "Location where all resources are deployed. Is limited by the regions with Azure OpenAI availability. Defaults to **East US** region."
       }
     },
     "name": {
@@ -33,13 +46,6 @@
       "defaultValue": "[uniqueString(resourceGroup().id)]",
       "metadata": {
         "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
-      }
-    },
-    "cosmosDbEnableFreeTier": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**."
       }
     },
     "appServiceSku": {
@@ -61,18 +67,18 @@
         "description": "Specifies the Azure OpenAI account name."
       }
     },
-    "openAiKey": {
+    "openAiAccountKey": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
         "description": "Specifies the key for Azure OpenAI account."
       }
     },
-    "openAiModelName": {
+    "openAiGptModelName": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "Specifies the deployed model name for your Azure OpenAI account completions API."
+        "description": "Specifies the deployed model name for your Azure OpenAI account GPT model."
       }
     },
     "appGitRepository": {
@@ -91,16 +97,25 @@
     }
   },
   "variables": {
-    "openAiEndpoint": "[format('https://{0}.openai.azure.com', parameters('openAiAccountName'))]",
+    "openAiSettings": {
+      "name": "[parameters('openAiAccountName')]",
+      "endpoint": "[format('https://{0}.openai.azure.com', parameters('openAiAccountName'))]",
+      "key": "[parameters('openAiAccountKey')]",
+      "sku": "S0",
+      "maxConversationTokens": "2000",
+      "model": {
+        "deployment": {
+          "name": "[parameters('openAiGptModelName')]"
+        }
+      }
+    },
     "cosmosDbSettings": {
       "name": "[format('{0}-cosmos-nosql', parameters('name'))]",
-      "enableFreeTier": "[parameters('cosmosDbEnableFreeTier')]",
       "database": {
         "name": "chatdatabase"
       },
       "container": {
-        "name": "chatcontainer",
-        "throughput": 400
+        "name": "chatcontainer"
       }
     },
     "appServiceSettings": {
@@ -120,7 +135,7 @@
   "resources": [
     {
       "type": "Microsoft.DocumentDB/databaseAccounts",
-      "apiVersion": "2022-08-15",
+      "apiVersion": "2023-04-15",
       "name": "[variables('cosmosDbSettings').name]",
       "location": "[parameters('location')]",
       "kind": "GlobalDocumentDB",
@@ -129,7 +144,11 @@
           "defaultConsistencyLevel": "Session"
         },
         "databaseAccountOfferType": "Standard",
-        "enableFreeTier": "[variables('cosmosDbSettings').enableFreeTier]",
+        "capabilities": [
+          {
+            "name": "EnableServerless"
+          }
+        ],
         "locations": [
           {
             "failoverPriority": 0,
@@ -141,7 +160,7 @@
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
-      "apiVersion": "2022-08-15",
+      "apiVersion": "2023-04-15",
       "name": "[format('{0}/{1}', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]",
       "properties": {
         "resource": {
@@ -154,7 +173,7 @@
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-      "apiVersion": "2022-08-15",
+      "apiVersion": "2023-04-15",
       "name": "[format('{0}/{1}/{2}', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').container.name)]",
       "properties": {
         "resource": {
@@ -184,9 +203,7 @@
             ]
           }
         },
-        "options": {
-          "throughput": "[variables('cosmosDbSettings').container.throughput]"
-        }
+        "options": {}
       },
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]"
@@ -194,7 +211,7 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-09-01",
       "name": "[variables('appServiceSettings').plan.name]",
       "location": "[parameters('location')]",
       "sku": {
@@ -203,7 +220,7 @@
     },
     {
       "type": "Microsoft.Web/sites",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-09-01",
       "name": "[variables('appServiceSettings').web.name]",
       "location": "[parameters('location')]",
       "properties": {
@@ -216,18 +233,18 @@
     },
     {
       "type": "Microsoft.Web/sites/config",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}/{1}', variables('appServiceSettings').web.name, 'appsettings')]",
       "kind": "string",
       "properties": {
-        "COSMOSDB__ENDPOINT": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').documentEndpoint]",
-        "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]",
+        "COSMOSDB__ENDPOINT": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2023-04-15').documentEndpoint]",
+        "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2023-04-15').primaryMasterKey]",
         "COSMOSDB__DATABASE": "[variables('cosmosDbSettings').database.name]",
         "COSMOSDB__CONTAINER": "[variables('cosmosDbSettings').container.name]",
-        "OPENAI__ENDPOINT": "[variables('openAiEndpoint')]",
-        "OPENAI__KEY": "[parameters('openAiKey')]",
-        "OPENAI__MODELNAME": "[parameters('openAiModelName')]",
-        "OPENAI__MAXCONVERSATIONTOKENS": "2000"
+        "OPENAI__ENDPOINT": "[variables('openAiSettings').endpoint]",
+        "OPENAI__KEY": "[variables('openAiSettings').key]",
+        "OPENAI__MODELNAME": "[variables('openAiSettings').model.deployment.name]",
+        "OPENAI__MAXCONVERSATIONTOKENS": "[variables('openAiSettings').maxConversationTokens]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]",
@@ -238,7 +255,7 @@
     },
     {
       "type": "Microsoft.Web/sites/sourcecontrols",
-      "apiVersion": "2021-03-01",
+      "apiVersion": "2022-09-01",
       "name": "[format('{0}/{1}', variables('appServiceSettings').web.name, 'web')]",
       "properties": {
         "repoUrl": "[variables('appServiceSettings').web.git.repo]",
@@ -253,7 +270,7 @@
   "outputs": {
     "deployedUrl": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name), '2022-03-01').defaultHostName]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name), '2022-09-01').defaultHostName]"
     }
   }
 }

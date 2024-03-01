@@ -1,15 +1,28 @@
-@description('Location where all resources will be deployed. This value defaults to the **East US** region.')
+@description('Location where all resources are deployed. Is limited by the regions with Azure OpenAI availability. Defaults to **East US** region.')
 @allowed([
   'Australia East'
+  'Brazil South'
+  'Canada Central'
   'Canada East'
   'East US'
   'East US 2'
   'France Central'
+  'Germany West Central'
   'Japan East'
+  'Korea Central'
   'North Central US'
+  'Norway East'
+  'Poland Central'
+  'South Africa North'
+  'South Central US'
+  'South India'
+  'Sweden Central'
   'Switzerland North'
+  'UAE North'
   'UK South'
   'West Europe'
+  'West US'
+  'West US 3'
 ])
 param location string = 'East US'
 
@@ -20,9 +33,6 @@ Unique name for the chat application.  The name is required to be unique as it w
 The name defaults to a unique string generated from the resource group identifier.
 ''')
 param name string = uniqueString(resourceGroup().id)
-
-@description('Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**.')
-param cosmosDbEnableFreeTier bool = true
 
 @description('Specifies the SKU for the Azure App Service plan. Defaults to **F1** Free Tier')
 @allowed([
@@ -37,10 +47,10 @@ param openAiAccountName string = ''
 
 @description('Specifies the key for Azure OpenAI account.')
 @secure()
-param openAiKey string = ''
+param openAiAccountKey string = ''
 
-@description('Specifies the deployed model name for your Azure OpenAI account completions API.')
-param openAiModelName string = ''
+@description('Specifies the deployed model name for your Azure OpenAI account GPT model.')
+param openAiGptModelName string = ''
 
 @description('Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository.')
 param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatgpt.git'
@@ -48,17 +58,26 @@ param appGitRepository string = 'https://github.com/azure-samples/cosmosdb-chatg
 @description('Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository.')
 param appGetRepositoryBranch string = 'main'
 
-var openAiEndpoint = 'https://${openAiAccountName}.openai.azure.com'
+var openAiSettings = {
+  name: openAiAccountName
+  endpoint: 'https://${openAiAccountName}.openai.azure.com'
+  key: openAiAccountKey
+  sku: 'S0'
+  maxConversationTokens: '2000'
+  model: {
+    deployment: {
+      name: openAiGptModelName
+    }
+  }
+}
 
 var cosmosDbSettings = {
   name: '${name}-cosmos-nosql'
-  enableFreeTier: cosmosDbEnableFreeTier
   database: {
     name: 'chatdatabase'
   }
   container: {
     name: 'chatcontainer'
-    throughput: 400
   }
 }
 
@@ -76,7 +95,7 @@ var appServiceSettings = {
   sku: appServiceSku
 }
 
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   name: cosmosDbSettings.name
   location: location
   kind: 'GlobalDocumentDB'
@@ -85,7 +104,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
       defaultConsistencyLevel: 'Session'
     }
     databaseAccountOfferType: 'Standard'
-    enableFreeTier: cosmosDbSettings.enableFreeTier
+    capabilities: [ { name: 'EnableServerless' } ]
     locations: [
       {
         failoverPriority: 0
@@ -96,7 +115,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   }
 }
 
-resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' = {
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023-04-15' = {
   parent: cosmosDbAccount
   name: cosmosDbSettings.database.name
   properties: {
@@ -106,7 +125,7 @@ resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@20
   }
 }
 
-resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' = {
+resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
   parent: cosmosDbDatabase
   name: cosmosDbSettings.container.name
   properties: {
@@ -138,12 +157,11 @@ resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
       }
     }
     options: {
-      throughput: cosmosDbSettings.container.throughput
     }
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: appServiceSettings.plan.name
   location: location
   sku: {
@@ -151,7 +169,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   }
 }
 
-resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
+resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
   name: appServiceSettings.web.name
   location: location
   properties: {
@@ -160,7 +178,7 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
+resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-09-01' = {
   parent: appServiceWeb
   name: 'appsettings'
   kind: 'string'
@@ -169,14 +187,14 @@ resource appServiceWebSettings 'Microsoft.Web/sites/config@2022-03-01' = {
     COSMOSDB__KEY: cosmosDbAccount.listKeys().primaryMasterKey
     COSMOSDB__DATABASE: cosmosDbDatabase.name
     COSMOSDB__CONTAINER: cosmosDbContainer.name
-    OPENAI__ENDPOINT: openAiEndpoint
-    OPENAI__KEY: openAiKey
-    OPENAI__MODELNAME: openAiModelName
-    OPENAI__MAXCONVERSATIONTOKENS: '2000'
+    OPENAI__ENDPOINT: openAiSettings.endpoint
+    OPENAI__KEY: openAiSettings.key
+    OPENAI__MODELNAME: openAiSettings.model.deployment.name
+    OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
   }
 }
 
-resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2021-03-01' = {
+resource appServiceWebDeployment 'Microsoft.Web/sites/sourcecontrols@2022-09-01' = {
   parent: appServiceWeb
   name: 'web'
   properties: {
