@@ -1,5 +1,7 @@
-﻿using Cosmos.Chat.GPT.Constants;
+﻿using Azure.AI.OpenAI;
+using Cosmos.Chat.GPT.Constants;
 using Cosmos.Chat.GPT.Models;
+using Microsoft.Azure.Cosmos;
 using Microsoft.ML.Tokenizers;
 
 namespace Cosmos.Chat.GPT.Services;
@@ -192,8 +194,8 @@ public class ChatService
         promptMessage.Tokens = GetTokens(promptText);
 
         ////Add to the cache
-        //int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-        //_sessions[index].AddMessage(promptMessage);
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
+        _sessions[index].AddMessage(promptMessage);
 
         return promptMessage;
 
@@ -207,9 +209,9 @@ public class ChatService
         //Create completion message
         Message completionMessage = new(sessionId, nameof(Participants.Assistant), completionObject.Tokens, completionObject.Text);
 
-        ////Add to the cache
-        //int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-        //_sessions[index].AddMessage(completionMessage);
+        //Add to the cache
+        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
+        _sessions[index].AddMessage(completionMessage);
 
         return completionMessage;
     }
@@ -246,4 +248,5 @@ public class ChatService
         return _tokenizer.CountTokens(userPrompt);
 
     }
+
 }
