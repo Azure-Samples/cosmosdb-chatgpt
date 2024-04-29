@@ -9,7 +9,8 @@ namespace Cosmos.Chat.GPT.Services;
 /// </summary>
 public class OpenAiService
 {
-    private readonly string _modelName = String.Empty;
+    private readonly string _completionDeploymentName = String.Empty;
+    private readonly string _embeddingDeploymentName = String.Empty;
     private readonly OpenAIClient _client;
 
     /// <summary>
@@ -36,13 +37,15 @@ public class OpenAiService
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string modelName)
+    public OpenAiService(string endpoint, string key, string completionDeploymentName, string embeddingDeploymentName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(modelName);
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
         ArgumentNullException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNullOrEmpty(completionDeploymentName);
+        ArgumentNullException.ThrowIfNullOrEmpty(embeddingDeploymentName);
 
-        _modelName = modelName;
+        _completionDeploymentName = completionDeploymentName;
+        _embeddingDeploymentName = embeddingDeploymentName;
 
         _client = new(new Uri(endpoint), new AzureKeyCredential(key));
     }
@@ -53,15 +56,14 @@ public class OpenAiService
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="userPrompt">Prompt message and chat history to send to the model.</param>
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
-    public async Task<Message> GetChatCompletionAsync(string sessionId, string userPrompt)
+    public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
     {
 
         ChatRequestSystemMessage systemMessage = new(_systemPrompt);
         ChatRequestUserMessage userMessage = new(userPrompt);
-        Message completionMessage = new Message();
         ChatCompletionsOptions options = new()
         {
-            DeploymentName = _modelName,
+            DeploymentName = _completionDeploymentName,
             Messages =
             {
                 systemMessage,
@@ -79,11 +81,11 @@ public class OpenAiService
 
         ChatCompletions completions = completionsResponse.Value;
 
-        completionMessage.Text = completions.Choices[0].Message.Content;
-        completionMessage.Tokens = completions.Usage.CompletionTokens;
+        string completion = completions.Choices[0].Message.Content;
+        int tokens = completions.Usage.CompletionTokens;
 
 
-        return completionMessage;
+        return (completion, tokens);
     }
 
     /// <summary>
@@ -91,7 +93,7 @@ public class OpenAiService
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="conversationText">conversation history to send to OpenAI.</param>
-    /// <returns>Summarization response from the OpenAI model deployment.</returns>
+    /// <returns>Summarization response from the OpenAI completion model deployment.</returns>
     public async Task<string> SummarizeAsync(string sessionId, string conversationText)
     {
 
@@ -100,7 +102,7 @@ public class OpenAiService
 
         ChatCompletionsOptions options = new()
         {
-            DeploymentName = _modelName,
+            DeploymentName = _completionDeploymentName,
             Messages = {
                 systemMessage,
                 userMessage
@@ -120,5 +122,28 @@ public class OpenAiService
         string completionText = completions.Choices[0].Message.Content;
 
         return completionText;
+    }
+
+    /// <summary>
+    /// Generates embeddings from the deployed OpenAI embeddings model and returns an array of vectors.
+    /// </summary>
+    /// <param name="input">Text to send to OpenAI.</param>
+    /// <returns>Array of vectors from the OpenAI embedding model deployment.</returns>
+    public async Task<float[]> GetEmbeddingsAsync(string input)
+    {
+
+        float[] embedding = new float[0];
+
+        EmbeddingsOptions options = new EmbeddingsOptions(_embeddingDeploymentName, new List<string> { input });
+
+        //options.Dimensions = 1536;
+
+        var response = await _client.GetEmbeddingsAsync(options);
+
+        Embeddings embeddings = response.Value;
+
+        embedding = embeddings.Data[0].Embedding.ToArray();
+
+        return embedding;
     }
 }

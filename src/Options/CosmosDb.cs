@@ -8,5 +8,7 @@ public record CosmosDb
 
     public required string Database { get; init; }
 
-    public required string Container { get; init; }
+    public required string ChatContainer { get; init; }
+
+    public required string CacheContainer { get; init; }
 };

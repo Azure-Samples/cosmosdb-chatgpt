@@ -35,6 +35,9 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+
+        builder.Services.AddOptions<Chat>()
+            .Bind(builder.Configuration.GetSection(nameof(Chat)));
     }
 
     public static void RegisterServices(this IServiceCollection services)
@@ -52,7 +55,8 @@ static class ProgramExtensions
                     endpoint: cosmosDbOptions.Value?.Endpoint ?? String.Empty,
                     key: cosmosDbOptions.Value?.Key ?? String.Empty,
                     databaseName: cosmosDbOptions.Value?.Database ?? String.Empty,
-                    containerName: cosmosDbOptions.Value?.Container ?? String.Empty
+                    chatContainerName: cosmosDbOptions.Value?.ChatContainer ?? String.Empty,
+                    cacheContainerName: cosmosDbOptions.Value?.CacheContainer ?? String.Empty
                 );
             }
         });
@@ -68,16 +72,17 @@ static class ProgramExtensions
                 return new OpenAiService(
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
                     key: openAiOptions.Value?.Key ?? String.Empty,
-                    modelName: openAiOptions.Value?.ModelName ?? String.Empty
+                    completionDeploymentName: openAiOptions.Value?.CompletionDeploymentName ?? String.Empty,
+                    embeddingDeploymentName: openAiOptions.Value?.EmbeddingDeploymentName ?? String.Empty
                 );
             }
         });
         services.AddSingleton<ChatService>((provider) =>
         {
-            var openAiOptions = provider.GetRequiredService<IOptions<OpenAi>>();
-            if (openAiOptions is null)
+            var chatOptions = provider.GetRequiredService<IOptions<Chat>>();
+            if (chatOptions is null)
             {
-                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
+                throw new ArgumentException($"{nameof(IOptions<Chat>)} was not resolved through dependency injection.");
             }
             else
             {
@@ -86,7 +91,8 @@ static class ProgramExtensions
                 return new ChatService(
                     openAiService: openAiService,
                     cosmosDbService: cosmosDbService,
-                    maxConversationTokens: openAiOptions.Value?.MaxConversationTokens ?? String.Empty
+                    maxConversationTokens: chatOptions.Value?.MaxConversationTokens ?? String.Empty,
+                    cacheSimilarityScore: chatOptions.Value?.CacheSimilarityScore ?? String.Empty
                 );
             }
         });

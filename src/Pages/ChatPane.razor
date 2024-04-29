@@ -23,7 +23,7 @@
                         <circle cx="257.81" cy="198.46" r="17.24"/>
                         <path d="m182.49 96.66-.07.05.07-.04Z"/>
                     </svg>
-                    <span class="navbar-brand mb-0 ms-1 h1">Azure OpenAI</span>
+                    <span class="navbar-brand mb-0 ms-1 h1">Azure OpenAI Service</span>
                 </div>
                 <button class="navbar-toggler border-0" @onclick="ToggleNavMenu">
                     <i class="bi bi-arrow-left-square-fill"></i>
@@ -94,7 +94,12 @@
                     <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch">
                         @foreach (var msg in _messagesInChat)
                         {
-                            <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Assistant) ? "align-self-end" : "align-self-start")">
+                           <div class="toast fade show w-75 rounded-3 align-self-start">
+                            
+                            </div>
+
+
+                            @* <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Assistant) ? "align-self-end" : "align-self-start")">
                                 <div class="toast-header @(msg.Sender == nameof(Participants.Assistant) ? "bg-success text-dark" : "bg-primary text-light")">
                                     <i class="bi @(msg.Sender == nameof(Participants.Assistant) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
                                     <strong class="me-auto text-capitalize">
@@ -127,7 +132,7 @@
                                     }
                                     @html
                                 </div>
-                            </div>
+                            </div> *@
                         }
                     </div>
                 }
@@ -240,10 +245,10 @@
 
         await chatService.GetChatCompletionAsync(CurrentSession?.SessionId, UserPrompt);
 
-        if(_messagesInChat?.Count == 2)
+        if(_messagesInChat?.Count == 1)
         {
             string newSessionName;
-            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentSession?.SessionId, String.Join(Environment.NewLine, _messagesInChat.Select(m => m.Text)));
+            newSessionName = await chatService.SummarizeChatSessionNameAsync(CurrentSession?.SessionId);
 
             if (CurrentSession is not null)
             {

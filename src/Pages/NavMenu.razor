@@ -44,7 +44,7 @@
                         {
                             <div class="col">
                                 <div class="card @(IsActiveSession(session.SessionId) ? "bg-primary text-light" : "bg-primary opacity-50 text-light")">
-                                    <div class="card-body user-select-none" role="button" @onclick="@(e => LoadChat(session.SessionId,session.Name, session.TokensUsed))">
+                                    <div class="card-body user-select-none" role="button" @onclick="@(e => LoadChat(session.SessionId,session.Name, session.Tokens))">
                                         <a class="card-title text-decoration-none h6">
                                             @if (IsActiveSession(session.SessionId))
                                             {
@@ -61,7 +61,7 @@
                                     </div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                         <span class="badge bg-light me-2 user-select-none">
-                                            Tokens Used: @session.TokensUsed
+                                            Tokens Used: @session.Tokens
                                         </span>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-sm btn-link text-light" @onclick="@(e => OpenInput(session.SessionId,session.Name))">
@@ -194,7 +194,7 @@
                 {
                     CurrentSession.SessionId = match.SessionId;
                     CurrentSession.Name = match.Name;
-                    CurrentSession.TokensUsed = match.TokensUsed;
+                    CurrentSession.Tokens = match.Tokens;
                 }
             }
 
@@ -271,7 +271,7 @@
             {
                 CurrentSession.SessionId = match.SessionId;
                 CurrentSession.Name = match.Name;
-                CurrentSession.TokensUsed = match.TokensUsed;
+                CurrentSession.Tokens = match.Tokens;
             }
         }
 
@@ -300,7 +300,7 @@
                 {
                     CurrentSession.SessionId = match.SessionId;
                     CurrentSession.Name = match.Name;
-                    CurrentSession.TokensUsed = match.TokensUsed;
+                    CurrentSession.Tokens = match.Tokens;
                 }
             }            
         }
@@ -310,7 +310,7 @@
         return 0;
     }
 
-    async private Task<int> LoadChat(string _sessionId, string sessionName, int? tokensUsed)
+    async private Task<int> LoadChat(string _sessionId, string sessionName, int? tokens)
     {
         if (ChatSessions is null) return 0;
 
@@ -319,7 +319,7 @@
 
         CurrentSession.SessionId = _sessionId;
         CurrentSession.Name = sessionName;
-        CurrentSession.TokensUsed = tokensUsed;
+        CurrentSession.Tokens = tokens;
 
         await LoadCurrentChatAsync();
 
