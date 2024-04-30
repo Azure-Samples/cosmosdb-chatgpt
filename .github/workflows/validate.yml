@@ -16,5 +16,7 @@ jobs:
         run: dotnet --version       
       - name: Build .NET solution
         run: dotnet build cosmoschatgpt.sln
+        working-directory: ./src
       - name: Check .NET code format
         run: dotnet format --verify-no-changes cosmoschatgpt.sln
+        working-directory : ./src
