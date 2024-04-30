@@ -15,7 +15,7 @@
 
         public CacheItem(float[] vectors, string prompts, string completion)
         {
-            Id = new Guid().ToString();
+            Id = Guid.NewGuid().ToString();
             Vectors = vectors;
             Prompts = prompts;
             Completion = completion;

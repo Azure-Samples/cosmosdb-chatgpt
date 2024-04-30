@@ -1,6 +1,8 @@
-﻿using Cosmos.Chat.GPT.Models;
+﻿using Azure.AI.OpenAI;
+using Cosmos.Chat.GPT.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
+using System.Collections.ObjectModel;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -43,13 +45,56 @@ public class CosmosDbService
 
         Database? database = client?.GetDatabase(databaseName);
         Container? chatContainer = database?.GetContainer(chatContainerName);
-        Container? cacheContainer = database?.GetContainer(cacheContainerName);
+
+        //Container? cacheContainer = database?.GetContainer(cacheContainerName);
+        Container? cacheContainer = CreateCacheDatabaseContainer(database, cacheContainerName);
+
 
         _chatContainer = chatContainer ??
             throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
 
         _cacheContainer = cacheContainer ??
             throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
+    }
+
+    private static Container CreateCacheDatabaseContainer(Database? database, string cacheContainerName)
+    {
+
+        ThroughputProperties throughputProperties = ThroughputProperties.CreateAutoscaleThroughput(4000);
+
+        // Define new container properties including the vector indexing policy
+        ContainerProperties properties = new ContainerProperties(id: cacheContainerName, partitionKeyPath: "/id")
+        {
+            // Define the vector embedding container policy
+            VectorEmbeddingPolicy = new(
+            new Collection<Embedding>(
+            [
+                new Embedding()
+                {
+                    Path = "/vectors",
+                    DataType = VectorDataType.Float32,
+                    DistanceFunction = DistanceFunction.Cosine,
+                    Dimensions = 1536
+                }
+            ])),
+            IndexingPolicy = new IndexingPolicy()
+            {
+                // Define the vector index policy
+                VectorIndexes = new()
+                {
+                    new VectorIndexPath()
+                    {
+                        Path = "/vectors",
+                        Type = VectorIndexType.QuantizedFlat
+                    }
+                }
+            }
+        };
+
+        // Create the container
+        Container container = database.CreateContainerIfNotExistsAsync(properties, throughputProperties).Result;
+
+        return container;
     }
 
     /// <summary>
@@ -205,24 +250,25 @@ public class CosmosDbService
     /// <param name="similarityScore">Value to determine how similar the vectors >0.99 is exact match.</param>
     public async Task<string> CacheGetAsync(float[] vectors, double similarityScore)
     {
-        string queryText = "SELECT Top 1 c.prompt, c.completion, x.similarityScore FROM(SELECT c.prompt, c.completion, VectorDistance(c.vectors, @vectors, false) as similarityScore FROM c) x WHERE x.similarityScore > @similarityScore ORDER BY x.similarityScore desc";
+
+        string queryText = "SELECT Top 1 x.prompt, x.completion, x.similarityScore FROM(SELECT c.prompt, c.completion, VectorDistance(c.vectors, @vectors, false) as similarityScore FROM c) x WHERE x.similarityScore > @similarityScore ORDER BY x.similarityScore desc";
 
         var queryDef = new QueryDefinition(
-             query: queryText)
+                query: queryText)
             .WithParameter("@vectors", vectors)
             .WithParameter("@similarityScore", similarityScore);
 
-        using FeedIterator<dynamic> resultSet = _cacheContainer.GetItemQueryIterator<dynamic>(queryDefinition: queryDef);
+        using FeedIterator<CacheItem> resultSet = _cacheContainer.GetItemQueryIterator<CacheItem>(queryDefinition: queryDef);
 
         string cacheResponse = "";
 
         while (resultSet.HasMoreResults)
         {
-            FeedResponse<dynamic> response = await resultSet.ReadNextAsync();
+            FeedResponse<CacheItem> response = await resultSet.ReadNextAsync();
 
-            foreach (var item in response)
+            foreach (CacheItem item in response)
             {
-                cacheResponse = item.completion;
+                cacheResponse = item.Completion;
             }
         }
 
@@ -235,10 +281,9 @@ public class CosmosDbService
     /// <param name="vectors">Vectors used to perform the semantic search.</param>
     /// <param name="prompt">Text value of the vectors in the search.</param>
     /// <param name="completion">Text value of the previously generated response to return to the user.</param>
-    public async Task CachePutAsync(float[] vectors, string prompts, string completion)
+    public async Task CachePutAsync(CacheItem cacheItem)
     {
-        CacheItem cacheItem = new(vectors, prompts, completion);
-
+        
         await _cacheContainer.UpsertItemAsync<CacheItem>(item: cacheItem);
     }
 

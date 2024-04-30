@@ -95,44 +95,35 @@
                         @foreach (var msg in _messagesInChat)
                         {
                            <div class="toast fade show w-75 rounded-3 align-self-start">
-                            
-                            </div>
-
-
-                            @* <div class="toast fade show w-75 rounded-3 @(msg.Sender == nameof(Participants.Assistant) ? "align-self-end" : "align-self-start")">
-                                <div class="toast-header @(msg.Sender == nameof(Participants.Assistant) ? "bg-success text-dark" : "bg-primary text-light")">
-                                    <i class="bi @(msg.Sender == nameof(Participants.Assistant) ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
-                                    <strong class="me-auto text-capitalize">
-                                        @msg.Sender
-                                    </strong>
-                                    @if(msg.Tokens is not null) {
-                                        <span class="me-2 badge rounded-pill bg-light">
-                                            Tokens: @msg.Tokens
-                                        </span>
-                                    }
-                                    <small>
-                                        @msg.TimeStamp.Humanize()
-                                    </small>
+                                <div class="toast-header bg-primary text-light">
+                                    <i class="bi bi-person me-1" aria-hidden="true"></i>
+                                    <strong class="me-auto text-capitalize">User</strong>
+                                    <span class="me-2 badge rounded-pill bg-light">Tokens: @msg.PromptTokens</span>
+                                    <small>@msg.TimeStamp.Humanize()</small>
                                 </div>
                                 <div class="toast-body">
                                     <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
                                     @{
-                                        var text = msg.Text.Replace("\n", "<br />");
-                                        Regex rgx = new Regex("```");
-                                        var matches = rgx.Matches(text);
-                                        if(matches.Count() > 0)
-                                            for(int i = 0; i < matches.Count; i++)
-                                                if(i % 2 == 0)
-                                                    // even = start code block tag
-                                                    text = rgx.Replace(text, "<pre><code>", 1, i);
-                                                else
-                                                    // odd = end code block tag
-                                                    text = rgx.Replace(text, "</pre></code>", 1, i);
-                                        MarkupString html = new MarkupString(text);
+                                        MarkupString prompt = FixupText(msg.Prompt);
                                     }
-                                    @html
+                                    @prompt
                                 </div>
-                            </div> *@
+                            </div>
+                            <div class="toast fade show w-75 rounded-3 align-self-end">
+                                <div class="toast-header bg-success text-dark">
+                                    <i class="bi bi-robot me-1" aria-hidden="true"></i>
+                                    <strong class="me-auto text-capitalize">Assistant</strong>
+                                    <span class="me-2 badge rounded-pill bg-light">Tokens: @msg.CompletionTokens</span>
+                                    <small>@msg.TimeStamp.Humanize()</small>
+                                </div>
+                                <div class="toast-body">
+                                    <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
+                                    @{
+                                        MarkupString completion = FixupText(msg.Completion);
+                                    }
+                                    @completion
+                                </div>
+                            </div>
                         }
                     </div>
                 }
@@ -164,16 +155,35 @@
     [Parameter]
     public bool ShowHeader { get; set; }
 
-	[Parameter]
+    [Parameter]
     public EventCallback OnNavBarVisibilityUpdated { get; set; }
 
     private string? UserPrompt { get; set; }
 
     private string? UserPromptSet { get; set; }
-	
+
     private List<Message>? _messagesInChat;
     private static event EventHandler<Session>? _onMessagePosted;
     private bool _loadingComplete;
+
+    private MarkupString FixupText(string input)
+    {
+        var text = input.Replace("\n", "<br />");
+        Regex rgx = new Regex("```");
+        var matches = rgx.Matches(text);
+        if (matches.Count() > 0)
+            for (int i = 0; i < matches.Count; i++)
+                if (i % 2 == 0)
+                    // even = start code block tag
+                    text = rgx.Replace(text, "<pre><code>", 1, i);
+                else
+                    // odd = end code block tag
+                    text = rgx.Replace(text, "</pre></code>", 1, i);
+        
+        MarkupString html = new MarkupString(text);
+
+        return html;
+    }
 
 	async private Task ToggleNavMenu()
     {
