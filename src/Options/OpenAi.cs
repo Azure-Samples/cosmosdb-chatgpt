@@ -6,7 +6,7 @@ public record OpenAi
 
     public required string Key { get; init; }
 
-    public required string ModelName { get; init; }
+    public required string CompletionDeploymentName { get; init; }
 
-    public string? MaxConversationTokens { get; init; }
+    public required string EmbeddingDeploymentName { get; init; }
 }

@@ -16,26 +16,22 @@ public record Message
 
     public DateTime TimeStamp { get; set; }
 
-    public string Sender { get; set; }
-    public int? Tokens { get; set; }
+    public string Prompt { get; set; }
 
-    public string Text { get; set; }
+    public int PromptTokens { get; set; }
 
-    public string UserPrompt { get; set; }
+    public string Completion { get; set; }
 
-    public string CompletionText { get; set; }
-    public Message(string sessionId, string sender, int? tokens, string text)
+    public int CompletionTokens { get; set; }
+    public Message(string sessionId, int promptTokens, string prompt, string completion = "", int completionTokens = 0)
     {
         Id = Guid.NewGuid().ToString();
         Type = nameof(Message);
         SessionId = sessionId;
-        Sender = sender;
-        Tokens = tokens;
         TimeStamp = DateTime.UtcNow;
-        Text = text;
-    }
-
-    public Message()
-    {
+        Prompt = prompt;
+        PromptTokens = promptTokens;
+        Completion = completion;
+        CompletionTokens = completionTokens;
     }
 }

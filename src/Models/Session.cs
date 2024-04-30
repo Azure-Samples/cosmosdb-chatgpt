@@ -16,7 +16,7 @@ public record Session
     /// </summary>
     public string SessionId { get; set; }
 
-    public int? TokensUsed { get; set; }
+    public int? Tokens { get; set; }
 
     public string Name { get; set; }
 
@@ -28,7 +28,7 @@ public record Session
         Id = Guid.NewGuid().ToString();
         Type = nameof(Session);
         SessionId = this.Id;
-        TokensUsed = 0;
+        Tokens = 0;
         Name = "New Chat";
         Messages = new List<Message>();
     }
