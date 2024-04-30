@@ -218,7 +218,6 @@ public class ChatService
         await _cosmosDbService.InsertMessageAsync(chatMessage);
 
         return chatMessage;
-
     }
 
     /// <summary>
@@ -252,6 +251,7 @@ public class ChatService
         return _tokenizer.CountTokens(userPrompt);
 
     }
+
 
     /// <summary>
     /// Consult the semantic cache for similar vectors for the same context window for this conversation
