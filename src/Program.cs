@@ -38,9 +38,6 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<Chat>()
             .Bind(builder.Configuration.GetSection(nameof(Chat)));
-
-        builder.Services.AddOptions<SemanticKernel>()
-            .Bind(builder.Configuration.GetSection(nameof(SemanticKernel)));
     }
 
     public static void RegisterServices(this IServiceCollection services)
@@ -82,10 +79,14 @@ static class ProgramExtensions
         });
         services.AddSingleton<SemanticKernelService, SemanticKernelService>((provider) =>
         {
-            var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
+            //We are using the same options as OpenAiService. There is an config options class for SemanticKernelService
+            //but it is not used. Leaving here if you decide to use in the future. 
+            var semanticKernalOptions = provider.GetRequiredService<IOptions<OpenAi>>();
+            //var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
             if (semanticKernalOptions is null)
             {
-                throw new ArgumentException($"{nameof(IOptions<SemanticKernel>)} was not resolved through dependency injection.");
+                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
+                //throw new ArgumentException($"{nameof(IOptions<SemanticKernel>)} was not resolved through dependency injection.");
             }
             else
             {
