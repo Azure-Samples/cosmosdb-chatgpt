@@ -44,14 +44,14 @@ namespace Cosmos.Chat.GPT.Services
 
         public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> chatHistory)
         {
-            
+
             var skChatHistory = new ChatHistory();
             skChatHistory.AddSystemMessage(_systemPrompt);
 
             foreach (var message in chatHistory)
             {
                 skChatHistory.AddUserMessage(message.Prompt);
-                if(message.Completion != string.Empty)
+                if (message.Completion != string.Empty)
                     skChatHistory.AddAssistantMessage(message.Completion);
             }
 
@@ -65,7 +65,7 @@ namespace Cosmos.Chat.GPT.Services
                     }
             };
 
-            
+
             var result = await kernel.GetRequiredService<IChatCompletionService>().GetChatMessageContentAsync(skChatHistory, settings);
 
             CompletionsUsage completionUsage = (CompletionsUsage)result.Metadata["Usage"]!;
@@ -110,7 +110,7 @@ namespace Cosmos.Chat.GPT.Services
             var result = await kernel.GetRequiredService<IChatCompletionService>().GetChatMessageContentAsync(skChatHistory, settings);
 
             string completion = result.Items[0].ToString();
-            
+
             return completion;
         }
     }

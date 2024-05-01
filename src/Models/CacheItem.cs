@@ -7,8 +7,7 @@
         /// </summary>
         public string Id { get; set; }
 
-        public float[] Vectors { get; set;  }
-
+        public float[] Vectors { get; set; }
         public string Prompts { get; set; }
 
         public string Completion { get; set; }

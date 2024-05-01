@@ -208,11 +208,11 @@ public class CosmosDbService
         PartitionKey partitionKey = new(messages[0].SessionId);
         TransactionalBatch batch = _chatContainer.CreateTransactionalBatch(partitionKey);
 
-        foreach(var message in messages)
+        foreach (var message in messages)
         {
             batch.UpsertItem(item: message);
         }
-        
+
         await batch.ExecuteAsync();
     }
 
@@ -283,7 +283,7 @@ public class CosmosDbService
     /// <param name="completion">Text value of the previously generated response to return to the user.</param>
     public async Task CachePutAsync(CacheItem cacheItem)
     {
-        
+
         await _cacheContainer.UpsertItemAsync<CacheItem>(item: cacheItem);
     }
 

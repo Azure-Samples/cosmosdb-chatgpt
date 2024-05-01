@@ -8,7 +8,7 @@ public class ChatService
     /// <summary>
     /// All data is cached in the _sessions List object.
     /// </summary>
-    
+
     private readonly CosmosDbService _cosmosDbService;
     private readonly OpenAiService _openAiService;
     private readonly SemanticKernelService _semanticKernelService;
@@ -48,7 +48,7 @@ public class ChatService
     /// </summary>
     public async Task CreateNewChatSessionAsync()
     {
-        
+
         Session session = new();
 
         await _cosmosDbService.InsertSessionAsync(session);
@@ -111,7 +111,7 @@ public class ChatService
         }
         else  //Cache miss, send to OpenAI to generate a completion
         {
-            
+
             //Generate a completion and tokens used from current context window
             //(chatMessage.Completion, chatMessage.CompletionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, contextWindow);
 
