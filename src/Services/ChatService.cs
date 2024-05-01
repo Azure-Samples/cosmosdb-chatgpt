@@ -5,10 +5,7 @@ namespace Cosmos.Chat.GPT.Services;
 
 public class ChatService
 {
-    /// <summary>
-    /// All data is cached in the _sessions List object.
-    /// </summary>
-
+    
     private readonly CosmosDbService _cosmosDbService;
     private readonly OpenAiService _openAiService;
     private readonly SemanticKernelService _semanticKernelService;
@@ -80,20 +77,19 @@ public class ChatService
     }
 
     /// <summary>
-    /// Get a completion from Azure OpenAi Service
+    /// Get a completion for a user prompt from Azure OpenAi Service
     /// </summary>
     public async Task<Message> GetChatCompletionAsync(string? sessionId, string promptText)
     {
 
         ArgumentNullException.ThrowIfNull(sessionId);
 
-        //Create a message object for the new User Prompt, also calculates the tokens for the prompt
+        //Create a message object for the new User Prompt and calculate the tokens for the prompt
         Message chatMessage = await CreateChatMessageAsync(sessionId, promptText);
 
         //Grab context window from the conversation history up to the maximum configured tokens
         List<Message> contextWindow = await GetChatSessionContextWindow(sessionId);
 
-        //// Lab Exercise 2: Semantic Cache
         //Perform a cache search to see if this prompt has already been used in the same context window as this conversation
         (string cachePrompts, float[] cacheVectors, string cacheResponse) = await CacheGetAsync(contextWindow);
 
@@ -112,10 +108,8 @@ public class ChatService
         else  //Cache miss, send to OpenAI to generate a completion
         {
 
-            //Generate a completion and tokens used from current context window
+            //Generate a completion and tokens used from current context window which includes the latest user prompt
             //(chatMessage.Completion, chatMessage.CompletionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, contextWindow);
-
-            //Lab Exercise 3: Semantic Kernel
             (chatMessage.Completion, chatMessage.CompletionTokens) = await _semanticKernelService.GetChatCompletionAsync(sessionId, contextWindow);
 
             //Cache the prompts in the current context window and their vectors with the generated completion
@@ -160,7 +154,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// Have OpenAI summarize the conversation based upon the prompt and completion text in the session
+    /// Use OpenAI to summarize the conversation to give it a relevant name on the web page
     /// </summary>
     public async Task<string> SummarizeChatSessionNameAsync(string? sessionId)
     {
@@ -173,9 +167,8 @@ public class ChatService
         //Create a conversation string from the messages
         string conversationText = string.Join(" ", messages.Select(m => m.Prompt + " " + m.Completion));
 
+        //Send to OpenAI to summarize the conversation
         //string completionText = await _openAiService.SummarizeAsync(sessionId, conversationText);
-
-        //Lab Exercise 3: Semantic Kernel
         string completionText = await _semanticKernelService.SummarizeConversationAsync(conversationText);
 
         await RenameChatSessionAsync(sessionId, completionText);
@@ -184,7 +177,7 @@ public class ChatService
     }
 
     /// <summary>
-    /// Calculate token count for prompt text. Add user prompt to the chat session message list object
+    /// Add user prompt to a new chat session message object, calculate token count for prompt text.
     /// </summary>
     private async Task<Message> CreateChatMessageAsync(string sessionId, string promptText)
     {
@@ -192,7 +185,7 @@ public class ChatService
         //Calculate tokens for the user prompt message.
         int promptTokens = GetTokens(promptText);
 
-        //Create a new message object. This gets used later for building the conversation history.
+        //Create a new message object.
         Message chatMessage = new(sessionId, promptTokens, promptText, "");
 
         await _cosmosDbService.InsertMessageAsync(chatMessage);
@@ -220,21 +213,15 @@ public class ChatService
     /// </summary>
     private int GetTokens(string userPrompt)
     {
+        
         Tokenizer _tokenizer = Tokenizer.CreateTiktokenForModel("gpt-3.5-turbo");
-
-        //Create a new instance of SharpToken
-        //var encoding = GptEncoding.GetEncodingForModel("gpt-3.5-turbo");
-
-        //Get count of vectors on user prompt (return)
-        //return encoding.Encode(userPrompt).Count;
 
         return _tokenizer.CountTokens(userPrompt);
 
     }
 
-
     /// <summary>
-    /// Consult the semantic cache for similar vectors for the same context window for this conversation
+    /// Query the semantic cache with user prompt vectors for the current context window in this conversation
     /// </summary>
     private async Task<(string cachePrompts, float[] cacheVectors, string cacheResponse)> CacheGetAsync(List<Message> contextWindow)
     {
@@ -243,18 +230,20 @@ public class ChatService
 
         //Get the embeddings for the user prompts
         //float[] vectors = await _openAiService.GetEmbeddingsAsync(prompts);
-
-        //Lab Exercise 3: Semantic Kernel
         float[] vectors = await _semanticKernelService.GetEmbeddingsAsync(prompts);
 
         //Check the cache for similar vectors
-        string response = await _cosmosDbService.CacheGetAsync(vectors, 0.99);
+        string response = await _cosmosDbService.CacheGetAsync(vectors, _cacheSimilarityScore);
 
         return (prompts, vectors, response);
     }
 
+    /// <summary>
+    /// Cache the last generated completion with user prompt vectors for the current context window in this conversation
+    /// </summary>
     private async Task CachePutAsync(string cachePrompts, float[] cacheVectors, string generatedCompletion)
     {
+        //Include the user prompts text to view. They are not used in the cache search.
         CacheItem cacheItem = new(cacheVectors, cachePrompts, generatedCompletion);
 
         //Put the prompts, vectors and completion into the cache
