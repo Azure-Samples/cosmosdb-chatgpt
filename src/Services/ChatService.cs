@@ -5,7 +5,7 @@ namespace Cosmos.Chat.GPT.Services;
 
 public class ChatService
 {
-    
+
     private readonly CosmosDbService _cosmosDbService;
     private readonly OpenAiService _openAiService;
     private readonly SemanticKernelService _semanticKernelService;
@@ -213,7 +213,7 @@ public class ChatService
     /// </summary>
     private int GetTokens(string userPrompt)
     {
-        
+
         Tokenizer _tokenizer = Tokenizer.CreateTiktokenForModel("gpt-3.5-turbo");
 
         return _tokenizer.CountTokens(userPrompt);
