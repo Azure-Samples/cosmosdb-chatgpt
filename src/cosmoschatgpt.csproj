@@ -15,7 +15,12 @@
     <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.10.0-alpha" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Package\" />
+    <Folder Include="Private\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Private\Microsoft.Azure.Cosmos.4.0.1.nupkg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Update="nuget.config">
