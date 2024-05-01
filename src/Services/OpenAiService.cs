@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using Cosmos.Chat.GPT.Models;
+using Microsoft.VisualBasic;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -56,18 +57,19 @@ public class OpenAiService
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
     /// <param name="userPrompt">Prompt message and chat history to send to the model.</param>
     /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
-    public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, string userPrompt)
+    public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> conversation)
     {
 
-        ChatRequestSystemMessage systemMessage = new(_systemPrompt);
-        ChatRequestUserMessage userMessage = new(userPrompt);
+        //Serialize the conversation to a string to send to OpenAI
+        string conversationString = string.Join(Environment.NewLine, conversation.Select(m => m.Prompt + " " + m.Completion));
+
         ChatCompletionsOptions options = new()
         {
             DeploymentName = _completionDeploymentName,
             Messages =
             {
-                systemMessage,
-                userMessage
+                new ChatRequestSystemMessage(_systemPrompt),
+                new ChatRequestUserMessage(conversationString)
             },
             User = sessionId,
             MaxTokens = 1000,

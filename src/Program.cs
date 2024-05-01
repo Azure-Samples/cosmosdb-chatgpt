@@ -38,6 +38,9 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<Chat>()
             .Bind(builder.Configuration.GetSection(nameof(Chat)));
+
+        builder.Services.AddOptions<SemanticKernel>()
+            .Bind(builder.Configuration.GetSection(nameof(SemanticKernel)));
     }
 
     public static void RegisterServices(this IServiceCollection services)
@@ -77,6 +80,23 @@ static class ProgramExtensions
                 );
             }
         });
+        services.AddSingleton<SemanticKernelService, SemanticKernelService>((provider) =>
+        {
+            var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
+            if (semanticKernalOptions is null)
+            {
+                throw new ArgumentException($"{nameof(IOptions<SemanticKernel>)} was not resolved through dependency injection.");
+            }
+            else
+            {
+                return new SemanticKernelService(
+                    endpoint: semanticKernalOptions.Value?.Endpoint ?? String.Empty,
+                    key: semanticKernalOptions.Value?.Key ?? String.Empty,
+                    completionDeploymentName: semanticKernalOptions.Value?.CompletionDeploymentName ?? String.Empty,
+                    embeddingDeploymentName: semanticKernalOptions.Value?.EmbeddingDeploymentName ?? String.Empty
+                );
+            }
+        });
         services.AddSingleton<ChatService>((provider) =>
         {
             var chatOptions = provider.GetRequiredService<IOptions<Chat>>();
@@ -88,9 +108,11 @@ static class ProgramExtensions
             {
                 var cosmosDbService = provider.GetRequiredService<CosmosDbService>();
                 var openAiService = provider.GetRequiredService<OpenAiService>();
+                var semanticKernelService = provider.GetRequiredService<SemanticKernelService>();
                 return new ChatService(
                     openAiService: openAiService,
                     cosmosDbService: cosmosDbService,
+                    semanticKernelService: semanticKernelService,
                     maxConversationTokens: chatOptions.Value?.MaxConversationTokens ?? String.Empty,
                     cacheSimilarityScore: chatOptions.Value?.CacheSimilarityScore ?? String.Empty
                 );
