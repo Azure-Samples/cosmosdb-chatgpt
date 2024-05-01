@@ -1,0 +1,52 @@
+{
+	"name": "Cosmos Chat GPT Blazor Server",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"VARIANT": "8.0"
+		}
+	},
+	"portsAttributes": {
+		"8100": {
+			"label": "Blazor web application",
+			"onAutoForward": "openPreview"
+		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"installBicep": true,
+			"version": "latest"
+		}
+	},
+	"updateContentCommand": "dotnet build cosmoschatgpt.sln",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csharp",
+				"vsls-contrib.codetour",
+				"VisualStudioExptTeam.vscodeintellicode",
+				"ms-azuretools.vscode-cosmosdb",
+				"ms-azuretools.vscode-bicep"
+			],
+			"settings": {
+				"omnisharp.defaultLaunchSolution": "cosmoschatgpt.sln",
+				"csharp.suppressDotnetRestoreNotification": true,
+				"csharp.suppressDotnetInstallWarning": true,
+				"csharp.suppressBuildAssetsNotification": true,
+				"codetour.promptForWorkspaceTours": false,
+				"codetour.recordMode": "pattern",
+				"codetour.showMarkers": false,
+				"explorer.sortOrder": "type",
+				"explorer.fileNesting.enabled": true,
+				"explorer.fileNesting.patterns": {
+					"*.js": "${capture}.js.map",
+					"*.razor": "${capture}.razor.cs,${capture}.razor.css"
+				},
+				"git.autofetch": true,
+				"files.autoSaveDelay": 1000,
+				"files.autoSave": "afterDelay",
+				"extensions.ignoreRecommendations": true
+			}
+		}
+	}
+}
