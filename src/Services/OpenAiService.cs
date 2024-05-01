@@ -33,7 +33,8 @@ public class OpenAiService
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
     /// <param name="key">Account key.</param>
-    /// <param name="modelName">Name of the deployed Azure OpenAI model.</param>
+    /// <param name="completionDeploymentName">Name of the deployed Azure OpenAI completion model.</param>
+    /// <param name="embeddingDeploymentName">Name of the deployed Azure OpenAI embedding model.</param>
     /// <exception cref="ArgumentNullException">Thrown when endpoint, key, or modelName is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
@@ -55,8 +56,8 @@ public class OpenAiService
     /// Sends a prompt to the deployed OpenAI LLM model and returns the response.
     /// </summary>
     /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-    /// <param name="userPrompt">Prompt message and chat history to send to the model.</param>
-    /// <returns>Response from the OpenAI model along with tokens for the prompt and response.</returns>
+    /// <param name="conversation">List of Message objects containign the context window (chat history) to send to the model.</param>
+    /// <returns>Generated response along with tokens used to generate it.</returns>
     public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> conversation)
     {
 
@@ -137,8 +138,6 @@ public class OpenAiService
         float[] embedding = new float[0];
 
         EmbeddingsOptions options = new EmbeddingsOptions(_embeddingDeploymentName, new List<string> { input });
-
-        //options.Dimensions = 1536;
 
         var response = await _client.GetEmbeddingsAsync(options);
 

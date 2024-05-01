@@ -41,13 +41,14 @@ public class CosmosDbService
 
         CosmosClient client = new CosmosClientBuilder(endpoint, key)
             .WithSerializerOptions(options)
-            .Build();
+            .Build()!;
 
-        Database? database = client?.GetDatabase(databaseName);
-        Container? chatContainer = database?.GetContainer(chatContainerName);
+        Database database = client.GetDatabase(databaseName)!;
+        Container chatContainer = database.GetContainer(chatContainerName)!;
 
-        //Container? cacheContainer = database?.GetContainer(cacheContainerName);
-        Container? cacheContainer = CreateCacheDatabaseContainer(database, cacheContainerName);
+        //Container cacheContainer = database.GetContainer(cacheContainerName)!;
+        //TO-DO: Create cache container in code until Contol Plane supports Vector Indexing
+        Container cacheContainer = CreateCacheContainer(database, cacheContainerName)!;
 
 
         _chatContainer = chatContainer ??
@@ -57,7 +58,15 @@ public class CosmosDbService
             throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
     }
 
-    private static Container CreateCacheDatabaseContainer(Database? database, string cacheContainerName)
+    /// <summary>
+    /// Creates a new semantic cache container.
+    /// This function creates a new cache using both a Vector Embedding Policy for the container 
+    /// and a Vector Indexing Policy which specifies the index itself.
+    /// The container also specifies a default time to live of 1 day.
+    /// </summary>
+    /// <param name="session">Chat session item to create.</param>
+    /// <returns>Newly created chat session item.</returns>
+    private static Container CreateCacheContainer(Database database, string cacheContainerName)
     {
 
         ThroughputProperties throughputProperties = ThroughputProperties.CreateAutoscaleThroughput(4000);
@@ -65,6 +74,9 @@ public class CosmosDbService
         // Define new container properties including the vector indexing policy
         ContainerProperties properties = new ContainerProperties(id: cacheContainerName, partitionKeyPath: "/id")
         {
+            // Set the default time to live for cache items to 1 day
+            DefaultTimeToLive = 86400,
+
             // Define the vector embedding container policy
             VectorEmbeddingPolicy = new(
             new Collection<Embedding>(
@@ -183,6 +195,11 @@ public class CosmosDbService
         );
     }
 
+    /// <summary>
+    /// Returns an existing chat session.
+    /// </summary>
+    /// <param name="sessionId">Chat session id for the session to return.</param>
+    /// <returns>Chat session item.</returns>
     public async Task<Session> GetSessionAsync(string sessionId)
     {
         PartitionKey partitionKey = new(sessionId);
@@ -245,11 +262,16 @@ public class CosmosDbService
 
     /// <summary>
     /// Find a cache item.
+    /// Select Top 1 to get only get one result.
+    /// OrderBy DESC to return the highest similary score first.
+    /// Use a subquery to get the similarity score so we can then use in a WHERE clause
     /// </summary>
     /// <param name="vectors">Vectors to do the semantic search in the cache.</param>
-    /// <param name="similarityScore">Value to determine how similar the vectors >0.99 is exact match.</param>
+    /// <param name="similarityScore">Value to determine how similar the vectors. >0.99 is exact match.</param>
     public async Task<string> CacheGetAsync(float[] vectors, double similarityScore)
     {
+
+        string cacheResponse = "";
 
         string queryText = "SELECT Top 1 x.prompt, x.completion, x.similarityScore FROM(SELECT c.prompt, c.completion, VectorDistance(c.vectors, @vectors, false) as similarityScore FROM c) x WHERE x.similarityScore > @similarityScore ORDER BY x.similarityScore desc";
 
@@ -260,8 +282,6 @@ public class CosmosDbService
 
         using FeedIterator<CacheItem> resultSet = _cacheContainer.GetItemQueryIterator<CacheItem>(queryDefinition: queryDef);
 
-        string cacheResponse = "";
-
         while (resultSet.HasMoreResults)
         {
             FeedResponse<CacheItem> response = await resultSet.ReadNextAsync();
@@ -269,6 +289,7 @@ public class CosmosDbService
             foreach (CacheItem item in response)
             {
                 cacheResponse = item.Completion;
+                return cacheResponse;
             }
         }
 
@@ -288,7 +309,7 @@ public class CosmosDbService
     }
 
     /// <summary>
-    /// Remove a cache item.
+    /// Remove a cache item using its vectors.
     /// </summary>
     /// <param name="vectors">Vectors used to perform the semantic search. Similarity Score is set to 0.99 for exact match</param>
     public async Task CacheRemoveAsync(float[] vectors)
@@ -303,16 +324,13 @@ public class CosmosDbService
 
         using FeedIterator<CacheItem> resultSet = _cacheContainer.GetItemQueryIterator<CacheItem>(queryDefinition: queryDef);
 
-        string cacheId = "";
-
         while (resultSet.HasMoreResults)
         {
             FeedResponse<CacheItem> response = await resultSet.ReadNextAsync();
 
             foreach (CacheItem item in response)
             {
-                cacheId = item.Id;
-                await _cacheContainer.DeleteItemAsync<CacheItem>(partitionKey: new PartitionKey(cacheId), id: cacheId);
+                await _cacheContainer.DeleteItemAsync<CacheItem>(partitionKey: new PartitionKey(item.Id), id: item.Id);
                 return;
             }
         }
