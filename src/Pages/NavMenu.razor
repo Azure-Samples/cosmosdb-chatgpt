@@ -144,6 +144,7 @@
             await this.InvokeAsync(async () =>
             {
                 this.StateHasChanged();
+
                 await LoadCurrentChatAsync();
             });
         };

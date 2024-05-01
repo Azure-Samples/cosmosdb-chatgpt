@@ -8,17 +8,18 @@ public class ChatService
     /// <summary>
     /// All data is cached in the _sessions List object.
     /// </summary>
-    private static List<Session> _sessions = new();
-
+    
     private readonly CosmosDbService _cosmosDbService;
     private readonly OpenAiService _openAiService;
+    private readonly SemanticKernelService _semanticKernelService;
     private readonly int _maxConversationTokens;
     private readonly double _cacheSimilarityScore;
 
-    public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService, string maxConversationTokens, string cacheSimilarityScore)
+    public ChatService(CosmosDbService cosmosDbService, OpenAiService openAiService, SemanticKernelService semanticKernelService, string maxConversationTokens, string cacheSimilarityScore)
     {
         _cosmosDbService = cosmosDbService;
         _openAiService = openAiService;
+        _semanticKernelService = semanticKernelService;
 
         _maxConversationTokens = Int32.TryParse(maxConversationTokens, out _maxConversationTokens) ? _maxConversationTokens : 4000;
         _cacheSimilarityScore = Double.TryParse(cacheSimilarityScore, out _cacheSimilarityScore) ? _cacheSimilarityScore : 0.99;
@@ -29,7 +30,7 @@ public class ChatService
     /// </summary>
     public async Task<List<Session>> GetAllChatSessionsAsync()
     {
-        return _sessions = await _cosmosDbService.GetSessionsAsync();
+        return await _cosmosDbService.GetSessionsAsync();
     }
 
     /// <summary>
@@ -47,9 +48,8 @@ public class ChatService
     /// </summary>
     public async Task CreateNewChatSessionAsync()
     {
+        
         Session session = new();
-
-        _sessions.Add(session);
 
         await _cosmosDbService.InsertSessionAsync(session);
 
@@ -62,11 +62,11 @@ public class ChatService
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
-        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
+        Session session = await _cosmosDbService.GetSessionAsync(sessionId);
 
-        _sessions[index].Name = newChatSessionName;
+        session.Name = newChatSessionName;
 
-        await _cosmosDbService.UpdateSessionAsync(_sessions[index]);
+        await _cosmosDbService.UpdateSessionAsync(session);
     }
 
     /// <summary>
@@ -75,10 +75,6 @@ public class ChatService
     public async Task DeleteChatSessionAsync(string? sessionId)
     {
         ArgumentNullException.ThrowIfNull(sessionId);
-
-        int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-
-        _sessions.RemoveAt(index);
 
         await _cosmosDbService.DeleteSessionAndMessagesAsync(sessionId);
     }
@@ -94,12 +90,12 @@ public class ChatService
         //Create a message object for the new User Prompt, also calculates the tokens for the prompt
         Message chatMessage = await CreateChatMessageAsync(sessionId, promptText);
 
-        //Grab conversation history up to the maximum configured tokens
-        List<Message> conversation = await GetChatSessionContextWindow(sessionId);
+        //Grab context window from the conversation history up to the maximum configured tokens
+        List<Message> contextWindow = await GetChatSessionContextWindow(sessionId);
 
-        //// Lab Exercise
+        //// Lab Exercise 2: Semantic Cache
         //Perform a cache search to see if this prompt has already been used in the same context window as this conversation
-        (string cachePrompts, float[] cacheVectors, string cacheResponse) = await CacheGetAsync(conversation);
+        (string cachePrompts, float[] cacheVectors, string cacheResponse) = await CacheGetAsync(contextWindow);
 
         //Cache hit, return the cached completion
         if (!string.IsNullOrEmpty(cacheResponse))
@@ -107,18 +103,25 @@ public class ChatService
             chatMessage.Completion = cacheResponse;
             chatMessage.Completion += " (cached response)";
             chatMessage.CompletionTokens = 0;
+
+            //Persist the prompt/completion, update the session tokens
+            await UpdateSessionAndMessage(sessionId, chatMessage);
+
+            return chatMessage;
         }
         else  //Cache miss, send to OpenAI to generate a completion
-        { 
-            //Serialize the conversation to a string to send to OpenAI
-            string conversationString = string.Join(Environment.NewLine, conversation.Select(m => m.Prompt + " " + m.Completion));
+        {
+            
+            //Generate a completion and tokens used from current context window
+            //(chatMessage.Completion, chatMessage.CompletionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, contextWindow);
 
-            //Generate a completion and tokens used from the user prompt and conversation
-            (chatMessage.Completion, chatMessage.CompletionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, conversationString);
+            //Lab Exercise 3: Semantic Kernel
+            (chatMessage.Completion, chatMessage.CompletionTokens) = await _semanticKernelService.GetChatCompletionAsync(sessionId, contextWindow);
 
             //Cache the prompts in the current context window and their vectors with the generated completion
             await CachePutAsync(cachePrompts, cacheVectors, chatMessage.Completion);
         }
+
 
         //Persist the prompt/completion, update the session tokens
         await UpdateSessionAndMessage(sessionId, chatMessage);
@@ -133,10 +136,6 @@ public class ChatService
     {
 
         int? tokensUsed = 0;
-
-        //List<string> conversationBuilder = new List<string>();
-        //int index = _sessions.FindIndex(s => s.SessionId == sessionId);
-        //List<Message> messages = _sessions[index].Messages;
 
         List<Message> allMessages = await _cosmosDbService.GetSessionMessagesAsync(sessionId);
         List<Message> contextWindow = new List<Message>();
@@ -167,13 +166,17 @@ public class ChatService
     {
         ArgumentNullException.ThrowIfNull(sessionId);
 
+
         //Get the messages for the session
         List<Message> messages = await _cosmosDbService.GetSessionMessagesAsync(sessionId);
 
         //Create a conversation string from the messages
-        string conversationText = string.Join(Environment.NewLine, messages.Select(m => m.Prompt + " " + m.Completion));
+        string conversationText = string.Join(" ", messages.Select(m => m.Prompt + " " + m.Completion));
 
-        string completionText = await _openAiService.SummarizeAsync(sessionId, conversationText);
+        //string completionText = await _openAiService.SummarizeAsync(sessionId, conversationText);
+
+        //Lab Exercise 3: Semantic Kernel
+        string completionText = await _semanticKernelService.SummarizeConversationAsync(conversationText);
 
         await RenameChatSessionAsync(sessionId, completionText);
 
@@ -239,7 +242,10 @@ public class ChatService
         string prompts = string.Join(Environment.NewLine, contextWindow.Select(m => m.Prompt));
 
         //Get the embeddings for the user prompts
-        float[] vectors = await _openAiService.GetEmbeddingsAsync(prompts);
+        //float[] vectors = await _openAiService.GetEmbeddingsAsync(prompts);
+
+        //Lab Exercise 3: Semantic Kernel
+        float[] vectors = await _semanticKernelService.GetEmbeddingsAsync(prompts);
 
         //Check the cache for similar vectors
         string response = await _cosmosDbService.CacheGetAsync(vectors, 0.99);
