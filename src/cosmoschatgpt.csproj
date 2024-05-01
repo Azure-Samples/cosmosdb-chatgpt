@@ -17,4 +17,9 @@
   <ItemGroup>
     <Folder Include="Package\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Update="nuget.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
