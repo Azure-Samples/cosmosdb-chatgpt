@@ -50,16 +50,16 @@ namespace Cosmos.Chat.GPT.Services
             ArgumentNullException.ThrowIfNullOrEmpty(completionDeploymentName);
             ArgumentNullException.ThrowIfNullOrEmpty(embeddingDeploymentName);
 
+            //Exercise 4, add the Azure OpenAI Chat Completion and Text Embedding Generation plugins to the Semantic Kernel
+            //kernel = Kernel.CreateBuilder()
+            //    .Build();
+
+
             // Initialize the Semantic Kernel
             kernel = Kernel.CreateBuilder()
                 .AddAzureOpenAIChatCompletion(completionDeploymentName, endpoint, key)
                 .AddAzureOpenAITextEmbeddingGeneration(embeddingDeploymentName, endpoint, key)
                 .Build();
-
-            //Add the Summarization plugin
-            //kernel.Plugins.AddFromType<ConversationSummaryPlugin>();
-
-            //summarizePlugin = new(kernel);
 
         }
 
