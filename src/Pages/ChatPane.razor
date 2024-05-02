@@ -248,10 +248,10 @@
             return;
         }
 
-        // if (UserPrompt != String.Empty)
-        // {           
-        //     UserPromptSet = String.Empty;
-        // }
+        if (UserPrompt != String.Empty)
+        {           
+           UserPromptSet = String.Empty;
+        }
 
         await chatService.GetChatCompletionAsync(CurrentSession?.SessionId, UserPrompt);
 
