@@ -1,4 +1,5 @@
 ﻿using Cosmos.Chat.GPT.Models;
+using Cosmos.Chat.GPT.Options;
 using Microsoft.ML.Tokenizers;
 
 namespace Cosmos.Chat.GPT.Services;
@@ -43,12 +44,14 @@ public class ChatService
     /// <summary>
     /// User creates a new Chat Session.
     /// </summary>
-    public async Task CreateNewChatSessionAsync()
+    public async Task<Session> CreateNewChatSessionAsync()
     {
 
         Session session = new();
 
         await _cosmosDbService.InsertSessionAsync(session);
+
+        return session;
 
     }
 

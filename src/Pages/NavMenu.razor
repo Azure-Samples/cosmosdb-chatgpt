@@ -177,6 +177,9 @@
             _deletePopUpOpen = false;
             await chatService.DeleteChatSessionAsync(_sessionId);
 
+            int index = ChatSessions.FindIndex(s => s.SessionId == _sessionId);
+            ChatSessions.RemoveAt(index);
+
             _deletePopUpOpen = false;
 
             UpdateNavMenuDisplay("Delete");
@@ -224,6 +227,8 @@
             }
 
             await chatService.RenameChatSessionAsync(_sessionId, newName);
+            int index = ChatSessions.FindIndex(s => s.SessionId == _sessionId);
+            ChatSessions[index].Name = newName;
 
             _renamePopUpOpen = false;
 
@@ -246,8 +251,8 @@
 
     private async Task NewChat()
     {
-        await chatService.CreateNewChatSessionAsync();
-
+        var session = await chatService.CreateNewChatSessionAsync();
+        ChatSessions.Add(session);
         if (ChatSessions.Count == 1)
         {
             CurrentSession = ChatSessions[0] with { };
@@ -307,7 +312,6 @@
         }
 
         await OnChatClicked.InvokeAsync(CurrentSession);
-
         return 0;
     }
 
