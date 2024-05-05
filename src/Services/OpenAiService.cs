@@ -61,8 +61,9 @@ public class OpenAiService
     public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> conversation)
     {
 
+        /*
         //Serialize the conversation to a string to send to OpenAI
-        string conversationString = string.Join(Environment.NewLine, conversation.Select(m => m.Prompt + " " + m.Completion));
+        string userMessage = string.Join(Environment.NewLine, conversation.Select(m => m.Prompt + " " + m.Completion));
 
         ChatCompletionsOptions options = new()
         {
@@ -70,14 +71,12 @@ public class OpenAiService
             Messages =
             {
                 new ChatRequestSystemMessage(_systemPrompt),
-                new ChatRequestUserMessage(conversationString)
+                new ChatRequestUserMessage(userMessage)
             },
             User = sessionId,
             MaxTokens = 1000,
             Temperature = 0.2f,
-            NucleusSamplingFactor = 0.7f,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0
+            NucleusSamplingFactor = 0.7f
         };
 
         Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(options);
@@ -86,7 +85,12 @@ public class OpenAiService
 
         string completion = completions.Choices[0].Message.Content;
         int tokens = completions.Usage.CompletionTokens;
+        */
 
+        //Remove these three lines during lab
+        await Task.Delay(1000);
+        string completion = "Place holder response";
+        int tokens = 0;
 
         return (completion, tokens);
     }
