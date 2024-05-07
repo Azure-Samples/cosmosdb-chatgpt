@@ -88,6 +88,12 @@ public class ChatService
         //Create a message object for the new User Prompt and calculate the tokens for the prompt
         Message chatMessage = await CreateChatMessageAsync(sessionId, promptText);
 
+        List<Message> messages = new List<Message>();
+        messages.Add(chatMessage);
+
+        //Generate a completion and tokens used from current context window which includes the latest user prompt
+        (chatMessage.Completion, chatMessage.CompletionTokens) = await _openAiService.GetChatCompletionAsync(sessionId, messages);
+
         //Persist the prompt/completion, update the session tokens
         await UpdateSessionAndMessage(sessionId, chatMessage);
 
@@ -217,7 +223,7 @@ public class ChatService
         //Grab the user prompts for the context window
         string prompts = string.Join(Environment.NewLine, contextWindow.Select(m => m.Prompt));
 
-        //Get the embeddings for the user prompts
+        //To-do : Generate vercotrs from conversations to use for cache search
         float[] vectors = await _openAiService.GetEmbeddingsAsync(prompts);
         //float[] vectors = await _semanticKernelService.GetEmbeddingsAsync(prompts);
 

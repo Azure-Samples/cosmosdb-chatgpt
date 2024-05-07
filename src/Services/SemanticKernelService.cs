@@ -51,14 +51,9 @@ namespace Cosmos.Chat.GPT.Services
             ArgumentNullException.ThrowIfNullOrEmpty(embeddingDeploymentName);
 
             //Exercise 4, add the Azure OpenAI Chat Completion and Text Embedding Generation plugins to the Semantic Kernel
-            //kernel = Kernel.CreateBuilder()
-            //    .Build();
-
 
             // Initialize the Semantic Kernel
             kernel = Kernel.CreateBuilder()
-                .AddAzureOpenAIChatCompletion(completionDeploymentName, endpoint, key)
-                .AddAzureOpenAITextEmbeddingGeneration(embeddingDeploymentName, endpoint, key)
                 .Build();
 
         }
@@ -92,13 +87,8 @@ namespace Cosmos.Chat.GPT.Services
                     }
             };
 
-
-            var result = await kernel.GetRequiredService<IChatCompletionService>().GetChatMessageContentAsync(skChatHistory, settings);
-
-            CompletionsUsage completionUsage = (CompletionsUsage)result.Metadata["Usage"]!;
-
-            string completion = result.Items[0].ToString();
-            int tokens = completionUsage.CompletionTokens;
+            string completion = "Place holder response";
+            int tokens =100;
 
             return (completion, tokens);
 
@@ -112,9 +102,7 @@ namespace Cosmos.Chat.GPT.Services
         public async Task<float[]> GetEmbeddingsAsync(string text)
         {
 
-            var embeddings = await kernel.GetRequiredService<ITextEmbeddingGenerationService>().GenerateEmbeddingAsync(text);
-
-            float[] embeddingsArray = embeddings.ToArray();
+            float[] embeddingsArray = new float[0];
 
             return embeddingsArray;
         }

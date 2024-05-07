@@ -273,19 +273,9 @@ public class CosmosDbService
 
         string cacheResponse = "";
 
-        string queryText = @"SELECT Top 1 
-                                x.completion, 
-                                x.similarityScore 
-                            FROM (
-                                 SELECT 
-                                    c.prompt, 
-                                    c.completion, 
-                                    VectorDistance(c.vectors, @vectors, false) as similarityScore 
-                                 FROM c) x 
-                            WHERE 
-                                x.similarityScore > @similarityScore 
-                            ORDER BY 
-                                x.similarityScore desc";
+        //To-do : Implement the semantic cache query using VectorDistance function
+
+        string queryText = @"";
 
         var queryDef = new QueryDefinition(
                 query: queryText)
