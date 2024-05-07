@@ -268,7 +268,7 @@ public class CosmosDbService
     /// </summary>
     /// <param name="vectors">Vectors to do the semantic search in the cache.</param>
     /// <param name="similarityScore">Value to determine how similar the vectors. >0.99 is exact match.</param>
-    public async Task<string> CacheGetAsync(float[] vectors, double similarityScore)
+    public async Task<string> GetCacheAsync(float[] vectors, double similarityScore)
     {
 
         string cacheResponse = "";

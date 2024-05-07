@@ -45,11 +45,11 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    public async void ForceRefreshAsync()
+    public async void ForceRefreshAsync(Session session)
     {
         // Inform blazor the UI needs updating
         await InvokeAsync(StateHasChanged);
 
-        NavMenu?.UpdateNavMenuDisplay("Rename by Open AI");
+        NavMenu?.UpdateNavMenuDisplay("Rename by Open AI", session);
     }
 }
