@@ -244,4 +244,12 @@ public class ChatService
         //Put the prompts, vectors and completion into the cache
         await _cosmosDbService.CachePutAsync(cacheItem);
     }
+
+    /// <summary>
+    /// Clear the Semantic Cache
+    /// </summary>
+    public async Task ClearCache()
+    {
+        await _cosmosDbService.CacheClearAsync();
+    }
 }
