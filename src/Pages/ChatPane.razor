@@ -32,6 +32,11 @@
         </div>
     } 
     <h6 class="px-4 display-6 text-secondary p-2">@GetChatSessionName()</h6>
+    <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-link btn-sm pb-2" @onclick="ClearCache">
+            Clear Cache
+        </button>
+    </div>
     <div class="px-4 pb-4 pt-2 flex-grow-1 overflow-y-auto overflow-x-hidden align-items-stretch" id="MessagesInChatdiv">
         @if (CurrentSession is null)
         {
@@ -294,5 +299,10 @@
     private async Task ScrollLastChatToView()
     {
         await JSRuntime.InvokeAsync<bool>("scrollToLastMessage");
+    }
+
+    private async Task ClearCache()
+    {
+        chatService.ClearCache();
     }
 }
