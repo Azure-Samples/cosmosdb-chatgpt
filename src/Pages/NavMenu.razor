@@ -157,8 +157,15 @@
         _popUpText = $"Do you want to delete the chat \"{title}\"?";
     }
 
-    public void UpdateNavMenuDisplay(string reason = "")
+    public void UpdateNavMenuDisplay(string reason = "", Session _session = null)
     {
+        if (_session is not null)
+        {
+            int index = ChatSessions.FindIndex(s => s.SessionId == _session.SessionId);
+            ChatSessions[index].Tokens = _session.Tokens;
+            ChatSessions[index].Name = _session.Name;
+        }
+
         if (OnNavMenuChanged is not null)
         {
             OnNavMenuChanged.Invoke(null, reason);

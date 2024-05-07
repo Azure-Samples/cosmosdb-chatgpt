@@ -94,7 +94,7 @@ public class ChatService
         List<Message> contextWindow = await GetChatSessionContextWindow(sessionId);
 
         //Perform a cache search to see if this prompt has already been used in the same context window as this conversation
-        (string cachePrompts, float[] cacheVectors, string cacheResponse) = await CacheGetAsync(contextWindow);
+        (string cachePrompts, float[] cacheVectors, string cacheResponse) = await GetCacheAsync(contextWindow);
 
         //Cache hit, return the cached completion
         if (!string.IsNullOrEmpty(cacheResponse))
@@ -226,7 +226,7 @@ public class ChatService
     /// <summary>
     /// Query the semantic cache with user prompt vectors for the current context window in this conversation
     /// </summary>
-    private async Task<(string cachePrompts, float[] cacheVectors, string cacheResponse)> CacheGetAsync(List<Message> contextWindow)
+    private async Task<(string cachePrompts, float[] cacheVectors, string cacheResponse)> GetCacheAsync(List<Message> contextWindow)
     {
         //Grab the user prompts for the context window
         string prompts = string.Join(Environment.NewLine, contextWindow.Select(m => m.Prompt));
@@ -236,7 +236,7 @@ public class ChatService
         float[] vectors = await _semanticKernelService.GetEmbeddingsAsync(prompts);
 
         //Check the cache for similar vectors
-        string response = await _cosmosDbService.CacheGetAsync(vectors, _cacheSimilarityScore);
+        string response = await _cosmosDbService.GetCacheAsync(vectors, _cacheSimilarityScore);
 
         return (prompts, vectors, response);
     }
