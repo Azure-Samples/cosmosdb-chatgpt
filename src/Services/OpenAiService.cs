@@ -60,33 +60,6 @@ public class OpenAiService
     /// <returns>Generated response along with tokens used to generate it.</returns>
     public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> conversation)
     {
-
-        /*
-        //Serialize the conversation to a string to send to OpenAI
-        string userMessage = string.Join(Environment.NewLine, conversation.Select(m => m.Prompt + " " + m.Completion));
-
-        ChatCompletionsOptions options = new()
-        {
-            DeploymentName = _completionDeploymentName,
-            Messages =
-            {
-                new ChatRequestSystemMessage(_systemPrompt),
-                new ChatRequestUserMessage(userMessage)
-            },
-            User = sessionId,
-            MaxTokens = 1000,
-            Temperature = 0.2f,
-            NucleusSamplingFactor = 0.7f
-        };
-
-        Response<ChatCompletions> completionsResponse = await _client.GetChatCompletionsAsync(options);
-
-        ChatCompletions completions = completionsResponse.Value;
-
-        string completion = completions.Choices[0].Message.Content;
-        int tokens = completions.Usage.CompletionTokens;
-        */
-
         //Remove these three lines during lab
         await Task.Delay(1000);
         string completion = "Place holder response";
