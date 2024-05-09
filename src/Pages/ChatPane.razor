@@ -303,6 +303,6 @@
 
     private async Task ClearCache()
     {
-        chatService.ClearCache();
+        await chatService.CacheClearAsync();
     }
 }
