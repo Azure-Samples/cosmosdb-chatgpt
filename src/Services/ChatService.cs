@@ -50,7 +50,7 @@ public class ChatService
         float[] vectors = new float[0];
         string response = string.Empty;
         await Task.Delay(0);
-       
+
         return (prompts, vectors, response);
     }
 
