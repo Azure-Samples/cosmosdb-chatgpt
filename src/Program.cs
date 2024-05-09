@@ -79,8 +79,6 @@ static class ProgramExtensions
         });
         services.AddSingleton<SemanticKernelService, SemanticKernelService>((provider) =>
         {
-            //We are using the same options as OpenAiService. There is an config options class for SemanticKernelService
-            //but it is not used. Leaving here if you decide to use in the future. 
             var semanticKernalOptions = provider.GetRequiredService<IOptions<OpenAi>>();
             //var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
             if (semanticKernalOptions is null)

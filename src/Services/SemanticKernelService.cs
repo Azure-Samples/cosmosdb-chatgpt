@@ -1,80 +1,52 @@
 ﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Cosmos.Chat.GPT.Models;
-using Microsoft.SemanticKernel.Embeddings;
-using Azure.AI.OpenAI;
 
 #pragma warning disable SKEXP0010, SKEXP0001
 
-
 namespace Cosmos.Chat.GPT.Services
 {
-    /// <summary>
-    /// Semantic Kernel implementation for Azure OpenAI.
-    /// </summary>
     public class SemanticKernelService
     {
-        //Semantic Kernel
         readonly Kernel kernel;
 
-        /// <summary>
-        /// System prompt to send with user prompts to instruct the model for chat session
-        /// </summary>
         private readonly string _systemPrompt = @"
         You are an AI assistant that helps people find information.
         Provide concise answers that are polite and professional.";
 
-        /// <summary>    
-        /// System prompt to send with user prompts to instruct the model for summarization
-        /// </summary>
         private readonly string _summarizePrompt = @"
         Summarize this text. One to three words maximum length. 
         Plain text only. No punctuation, markup or tags.";
 
-
-        /// <summary>
-        /// Creates a new instance of the Semantic Kernel.
-        /// </summary>
-        /// <param name="endpoint">Endpoint URI.</param>
-        /// <param name="key">Account key.</param>
-        /// <param name="completionDeploymentName">Name of the deployed Azure OpenAI completion model.</param>
-        /// <param name="embeddingDeploymentName">Name of the deployed Azure OpenAI embedding model.</param>
-        /// <exception cref="ArgumentNullException">Thrown when endpoint, key, or modelName is either null or empty.</exception>
-        /// <remarks>
-        /// This constructor will validate credentials and create a Semantic Kernel instance.
-        /// </remarks>
         public SemanticKernelService(string endpoint, string key, string completionDeploymentName, string embeddingDeploymentName)
         {
+            _systemPrompt += "";
             ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
             ArgumentNullException.ThrowIfNullOrEmpty(key);
             ArgumentNullException.ThrowIfNullOrEmpty(completionDeploymentName);
             ArgumentNullException.ThrowIfNullOrEmpty(embeddingDeploymentName);
 
-            //Exercise 4, add the Azure OpenAI Chat Completion and Text Embedding Generation plugins to the Semantic Kernel
-
-            // Initialize the Semantic Kernel
             kernel = Kernel.CreateBuilder()
                 .Build();
-
         }
 
-        /// <summary>
-        /// Generates a completion using a user prompt with chat history to Semantic Kernel and returns the response.
-        /// </summary>
-        /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-        /// <param name="conversation">List of Message objects containign the context window (chat history) to send to the model.</param>
-        /// <returns>Generated response along with tokens used to generate it.</returns>
+        public async Task<float[]> GetEmbeddingsAsync(string text)
+        {
+            await Task.Delay(0);
+            float[] embeddingsArray = new float[0];
+
+            return embeddingsArray;
+        }
+
         public async Task<(string completion, int tokens)> GetChatCompletionAsync(string sessionId, List<Message> chatHistory)
         {
-
             var skChatHistory = new ChatHistory();
-            skChatHistory.AddSystemMessage(_systemPrompt);
+            skChatHistory.AddSystemMessage(string.Empty);
 
             foreach (var message in chatHistory)
             {
                 skChatHistory.AddUserMessage(message.Prompt);
-                if (message.Completion != string.Empty)
-                    skChatHistory.AddAssistantMessage(message.Completion);
+                skChatHistory.AddAssistantMessage(string.Empty);
             }
 
             PromptExecutionSettings settings = new()
@@ -88,35 +60,14 @@ namespace Cosmos.Chat.GPT.Services
             };
 
             string completion = "Place holder response";
-            int tokens =100;
+            int tokens = 0;
+            await Task.Delay(0);
 
             return (completion, tokens);
-
         }
 
-        /// <summary>
-        /// Generates embeddings from the deployed OpenAI embeddings model using Semantic Kernel.
-        /// </summary>
-        /// <param name="input">Text to send to OpenAI.</param>
-        /// <returns>Array of vectors from the OpenAI embedding model deployment.</returns>
-        public async Task<float[]> GetEmbeddingsAsync(string text)
+        public async Task<string> SummarizeAsync(string conversation)
         {
-
-            float[] embeddingsArray = new float[0];
-
-            return embeddingsArray;
-        }
-
-        /// <summary>
-        /// Sends the existing conversation to the Semantic Kernel and returns a two word summary.
-        /// </summary>
-        /// <param name="sessionId">Chat session identifier for the current conversation.</param>
-        /// <param name="conversationText">conversation history to send to Semantic Kernel.</param>
-        /// <returns>Summarization response from the OpenAI completion model deployment.</returns>
-        public async Task<string> SummarizeConversationAsync(string conversation)
-        {
-            //return await summarizePlugin.SummarizeConversationAsync(conversation, kernel);
-
             var skChatHistory = new ChatHistory();
             skChatHistory.AddSystemMessage(_summarizePrompt);
             skChatHistory.AddUserMessage(conversation);
@@ -131,11 +82,8 @@ namespace Cosmos.Chat.GPT.Services
                     }
             };
 
-
             var result = await kernel.GetRequiredService<IChatCompletionService>().GetChatMessageContentAsync(skChatHistory, settings);
-
             string completion = result.Items[0].ToString()!;
-
             return completion;
         }
     }
