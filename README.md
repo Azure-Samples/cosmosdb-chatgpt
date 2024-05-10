@@ -58,6 +58,13 @@ All connection information for Azure Cosmos DB and Azure Open AI is zero-touch a
 
 ### Configuring a lab environment
 
+Feel free to run this lab in GitHub Codespaces or locally in Visual Studio Code in a DevContainer. Then continue with the steps below.
+
+|GitHub Codespaces|Visual Studio Code|
+|---|---|
+|[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/cosmosdb-chatgpt/tree/lab-start)|[![Open in Dev Container](https://img.shields.io/static/v1?style=for-the-badge&label=Dev+Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/cosmosdb-chatpgpt)|
+
+
 This GitHub repository needs to be cloned to your local machine. The lab manual include details on how to configure to connect with the services deployed in Azure. Only Cosmos DB and Azure OpenAI Service require connection information to run locally.
 
 To run locally, copy the contents of the **appsettings.json** file in the /src folder of the project into a new **appsettings.Development.json** file in the same folder, then copy the Cosmos DB and Azure OpenAI endpoint and key values from the environment variables in Azure App Service into.
