@@ -18,7 +18,7 @@ This lab guides you through the steps to implement Generative AI capabilities fo
 
 You're updating an existing .NET solution that has an ASP.NET Blazor application as its sole project. This project includes service classes for Azure Cosmos DB and Azure OpenAI Service that need to connect to the deployed services in Azure.
 
-Before moving to the next step, ensure you have completed the **Service Deployment** as well as the **Configuring a lab environment** in the [README File](.\README.md).
+Before moving to the next step, ensure you have completed the **Service Deployment** as well as the **Configuring a lab environment** in the [README File](README.md).
 
 Once this is complete, you may begin the lab.
 
