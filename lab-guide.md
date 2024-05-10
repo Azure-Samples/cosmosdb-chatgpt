@@ -359,7 +359,7 @@ Let's build our semantic cache.
     private async Task<(string cachePrompts, float[] cacheVectors, string cacheResponse)> CacheGetAsync(List<Message> contextWindow)
     ```
 
-1. The build our cache we need to do four things. 
+1. To build our cache we need to do four things. 
     1. Create a string from an array of text. 
     1. Generate vectors on that text using Azure OpenAI Service. 
     1. Execute the vector search using Azure Cosmos DB for NoSQL.
@@ -418,19 +418,20 @@ Let's build our semantic cache.
 1. Next copy this text below to implement the **queryText** for this function.
 
     ```csharp
-    string queryText = @"SELECT Top 1 
-                        x.completion, 
-                        x.similarityScore 
-                    FROM (
-                         SELECT 
-                            c.prompt, 
-                            c.completion, 
-                            VectorDistance(c.vectors, @vectors, false) as similarityScore 
-                         FROM c) x 
-                    WHERE 
-                        x.similarityScore > @similarityScore 
-                    ORDER BY 
-                        x.similarityScore desc";
+    string queryText = @"
+        SELECT Top 1 
+            x.completion, 
+            x.similarityScore 
+        FROM (
+            SELECT 
+                c.prompt, 
+                c.completion, 
+                VectorDistance(c.vectors, @vectors, false) as similarityScore 
+            FROM c) x 
+        WHERE 
+            x.similarityScore > @similarityScore 
+        ORDER BY 
+            x.similarityScore desc";
     ```
 
     This query is what performs the vector query to find items in our semantic cache. Since this is a cache, it selects only the top result with an *ORDER BY* in descending order, so the item with highest similarity score (and the most similar to what is being searched) appears first. The results include cached completion value, and the similarity score for the cached item.
@@ -763,7 +764,7 @@ At this point, your application is ready to test our Semantic Kernel implementat
 1. Return to the terminal and run it using **dotnet run**.
 
     ```bash
-        dotnet run
+    dotnet run
     ```
 
 1. Visual Studio Code launches the in-tool simple browser again with the web application running. 
@@ -832,7 +833,7 @@ If the session name summarization does not work as expected, review the **Summar
       return completionText;
     }
     ```
-<details>
+</details>
 
 
 # Summary
@@ -854,7 +855,7 @@ Take some time to explore the services and capabilities you saw today to get mor
   - [Get started with vector search in Azure Cosmos DB](https://aka.ms/CosmosDBVectorSetup)
 
 
-Take your knowledge even further. We have built a complete end-to-end RAG Pattern solution that takes this lab you did today and expands it to a fully functional, production grade solution accelerator. The solution has the same ASP.NET Blazor web interface and the back end is entirely built using the latest from Semantic Kernel. The solution can be deployed to either AKS or Azure Container Apps, along with a host of other services designed for deploying production grade applications in Azure.
+Take your knowledge even further. We have built a complete end-to-end RAG Pattern solution that takes this lab you did today and expands it to a fully functional, production grade solution accelerator. The solution has the same ASP.NET Blazor web interface and the back end is entirely built using the latest features from Semantic Kernel. The solution can be deployed to either AKS or Azure Container Apps, along with a host of other services designed for deploying production grade applications in Azure.
 
 - **Official Microsoft Solution Accelerator for building RAG pattern applications**
   - [Vector search AI assistant](https://github.com/Azure/Vector-Search-AI-Assistant)
