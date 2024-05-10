@@ -98,7 +98,7 @@ You will need to add the values for Azure Cosmos DB and Azure OpenAI Service. He
 
 ### Running the lab
 
-To get started navigate to the [Lab Manual](.\lab-guide.md) and begin!
+To get started navigate to the [Lab Manual](lab-guide.md) and begin!
 
 
 ## Clean up
