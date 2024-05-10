@@ -45,8 +45,15 @@
 				"git.autofetch": true,
 				"files.autoSaveDelay": 1000,
 				"files.autoSave": "afterDelay",
-				"extensions.ignoreRecommendations": true
+				"extensions.ignoreRecommendations": true,
+				"editor.minimap.enabled": false
 			}
+		},
+		"codespaces": {
+			"openFiles":[
+				"lab-guide.md",
+				"src/Services/ChatService.cs"
+			]
 		}
 	}
 }
