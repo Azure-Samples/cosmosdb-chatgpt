@@ -34,7 +34,16 @@ This lab will walk users through the following exercises:
 
 - Azure Subscription
 - Subscription access to Azure OpenAI service. Start here to [Request Access to Azure OpenAI Service](https://aka.ms/oaiapply)
-- Visual Studio, VS Code, GitHub Codespaces or some editor if you want to edit or view the source for this sample.
+- Visual Studio, VS Code, GitHub Codespaces or another editor to edit or view the source for this sample.
+- Azure Cosmos DB for NoSQL Vector Search Preview enrollment
+
+This lab utilizes a preview feature, **Vector search for Azure Cosmos DB for NoSQL** which requires preview feature registration. Follow the below steps to register. You must be enrolled before you can deploy this solution:
+ 
+1. Navigate to your Azure Cosmos DB for NoSQL resource page.
+1. Select the "Features" pane under the "Settings" menu item.
+1. Select for “Vector Search in Azure Cosmos DB for NoSQL”.
+1. Read the description to confirm you want to enroll in the preview.
+1. Select "Enable" to enroll in the preview.
 
 ### Service Deployment
 
