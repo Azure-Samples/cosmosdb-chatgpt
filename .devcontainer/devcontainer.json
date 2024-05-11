@@ -18,7 +18,7 @@
 			"version": "latest"
 		}
 	},
-	"updateContentCommand": "dotnet build cosmoschatgpt.sln",
+	"updateContentCommand": "dotnet build src/cosmoschatgpt.sln",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -29,7 +29,7 @@
 				"ms-azuretools.vscode-bicep"
 			],
 			"settings": {
-				"omnisharp.defaultLaunchSolution": "cosmoschatgpt.sln",
+				"omnisharp.defaultLaunchSolution": "src/cosmoschatgpt.sln",
 				"csharp.suppressDotnetRestoreNotification": true,
 				"csharp.suppressDotnetInstallWarning": true,
 				"csharp.suppressBuildAssetsNotification": true,
@@ -45,8 +45,14 @@
 				"git.autofetch": true,
 				"files.autoSaveDelay": 1000,
 				"files.autoSave": "afterDelay",
-				"extensions.ignoreRecommendations": true
+				"extensions.ignoreRecommendations": true,
+				"editor.minimap.enabled": false
 			}
+		},
+		"codespaces": {
+			"openFiles":[
+				
+			]
 		}
 	}
 }
