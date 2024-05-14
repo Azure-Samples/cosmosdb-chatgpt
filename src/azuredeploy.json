@@ -9,6 +9,13 @@
         }
     },
     "parameters": {
+        "deploymentName": {
+            "type": "string",
+            "defaultValue": "Cosmos-ai-assistant",
+            "metadata": {
+                "description": "Deployment template for the Azure cosmos db AI assistant"
+            }
+        },
         "location": {
             "type": "string",
             "defaultValue": "North Central US",
@@ -224,7 +231,7 @@
             "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').embeddingsModel.deployment.name)]",
             "sku": {
                 "name": "Standard",
-                "capacity": 20
+                "capacity": 15
             },
             "properties": {
                 "model": {
@@ -242,6 +249,10 @@
             "type": "Microsoft.CognitiveServices/accounts/deployments",
             "apiVersion": "2023-05-01",
             "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').completionsModel.deployment.name)]",
+            "sku": {
+                "name": "Standard",
+                "capacity": 100
+            },
             "properties": {
                 "model": {
                     "format": "OpenAI",
@@ -250,7 +261,6 @@
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').embeddingsModel.deployment.name)]",
                 "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]"
             ]
         },
@@ -341,9 +351,25 @@
         }
     ],
     "outputs": {
-        "deployedUrl": {
+        "DeployedUrl": {
             "type": "string",
             "value": "[reference(resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name), '2022-09-01').defaultHostName]"
+        },
+        "CosmosDbEndpoint": {
+            "type": "string",
+            "value":  "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').documentEndpoint]"
+        },
+        "CosmosDbKey": {
+            "type": "string",
+            "value":  "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]"
+        },
+        "OpenAiEndpoint": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]"
+        }, 
+         "OpenAiKey": {
+            "type": "string",
+            "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2023-05-01').key1]"
         }
     }
 }
