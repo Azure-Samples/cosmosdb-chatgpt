@@ -45,10 +45,7 @@ public class CosmosDbService
 
         Database database = client.GetDatabase(databaseName)!;
         Container chatContainer = database.GetContainer(chatContainerName)!;
-
-        //Container cacheContainer = database.GetContainer(cacheContainerName)!;
-        //TO-DO: Create cache container in code until Contol Plane supports Vector Indexing
-        Container cacheContainer = CreateCacheContainer(database, cacheContainerName)!;
+        Container cacheContainer = database.GetContainer(cacheContainerName)!;
 
 
         _chatContainer = chatContainer ??
