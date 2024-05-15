@@ -29,7 +29,7 @@ public class CosmosDbService
 
         Database database = client.GetDatabase(databaseName)!;
         Container chatContainer = database.GetContainer(chatContainerName)!;
-        Container cacheContainer = CreateCacheContainer(database, cacheContainerName)!;
+        Container cacheContainer = database.GetContainer(cacheContainerName)!;
 
         _chatContainer = chatContainer ??
             throw new ArgumentException("Unable to connect to existing Azure Cosmos DB container or database.");
