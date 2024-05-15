@@ -11,35 +11,68 @@
   "parameters": {
     "deploymentName": {
       "type": "string",
-      "defaultValue": "Cosmos-ai-assistant",
+      "defaultValue": "Cosmos-chat-app",
       "metadata": {
-        "description": "Deployment template for the Azure cosmos db AI assistant"
+        "description": "Deployment template for the Azure Cosmos DB & Azure Open AI chat sample app"
       }
     },
     "location": {
       "type": "string",
-      "defaultValue": "North Central US",
+      "defaultValue": "East US",
       "allowedValues": [
+        "Australia East",
+        "Brazil South",
+        "Canada Central",
+        "Canada East",
+        "East US",
+        "East US 2",
+        "France Central",
+        "Germany West Central",
+        "Japan East",
+        "Korea Central",
         "North Central US",
+        "Norway East",
+        "Poland Central",
+        "South Africa North",
         "South Central US",
+        "South India",
         "Sweden Central",
-        "Canada East"
+        "Switzerland North",
+        "UAE North",
+        "UK South",
+        "West Europe",
+        "West US",
+        "West US 3"
       ],
       "metadata": {
         "description": "Location where all resources are deployed. Is limited by the regions with Azure OpenAI availability. Defaults to **East US** region."
       }
     },
-    "name": {
+    "cosmosLocation": {
       "type": "string",
+      "allowedValues": [
+        "North Central US",
+        "South Central US"
+      ],
       "metadata": {
-        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
+        "description": "Location override for just serverless Cosmos account. Leave blank to use locations property value"
       }
     },
-    "cosmosDbEnableFreeTier": {
-      "type": "bool",
-      "defaultValue": false,
+    "openAilocation": {
+      "type": "string",
+      "allowedValues": [
+        "Sweden Central",
+        "Canada East"
+      ],
       "metadata": {
-        "description": "Boolean indicating whether Azure Cosmos DB free tier should be used for the account. This defaults to **true**."
+        "description": "Location override where Azure OpenAI is deployed. Leave blank to use locations property value"
+      }
+    },
+    "name": {
+      "type": "string",
+      "defaultValue": "[uniqueString(resourceGroup().id)]",
+      "metadata": {
+        "description": "Unique name for the chat application.  The name is required to be unique as it will be used as a prefix for the names of these resources:\r\n- Azure Cosmos DB\r\n- Azure App Service\r\n- Azure OpenAI\r\nThe name defaults to a unique string generated from the resource group identifier.\r\n"
       }
     },
     "appServiceSku": {
@@ -52,16 +85,6 @@
       ],
       "metadata": {
         "description": "Specifies the SKU for the Azure App Service plan. Defaults to **F1**"
-      }
-    },
-    "openAiSku": {
-      "type": "string",
-      "defaultValue": "S0",
-      "allowedValues": [
-        "S0"
-      ],
-      "metadata": {
-        "description": "Specifies the SKU for the Azure OpenAI resource. Defaults to **S0**"
       }
     },
     "appGitRepository": {
@@ -77,46 +100,48 @@
       "metadata": {
         "description": "Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository."
       }
-    },
-    "deployOpenAi": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Determines if Azure OpenAI should be deployed. Defaults to true."
-      }
     }
   },
   "variables": {
     "openAiSettings": {
-      "name": "[format('{0}-openai', parameters('name'))]",
+      "name": "[format('openai-{0}', parameters('name'))]",
+      "location": "[if(empty(parameters('openAilocation')), parameters('location'), parameters('openAilocation'))]",
       "sku": "S0",
-      "maxConversationTokens": "100",
-      "maxCompletionTokens": "500",
-      "maxEmbeddingTokens": "8000",
       "completionsModel": {
         "name": "gpt-35-turbo",
         "version": "1106",
         "deployment": {
-          "name": "completions"
+          "name": "completions",
+          "capacity": 10
         }
       },
       "embeddingsModel": {
         "name": "text-embedding-ada-002",
         "version": "2",
         "deployment": {
-          "name": "embeddings"
+          "name": "embeddings",
+          "capacity": 5
         }
       }
     },
     "cosmosDbSettings": {
-      "name": "[format('cosmos-nosql-{0}', parameters('name'))]",
-      "enableFreeTier": "[parameters('cosmosDbEnableFreeTier')]",
+      "account": {
+        "name": "[format('cosmos-nosql-{0}', parameters('name'))]",
+        "location": "[if(empty(parameters('cosmosLocation')), parameters('location'), parameters('cosmosLocation'))]"
+      },
       "database": {
         "name": "ChatDatabase"
       },
-      "container": {
+      "chat": {
         "name": "ChatContainer"
+      },
+      "cache": {
+        "name": "CacheContainer"
       }
+    },
+    "chatSettings":{
+      "maxConversationTokens": "100",
+      "cacheSimilarityScore": "0.99"
     },
     "appServiceSettings": {
       "plan": {
@@ -136,8 +161,8 @@
     {
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "apiVersion": "2023-04-15",
-      "name": "[variables('cosmosDbSettings').name]",
-      "location": "[parameters('location')]",
+      "name": "[variables('cosmosDbSettings').account.name]",
+      "location": "[variables('cosmosDbSettings').account.location]",
       "kind": "GlobalDocumentDB",
       "properties": {
         "capabilities": [
@@ -152,7 +177,6 @@
           "defaultConsistencyLevel": "Session"
         },
         "databaseAccountOfferType": "Standard",
-        "enableFreeTier": "[variables('cosmosDbSettings').enableFreeTier]",
         "locations": [
           {
             "failoverPriority": 0,
@@ -165,26 +189,60 @@
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2023-04-15",
-      "name": "[format('{0}/{1}', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]",
+      "name": "[format('{0}/{1}', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name)]",
       "properties": {
         "resource": {
           "id": "[variables('cosmosDbSettings').database.name]"
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name)]"
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name)]"
       ]
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2023-04-15",
-      "name": "[format('{0}/{1}/{2}', parameters('accountName'), parameters('databaseName'), parameters('containerName'))]",
+      "name": "[format('{0}/{1}/{2}', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').chat.name)]",
       "properties": {
         "resource": {
-          "id": "[parameters('containerName')]",
+          "id": "[variables('cosmosDbSettings').chat.name]",
           "partitionKey": {
             "paths": [
-              "/myPartitionKey"
+              "/sessionId"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/sessionId/?"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/*"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name)]"
+      ]
+    },
+        {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}/{1}/{2}', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').cache.name)]",
+      "properties": {
+        "resource": {
+          "id": "[variables('cosmosDbSettings').cache.name]",
+          "partitionKey": {
+            "paths": [
+              "/id"
             ],
             "kind": "Hash"
           },
@@ -198,12 +256,12 @@
             ],
             "excludedPaths": [
               {
-                "path": "/\"_etag\"/?"
+                "path": "/vectors/?"
               }
             ],
             "vectorIndexes": [
               {
-                "path": "/vector",
+                "path": "/vectors",
                 "type": "quantizedFlat"
               }
             ]
@@ -211,7 +269,7 @@
           "vectorEmbeddingPolicy": {
             "vectorEmbeddings": [
               {
-                "path": "/vector",
+                "path": "/vectors",
                 "dataType": "float32",
                 "dimensions": 1536,
                 "distanceFunction": "cosine"
@@ -222,15 +280,14 @@
         "options": {}
       },
       "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('accountName'), parameters('databaseName'))]"
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name)]"
       ]
     },
     {
-      "condition": "[parameters('deployOpenAi')]",
       "type": "Microsoft.CognitiveServices/accounts",
       "apiVersion": "2023-05-01",
       "name": "[variables('openAiSettings').name]",
-      "location": "Canada East",
+      "location": "[variables('openAiSettings').location]",
       "sku": {
         "name": "[variables('openAiSettings').sku]"
       },
@@ -246,7 +303,7 @@
       "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').embeddingsModel.deployment.name)]",
       "sku": {
         "name": "Standard",
-        "capacity": 15
+        "capacity": "[variables('openAiSettings').embeddingsModel.deployment.capacity]"
       },
       "properties": {
         "model": {
@@ -260,13 +317,12 @@
       ]
     },
     {
-      "condition": "[parameters('deployOpenAi')]",
       "type": "Microsoft.CognitiveServices/accounts/deployments",
       "apiVersion": "2023-05-01",
       "name": "[format('{0}/{1}', variables('openAiSettings').name, variables('openAiSettings').completionsModel.deployment.name)]",
       "sku": {
         "name": "Standard",
-        "capacity": 100
+        "capacity": "[variables('openAiSettings').completionsModel.deployment.capacity]"
       },
       "properties": {
         "model": {
@@ -276,7 +332,8 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').embeddingsModel.deployment.name)]"
       ]
     },
     {
@@ -331,21 +388,24 @@
       "name": "[format('{0}/{1}', variables('appServiceSettings').web.name, 'appsettings')]",
       "kind": "string",
       "properties": {
-        "COSMOSDB__ENDPOINT": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2023-04-15').documentEndpoint]",
-        "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2023-04-15').primaryMasterKey]",
+        "COSMOSDB__ENDPOINT": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name), '2023-04-15').documentEndpoint]",
+        "COSMOSDB__KEY": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name), '2023-04-15').primaryMasterKey]",
         "COSMOSDB__DATABASE": "[variables('cosmosDbSettings').database.name]",
-        "COSMOSDB__CONTAINER": "[variables('cosmosDbSettings').container.name]",
+        "COSMOSDB__CHATCONTAINER": "[variables('cosmosDbSettings').chat.name]",
+        "COSMOSDB__CACHECONTAINER": "[variables('cosmosDbSettings').cache.name]",
         "OPENAI__ENDPOINT": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2023-05-01').endpoint]",
         "OPENAI__KEY": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2023-05-01').key1]",
         "OPENAI__COMPLETIONDEPLOYMENTNAME": "[variables('openAiSettings').completionsModel.deployment.name]",
         "OPENAI__EMBEDDINGDEPLOYMENTNAME": "[variables('openAiSettings').embeddingsModel.deployment.name]",
-        "OPENAI__MAXCONVERSATIONTOKENS": "[variables('openAiSettings').maxConversationTokens]"
+        "CHAT__MAXCONVERSATIONTOKENS": "[variables('chatSettings').maxConversationTokens]",
+        "CHAT__CACHESIMILARITYSCORE": "[variables('chatSettings').cacheSimilarityScore]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('appServiceSettings').web.name)]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name)]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').container.name)]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').name, variables('cosmosDbSettings').database.name)]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name)]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name)]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').chat.name)]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').cache.name)]",
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name)]",
         "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').completionsModel.deployment.name)]",
         "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openAiSettings').name, variables('openAiSettings').embeddingsModel.deployment.name)]"
@@ -372,15 +432,15 @@
     },
     "CosmosDbEndpoint": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').documentEndpoint]"
+      "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name), '2023-04-15').documentEndpoint]"
     },
     "CosmosDbKey": {
       "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').name), '2022-08-15').primaryMasterKey]"
+      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbSettings').account.name), '2023-04-15').primaryMasterKey]"
     },
     "OpenAiEndpoint": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2022-12-01').endpoint]"
+      "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('openAiSettings').name), '2023-05-01').endpoint]"
     },
     "OpenAiKey": {
       "type": "string",
