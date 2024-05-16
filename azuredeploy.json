@@ -94,11 +94,11 @@
         "description": "Git repository URL for the chat application. This defaults to the [`azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt) repository."
       }
     },
-    "appGetRepositoryBranch": {
+    "appGitRepositoryBranch": {
       "type": "string",
-      "defaultValue": "main",
+      "defaultValue": "start",
       "metadata": {
-        "description": "Git repository branch for the chat application. This defaults to the [**main** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository."
+        "description": "Git repository branch for the chat application. This defaults to the [**start** branch of the `azure-samples/cosmosdb-chatgpt`](https://github.com/azure-samples/cosmosdb-chatgpt/tree/main) repository."
       }
     }
   },
@@ -139,7 +139,7 @@
         "name": "CacheContainer"
       }
     },
-    "chatSettings":{
+    "chatSettings": {
       "maxConversationTokens": "100",
       "cacheSimilarityScore": "0.99"
     },
@@ -151,7 +151,7 @@
         "name": "[format('web-{0}', parameters('name'))]",
         "git": {
           "repo": "[parameters('appGitRepository')]",
-          "branch": "[parameters('appGetRepositoryBranch')]"
+          "branch": "[parameters('appGitRepositoryBranch')]"
         }
       },
       "sku": "[parameters('appServiceSku')]"
@@ -233,7 +233,7 @@
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name)]"
       ]
     },
-        {
+    {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2023-04-15",
       "name": "[format('{0}/{1}/{2}', variables('cosmosDbSettings').account.name, variables('cosmosDbSettings').database.name, variables('cosmosDbSettings').cache.name)]",
