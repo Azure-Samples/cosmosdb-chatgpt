@@ -1,6 +1,8 @@
 ﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Cosmos.Chat.GPT.Models;
+using Microsoft.SemanticKernel.Embeddings;
+using Azure.AI.OpenAI;
 
 #pragma warning disable SKEXP0010, SKEXP0001
 
