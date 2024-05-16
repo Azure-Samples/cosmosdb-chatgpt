@@ -181,7 +181,7 @@
           {
             "failoverPriority": 0,
             "isZoneRedundant": false,
-            "locationName": "[parameters('location')]"
+            "locationName": "[variables('cosmosDbSettings').account.location]"
           }
         ]
       }
