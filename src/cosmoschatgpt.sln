@@ -5,6 +5,12 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cosmoschatgpt", "cosmoschatgpt.csproj", "{AB2C218B-2B3F-46CA-A50F-EF5648363AE5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E15DC83-DB1B-49D9-9A4A-AD04D5C13A3C}"
+	ProjectSection(SolutionItems) = preProject
+		..\azuredeploy-no-ooai.json = ..\azuredeploy-no-ooai.json
+		..\azuredeploy.json = ..\azuredeploy.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

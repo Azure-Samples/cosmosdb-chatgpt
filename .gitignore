@@ -7,7 +7,7 @@
 appsettings.Development.json
 
 # NuGet Packages
-#*.nupkg
+*.nupkg
 
 
 # User-specific files
