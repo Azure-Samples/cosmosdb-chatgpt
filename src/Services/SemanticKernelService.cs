@@ -95,9 +95,9 @@ namespace Cosmos.Chat.GPT.Services
 
             var result = await kernel.GetRequiredService<IChatCompletionService>().GetChatMessageContentAsync(skChatHistory, settings);
 
-            CompletionsUsage completionUsage = (CompletionsUsage)result.Metadata["Usage"]!;
+            CompletionsUsage completionUsage = (CompletionsUsage)result.Metadata!["Usage"]!;
 
-            string completion = result.Items[0].ToString();
+            string completion = result.Items[0].ToString()!;
             int tokens = completionUsage.CompletionTokens;
 
             return (completion, tokens);

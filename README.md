@@ -13,7 +13,7 @@ azureDeploy: https://raw.githubusercontent.com/azure-samples/cosmosdb-chatgpt/ma
 
 # Build a Copilot app using Azure Cosmos DB & Azure OpenAI Service
 
-This sample application shows how to build a Generative-AI application using Azure Cosmos DB using its new vector search capabilities and Azure OpenAI Service and Semantic Kernel. The sample provides practical guidance on many concepts you will need to design and build these types of applications including how to: generate embeddings on user input, generating responses from an LLM, managing chat history and token consumption for conversational context, building a semantic cache to enhance performance, and an introduction to using Semantic Kernel which can be used to build complex Generative-AI agents and scenarios.
+This sample application shows how to build a Generative-AI application using Azure Cosmos DB using its new vector search capabilities and Azure OpenAI Service and Semantic Kernel. The sample provides practical guidance on many concepts you will need to design and build these types of applications.
 
 ![Cosmos DB + ChatGPT user interface](screenshot.png)
 
@@ -21,12 +21,12 @@ This sample application shows how to build a Generative-AI application using Azu
 
 This application demonstrates the following concepts and how to implement them:
 
-- The basics of building a chat-based application with a data model that can scale using Azure Cosmos DB.
-- Generating multiple different completions and embeddings using Azure OpenAI Service.
-- Context window (chat history) for natural conversational interactions with an LLM.
-- Manage tokens used by Azure OpenAI Service and how to use a tokenizer.
-- Semantic cache using Azure Cosmos DB for NoSQL vector search for improved performance.
-- Semantic Kernel SDK for Text Generation and Embedding Generation.
+- The basics of building a highly scalable Generative-AI chat application using Azure Cosmos DB for NoSQL.
+- Generating completions and embeddings using Azure OpenAI Service.
+- Managing a context window (chat history) for natural conversational interactions with an LLM.
+- Manage token consumption and payload sizes for Azure OpenAI Service requests.
+- Building a semantic cache using Azure Cosmos DB for NoSQL vector search for improved performance and cost.
+- Using the Semantic Kernel SDK for completion and embeddings generation.
 
 ## Getting Started
 
@@ -52,17 +52,18 @@ Click one of the ***Deploy to Azure*** buttons belows and follow the prompts in 
 The provided ARM Templates will provision the following resources:
 
 1. **Azure Cosmos DB** Serverless account with database and container with a vector embedding policy on the container and vector indexes defined.
-1. **Azure App service** This service can be configured to run on App Service free tier.
-1. **Azure OpenAI** You must also specify a name for the deployment of the "gpt" and "embedding" models used by this application.
+1. **Azure OpenAI Service** You must also specify a name for the deployment of the "completion" and "embedding" models used by this application.
+1. **Azure App service** Web application host for the ASP.NET Blazor application.
 
 **Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
 
 All connection information for Azure Cosmos DB and Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fbuild%2Fazuredeploy.json)
 
-**Note:** If you already have an Azure OpenAI account deployed and wish to use it with this application, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the GPT 3.5 Turbo model used for completions.
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json)
+**Deploy with existing Azure OpenAI account:** Use a pre-existing Azure OpenAI service account with GPT 3.5 Turbo and ADA-002. Use this Deploy to Azure button below. Provide Azure OpenAI account name, key, and deployment names for GPT 3.5 Turbo and ADA-002 models.
+
+[![Deploy with existing Azure OpenAI](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fbuild2024%2Fazuredeploy-no-aoai.json)
 
 
 ### Quickstart
@@ -74,11 +75,14 @@ Please see [Quickstarts](quickstart.md)
 
 ## Clean up
 
-To remove all the resources used by this sample, you must first manually delete the deployed model within the Azure AI service (if you originally provisioned it using this sample). You can then delete the resource group for your deployment. This will delete all remaining resources.
+To remove all the resources used by this sample, delete the resource group for your deployment.
 
 ## Resources
 
-- [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/chatgpt-azure-cosmos-db/)
+To learn more about the services and features demonstrated in this sample, see the following:
+
+- [Azure Cosmos DB for NoSQL Vector Search announcement](https://aka.ms/CosmosDBDiskANNBlog/)
 - [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
+- [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/overview)
 - [Azure App Service documentation](https://learn.microsoft.com/azure/app-service/)
 - [ASP.NET Core Blazor documentation](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
