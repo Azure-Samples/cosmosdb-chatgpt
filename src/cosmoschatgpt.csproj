@@ -8,19 +8,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.*" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.41.0-preview.0" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="0.22.0-preview.24179.1" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.16" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.10.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.10.0-alpha" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Private\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Private\Microsoft.Azure.Cosmos.4.0.1.nupkg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.17" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.12.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.12.0-alpha" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="nuget.config">

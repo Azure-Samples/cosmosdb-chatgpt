@@ -259,7 +259,7 @@
         }
 
         var message = await chatService.GetChatCompletionAsync(CurrentSession?.SessionId, UserPrompt);
-        CurrentSession.Tokens += message.CompletionTokens + message.PromptTokens;
+        CurrentSession!.Tokens += message.CompletionTokens + message.PromptTokens;
 
         if(_messagesInChat?.Count == 1)
         {

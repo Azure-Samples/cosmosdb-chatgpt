@@ -11,9 +11,9 @@ description: Hands on Lab to implement a Generative AI chat application that dem
 azureDeploy: https://raw.githubusercontent.com/azure-samples/cosmosdb-chatgpt/start/azuredeploy.json
 ---
 
-# Build a Copilot app using Azure Cosmos DB & Azure OpenAI Service
+# Hands-on-Lab: Build a Copilot app using Azure Cosmos DB & Azure OpenAI Service
 
-This Hands on Lab shows how to build a Generative-AI application using Azure Cosmos DB using its new vector search capabilities and Azure OpenAI Service and Semantic Kernel. The lab provides practical guidance on many concepts you will need to design and build these types of applications including how to: generate embeddings on user input, generating responses from an LLM, managing chat history and token consumption for conversational context, building a semantic cache to enhance performance, and an introduction to using Semantic Kernel which can be used to build complex Generative-AI agents and scenarios. The information in this sample will give you a solid foundation for to create your own AI copilot that you can take and extend toward many use cases.
+This Hands on Lab shows how to build a Generative-AI application using Azure Cosmos DB using its new vector search capabilities and Azure OpenAI Service and Semantic Kernel. The sample provides practical guidance on many concepts you will need to design and build these types of applications.
 
 ![Cosmos DB + ChatGPT user interface](screenshot.png)
 
@@ -21,12 +21,13 @@ This Hands on Lab shows how to build a Generative-AI application using Azure Cos
 
 This lab will walk users through the following exercises:
 
-- Setting up a local environment for completing exercises.
-- Connect the application to Azure Cosmos DB and Azure OpenAI Service.
-- Send user prompts to a Chat GPT model in Azure OpenAI Service and store and display the responses.
-- Implement and test a chat history feature to allow for more natural conversational interactions.
-- Implement and test a semantic cache for improved performance.
-- Connect to and implement Semantic Kernel SDK as a starting point for building more elaborate Generative AI solutions.
+- Setting up a local environment to complete the lab.
+- The basics of building a highly scalable Generative-AI chat application using Azure Cosmos DB for NoSQL.
+- Generating completions and embeddings using Azure OpenAI Service.
+- Managing a context window (chat history) for natural conversational interactions with an LLM.
+- Manage token consumption and payload sizes for Azure OpenAI Service requests.
+- Building a semantic cache using Azure Cosmos DB for NoSQL vector search for improved performance and cost.
+- Using the Semantic Kernel SDK for completion and embeddings generation.
 
 ## Getting Started
 
@@ -51,9 +52,9 @@ This lab utilizes a preview feature, **Vector search for Azure Cosmos DB for NoS
 
 The provided ARM templates will provision the following resources:
 
-1. **Azure Cosmos DB** Serverless account with database and container with a vector embedding policy on the container and vector indexes defined. This can optionally be configured to run on the Cosmos DB free tier if available for your subscription.
-1. **Azure App service** configured for CI/CD to your forked GitHub repository. This service can also be configured to run on App Service free tier.
-1. **Azure OpenAI Service** You must also specify a name for the deployment of the "gpt" and "embedding" models used by this application.
+1. **Azure Cosmos DB** Serverless account with database and container with a vector embedding policy on the container and vector indexes defined.
+1. **Azure OpenAI Service** Service for generating completions and embeddings used for Generative-AI applications.
+1. **Azure App service** Web application host for the ASP.NET Blazor application.
 
 **Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
 
@@ -61,24 +62,25 @@ All connection information for Azure Cosmos DB and Azure Open AI is zero-touch a
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy.json)
 
-**Note:** If you already have an Azure OpenAI account deployed and wish to use it with this application, use this template instead. You will be prompted to provide the name of the Azure OpenAI account, a key, and the name of the GPT 3.5 Turbo model used for completions.
+**Deploy with existing Azure OpenAI account:** Use a pre-existing Azure OpenAI service account with GPT 3.5 Turbo and ADA-002. Use this Deploy to Azure button below. Provide Azure OpenAI account name, key, and deployment names for GPT 3.5 Turbo and ADA-002 models.
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json)
 
 
 ### Configuring a lab environment
 
-Feel free to run this lab in GitHub Codespaces or locally in Visual Studio Code in a DevContainer. Then continue with the steps below.
+This lab can be run in GitHub Codespaces or locally in Visual Studio Code in a DevContainer. For either, select an option below.
 
 |GitHub Codespaces|Visual Studio Code|
 |---|---|
 |[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/cosmosdb-chatgpt/tree/lab-start)|[![Open in Dev Container](https://img.shields.io/static/v1?style=for-the-badge&label=Dev+Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/azure-samples/cosmosdb-chatpgpt)|
 
 
-This GitHub repository needs to be cloned to your local machine. The lab manual include details on how to configure to connect with the services deployed in Azure. Only Cosmos DB and Azure OpenAI Service require connection information to run locally.
+For any changes, this GitHub repository needs to be cloned to your local machine. The lab manual include details on how to configure to connect with the services deployed in Azure. Only Cosmos DB and Azure OpenAI Service require connection information to run locally.
 
-To run locally, copy the contents of the **appsettings.json** file in the /src folder of the project into a new **appsettings.Development.json** file in the same folder, then copy the Cosmos DB and Azure OpenAI endpoint and key values from the environment variables in Azure App Service into.
+To run locally, copy the contents of the **appsettings.json** file in the /src folder of the project into a new **appsettings.Development.json** file in the same folder, then copy the Azure Cosmos DB and Azure OpenAI endpoint and key values from the environment variables in Azure App Service into.
 
-You will need to add the values for Azure Cosmos DB and Azure OpenAI Service. Here is an example of the appsettings.json file you will need to update.
+Here is an example appsettings.json file you will need to update.
 
 **Note:** If you deploy using an existing Azure OpenAI account you will need to update the Completion and Embedding model names to match those in your existing account.
 
@@ -119,10 +121,14 @@ To get started navigate to the [Lab Manual](lab-guide.md) and begin!
 
 ## Clean up
 
-To remove all the resources used by this sample, you must first manually delete the deployed models within the Azure AI service (if you originally provisioned it using this sample). You can then delete the resource group for your deployment. This will delete all remaining resources.
+To remove all the resources used by this sample, delete the resource group for your deployment. This will delete any provisioned resources.
 
 ## Resources
 
-- [Azure Cosmos DB + Azure OpenAI ChatGPT Blog Post Announcement](https://devblogs.microsoft.com/cosmosdb/chatgpt-azure-cosmos-db/)
+To learn more about the services and features demonstrated in this sample, see the following:
+
+- [Azure Cosmos DB for NoSQL Vector Search announcement](https://aka.ms/CosmosDBDiskANNBlog/)
 - [Azure OpenAI Service documentation](https://learn.microsoft.com/azure/cognitive-services/openai/)
-- [Semantic Kernel documentation](https://learn.microsoft.com/semantic-kernel/overview/)
+- [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/overview)
+- [Azure App Service documentation](https://learn.microsoft.com/azure/app-service/)
+- [ASP.NET Core Blazor documentation](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
