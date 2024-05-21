@@ -4,9 +4,11 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Environment-specific app settings
-appsettings.development.json
-appsettings.production.json
-appsettings.*.json
+appsettings.Development.json
+
+# NuGet Packages
+*.nupkg
+
 
 # User-specific files
 *.rsuser
@@ -187,8 +189,7 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
-# NuGet Packages
-*.nupkg
+
 # NuGet Symbol Packages
 *.snupkg
 # The packages folder can be ignored because of Package Restore
@@ -353,7 +354,3 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-/appsettings.Development.json
-/appsettings.json
-/appsettings.Development.json
-/appsettings.Development.json

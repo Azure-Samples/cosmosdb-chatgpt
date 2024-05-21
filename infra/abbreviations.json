@@ -1,0 +1,8 @@
+{
+  "containerRegistry": "containerreg",
+  "containerAppsEnv": "container-env",
+  "containerAppsApp": "container-app",
+  "cosmosDbAccount": "cosmos-db-nosql",
+  "openAiAccount": "openai",
+  "userAssignedIdentity": "ua-id"
+}
