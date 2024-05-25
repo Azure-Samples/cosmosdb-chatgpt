@@ -55,9 +55,9 @@ The provided ARM Templates will provision the following resources:
 1. **Azure OpenAI Service** You must also specify a name for the deployment of the "completion" and "embedding" models used by this application.
 1. **Azure App service** Web application host for the ASP.NET Blazor application.
 
-**Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
+**Note:** You must have access to Azure OpenAI service from your subscription before attempting to deploy this application.
 
-All connection information for Azure Cosmos DB and Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
+All connection information for Azure Cosmos DB and Azure OpenAI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fbuild%2Fazuredeploy.json)
 
