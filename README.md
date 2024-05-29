@@ -63,7 +63,7 @@ All connection information for Azure Cosmos DB and Azure Open AI is zero-touch a
 
 **Deploy with existing Azure OpenAI account:** Use a pre-existing Azure OpenAI service account with GPT 3.5 Turbo and ADA-002. Use this Deploy to Azure button below. Provide Azure OpenAI account name, key, and deployment names for GPT 3.5 Turbo and ADA-002 models.
 
-[![Deploy with existing Azure OpenAI](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fbuild2024%2Fazuredeploy-no-aoai.json)
+[![Deploy with existing Azure OpenAI](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fazuredeploy-no-aoai.json)
 
 
 ### Quickstart
