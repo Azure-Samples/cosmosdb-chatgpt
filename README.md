@@ -59,7 +59,7 @@ The provided ARM Templates will provision the following resources:
 
 All connection information for Azure Cosmos DB and Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fbuild%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fazuredeploy.json)
 
 **Deploy with existing Azure OpenAI account:** Use a pre-existing Azure OpenAI service account with GPT 3.5 Turbo and ADA-002. Use this Deploy to Azure button below. Provide Azure OpenAI account name, key, and deployment names for GPT 3.5 Turbo and ADA-002 models.
 
