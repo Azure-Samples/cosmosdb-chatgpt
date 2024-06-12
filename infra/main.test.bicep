@@ -13,5 +13,6 @@ module main 'main.bicep' = {
   params: {
     environmentName: environmentName
     location: location
+    principalId: ''
   }
 }
