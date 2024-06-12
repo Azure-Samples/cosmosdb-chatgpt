@@ -80,6 +80,9 @@ module appServiceWebAppConfig '../core/host/app-service/config.bicep' = {
       OPENAI__COMPLETIONDEPLOYMENTNAME: openAiSettings.completionDeploymentName
       OPENAI__EMBEDDINGDEPLOYMENTNAME: openAiSettings.embeddingDeploymentName
       OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
+      SEMANTICKERNEL__ENDPOINT: openAiAccountEndpoint
+      SEMANTICKERNEL__COMPLETIONDEPLOYMENTNAME: openAiSettings.completionDeploymentName
+      SEMANTICKERNEL__EMBEDDINGDEPLOYMENTNAME: openAiSettings.embeddingDeploymentName
       COSMOSDB__ENDPOINT: databaseAccountEndpoint
       COSMOSDB__DATABASE: cosmosDbSettings.database
       COSMOSDB__CHATCONTAINER: cosmosDbSettings.chatContainer
