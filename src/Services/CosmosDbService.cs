@@ -1,4 +1,5 @@
 ﻿using Azure.AI.OpenAI;
+using Azure.Identity;
 using Cosmos.Chat.GPT.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
@@ -39,9 +40,11 @@ public class CosmosDbService
             PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
         };
 
-        CosmosClient client = new CosmosClientBuilder(endpoint, key)
+        var credential = new DefaultAzureCredential();
+        CosmosClient client = new CosmosClientBuilder(endpoint, credential)
             .WithSerializerOptions(options)
-            .Build()!;
+            .Build();
+
 
         Database database = client.GetDatabase(databaseName)!;
         Container chatContainer = database.GetContainer(chatContainerName)!;

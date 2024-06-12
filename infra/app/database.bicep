@@ -26,6 +26,9 @@ module cosmosDbAccount '../core/database/cosmos-db/nosql/account.bicep' = {
     location: location
     tags: tags
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 module cosmosDbDatabase '../core/database/cosmos-db/nosql/database.bicep' = {

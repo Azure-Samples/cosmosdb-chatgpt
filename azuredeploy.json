@@ -11,7 +11,7 @@
   "parameters": {
     "deploymentName": {
       "type": "string",
-      "defaultValue": "Cosmos-chat-app",
+      "defaultValue": "Cosmos-copilot",
       "metadata": {
         "description": "Deployment template for the Azure Cosmos DB & Azure Open AI chat sample app"
       }
@@ -109,7 +109,7 @@
       "sku": "S0",
       "completionsModel": {
         "name": "gpt-35-turbo",
-        "version": "1106",
+        "version": "0301",
         "deployment": {
           "name": "completions",
           "capacity": 10

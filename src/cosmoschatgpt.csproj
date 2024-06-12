@@ -7,6 +7,7 @@
     <UserSecretsId>faca8719-db54-4203-bb6e-cabe9c31df22</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.11.4" />
     <PackageReference Include="Humanizer" Version="2.*" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.41.0-preview.0" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="0.22.0-preview.24179.1" />

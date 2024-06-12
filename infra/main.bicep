@@ -13,6 +13,7 @@ param environmentName string
   'uksouth'
   'eastus'
   'southcentralus'
+  'eastus2'
 ])
 @description('Primary location for all resources.')
 param location string
@@ -23,19 +24,21 @@ param principalId string = ''
 // Optional parameters
 param openAiAccountName string = ''
 param cosmosDbAccountName string = ''
-param containerRegistryName string = ''
-param containerAppsEnvName string = ''
-param containerAppsAppName string = ''
 param userAssignedIdentityName string = ''
+@allowed([ 'gpt-35-turbo'])
+param gptModel string
+@allowed(['0301'])
+param gptVersion string
 
 // serviceName is used as value for the tag (azd-service-name) azd uses to identify deployment host
-param serviceName string = 'web'
 
+param appServicePlanName string = ''
 var abbreviations = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var uniqueSuffix = substring(uniqueString(subscription().id, resourceGroup.id), 1, 3) 
 var tags = {
   'azd-env-name': environmentName
-  repo: 'https://github.com/azure-samples/cosmos-db-nosql-dotnet-quickstart'
+  repo: 'https://github.com/Azure-Samples/cosmosdb-chatgpt'
 }
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
@@ -58,11 +61,33 @@ module ai 'app/ai.bicep' = {
   name: 'ai'
   scope: resourceGroup
   params: {
-    accountName: !empty(openAiAccountName) ? openAiAccountName : '${abbreviations.openAiAccount}-${resourceToken}'
+    name: !empty(openAiAccountName) ? openAiAccountName : '${abbreviations.openAiAccount}${resourceToken}'
+    location: location
+    gptVersion: gptVersion
+    tags: tags
+  }
+}
+
+module appService 'app/appservice.bicep'= {
+  name: 'deploy_app'
+  scope: resourceGroup
+  params: {
+    appServiceName: '${abbreviations.webSitesAppService}${environmentName}-${uniqueSuffix}'
+    appServicePlanName: !empty(appServicePlanName) ? appServicePlanName : '${abbreviations.webServerFarms}${environmentName}-${uniqueSuffix}'
+    cosmosEndpoint:  database.outputs.endpoint
+    databaseAccountEndpoint: database.outputs.endpoint
+    openAiAccountEndpoint: ai.outputs.endpoint    
+    openaiName: ai.outputs.accountName
+    openaiEndpoint: ai.outputs.endpoint
+    userAssignedManagedIdentity: {
+      resourceId: identity.outputs.resourceId
+      clientId: identity.outputs.clientId
+    }
     location: location
     tags: tags
   }
 }
+
 
 module database 'app/database.bicep' = {
   name: 'database'
@@ -74,35 +99,7 @@ module database 'app/database.bicep' = {
   }
 }
 
-module registry 'app/registry.bicep' = {
-  name: 'registry'
-  scope: resourceGroup
-  params: {
-    registryName: !empty(containerRegistryName) ? containerRegistryName : '${abbreviations.containerRegistry}${resourceToken}'
-    location: location
-    tags: tags
-  }
-}
-
-module web 'app/web.bicep' = {
-  name: serviceName
-  scope: resourceGroup
-  params: {
-    envName: !empty(containerAppsEnvName) ? containerAppsEnvName : '${abbreviations.containerAppsEnv}-${resourceToken}'
-    appName: !empty(containerAppsAppName) ? containerAppsAppName : '${abbreviations.containerAppsApp}-${resourceToken}'
-    databaseAccountEndpoint: database.outputs.endpoint
-    openAiAccountEndpoint: ai.outputs.endpoint    
-    openAiMaxConversationTokens: ai.outputs.maxConversationTokens
-    userAssignedManagedIdentity: {
-      resourceId: identity.outputs.resourceId
-      clientId: identity.outputs.clientId
-    }
-    location: location
-    tags: tags
-    serviceTag: serviceName
-  }
-}
-
+ 
 module security 'app/security.bicep' = {
   name: 'security'
   scope: resourceGroup
@@ -118,13 +115,6 @@ output AZURE_COSMOS_ENDPOINT string = database.outputs.endpoint
 output AZURE_COSMOS_DATABASE_NAME string = database.outputs.database.name
 output AZURE_COSMOS_CONTAINER_NAMES array = map(database.outputs.containers, c => c.name)
 
-// Container outputs
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.endpoint
-output AZURE_CONTAINER_REGISTRY_NAME string = registry.outputs.name
-
-// Application outputs
-output AZURE_CONTAINER_APP_ENDPOINT string = web.outputs.endpoint
-output AZURE_CONTAINER_ENVIRONMENT_NAME string = web.outputs.envName
 
 // Identity outputs
 output AZURE_USER_ASSIGNED_IDENTITY_NAME string = identity.outputs.name
@@ -137,5 +127,4 @@ output COSMOSDB__ENDPOINT string = database.outputs.endpoint
 output COSMOSDB__DATABASE string = database.outputs.database.name
 output COSMOSDB__CONTAINER string = database.outputs.containers[0].name
 output OPENAI__ENDPOINT string = ai.outputs.endpoint
-output OPENAI__MODELNAME string = ai.outputs.modelDeploymentName
 output OPENAI__MAXCONVERSATIONTOKENS string = string(ai.outputs.maxConversationTokens)

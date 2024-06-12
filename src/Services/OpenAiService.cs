@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
+using Azure.Identity;
 using Cosmos.Chat.GPT.Models;
 using Microsoft.VisualBasic;
 
@@ -49,7 +50,8 @@ public class OpenAiService
         _completionDeploymentName = completionDeploymentName;
         _embeddingDeploymentName = embeddingDeploymentName;
 
-        _client = new(new Uri(endpoint), new AzureKeyCredential(key));
+        var credential = new DefaultAzureCredential();
+        _client = new(new Uri(endpoint), credential);
     }
 
     /// <summary>

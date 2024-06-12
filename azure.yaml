@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: cosmoschatgpt
+name: cosmoscopilot
 metadata:
-  template: cosmoschatgpt
+  template: cosmoscopilot
 services:
   web:
     project: ./src
     language: csharp
-    host: containerapp
+    host: appservice
     docker:
       path: ./Dockerfile
       context: ./
