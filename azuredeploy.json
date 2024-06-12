@@ -112,7 +112,7 @@
         "version": "1106",
         "deployment": {
           "name": "completions",
-          "capacity": 10
+          "capacity": 1
         }
       },
       "embeddingsModel": {
