@@ -40,4 +40,4 @@ resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01
   }
 }
 
-output name string = account.name
+output name string = deployment.name

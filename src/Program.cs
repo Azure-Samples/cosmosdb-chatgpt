@@ -36,6 +36,9 @@ static class ProgramExtensions
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
 
+        builder.Services.AddOptions<SemanticKernel>()
+            .Bind(builder.Configuration.GetSection(nameof(SemanticKernel)));
+
         builder.Services.AddOptions<Chat>()
             .Bind(builder.Configuration.GetSection(nameof(Chat)));
     }
@@ -53,7 +56,6 @@ static class ProgramExtensions
             {
                 return new CosmosDbService(
                     endpoint: cosmosDbOptions.Value?.Endpoint ?? String.Empty,
-                    key: cosmosDbOptions.Value?.Key ?? String.Empty,
                     databaseName: cosmosDbOptions.Value?.Database ?? String.Empty,
                     chatContainerName: cosmosDbOptions.Value?.ChatContainer ?? String.Empty,
                     cacheContainerName: cosmosDbOptions.Value?.CacheContainer ?? String.Empty
@@ -71,7 +73,6 @@ static class ProgramExtensions
             {
                 return new OpenAiService(
                     endpoint: openAiOptions.Value?.Endpoint ?? String.Empty,
-                    key: openAiOptions.Value?.Key ?? String.Empty,
                     completionDeploymentName: openAiOptions.Value?.CompletionDeploymentName ?? String.Empty,
                     embeddingDeploymentName: openAiOptions.Value?.EmbeddingDeploymentName ?? String.Empty
                 );
@@ -79,20 +80,15 @@ static class ProgramExtensions
         });
         services.AddSingleton<SemanticKernelService, SemanticKernelService>((provider) =>
         {
-            //We are using the same options as OpenAiService. There is an config options class for SemanticKernelService
-            //but it is not used. Leaving here if you decide to use in the future. 
-            var semanticKernalOptions = provider.GetRequiredService<IOptions<OpenAi>>();
-            //var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
+            var semanticKernalOptions = provider.GetRequiredService<IOptions<SemanticKernel>>();
             if (semanticKernalOptions is null)
             {
-                throw new ArgumentException($"{nameof(IOptions<OpenAi>)} was not resolved through dependency injection.");
-                //throw new ArgumentException($"{nameof(IOptions<SemanticKernel>)} was not resolved through dependency injection.");
+                throw new ArgumentException($"{nameof(IOptions<SemanticKernel>)} was not resolved through dependency injection.");
             }
             else
             {
                 return new SemanticKernelService(
                     endpoint: semanticKernalOptions.Value?.Endpoint ?? String.Empty,
-                    key: semanticKernalOptions.Value?.Key ?? String.Empty,
                     completionDeploymentName: semanticKernalOptions.Value?.CompletionDeploymentName ?? String.Empty,
                     embeddingDeploymentName: semanticKernalOptions.Value?.EmbeddingDeploymentName ?? String.Empty
                 );

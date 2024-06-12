@@ -1,4 +1,4 @@
-﻿using Azure.AI.OpenAI;
+﻿using Azure.Core;
 using Azure.Identity;
 using Cosmos.Chat.GPT.Models;
 using Microsoft.Azure.Cosmos;
@@ -19,7 +19,6 @@ public class CosmosDbService
     /// Creates a new instance of the service.
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
-    /// <param name="key">Account key.</param>
     /// <param name="databaseName">Name of the database to access.</param>
     /// <param name="chatContainerName">Name of the chat container to access.</param>
     /// <param name="cacheContainerName">Name of the cache container to access.</param>
@@ -27,10 +26,9 @@ public class CosmosDbService
     /// <remarks>
     /// This constructor will validate credentials and create a service client instance.
     /// </remarks>
-    public CosmosDbService(string endpoint, string key, string databaseName, string chatContainerName, string cacheContainerName)
+    public CosmosDbService(string endpoint, string databaseName, string chatContainerName, string cacheContainerName)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(databaseName);
         ArgumentNullException.ThrowIfNullOrEmpty(chatContainerName);
         ArgumentNullException.ThrowIfNullOrEmpty(cacheContainerName);
@@ -40,7 +38,7 @@ public class CosmosDbService
             PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
         };
 
-        var credential = new DefaultAzureCredential();
+        TokenCredential credential = new DefaultAzureCredential();
         CosmosClient client = new CosmosClientBuilder(endpoint, credential)
             .WithSerializerOptions(options)
             .Build();

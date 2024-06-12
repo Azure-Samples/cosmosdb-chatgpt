@@ -2,7 +2,6 @@
   "cosmosDbAccount": "cosmos-db-nosql",
   "openAiAccount": "openai",
   "userAssignedIdentity": "ua-id",
-  "webSitesAppService": "app-",
-  "webSitesAppServiceEnvironment": "ase-",
-  "webServerFarms": "plan-"
+  "appServiceWebApp": "web",
+  "appServicePlan": "plan"
 }
