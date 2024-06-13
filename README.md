@@ -45,27 +45,29 @@ This lab utilizes a preview feature, **Vector search for Azure Cosmos DB for NoS
 1. Read the description to confirm you want to enroll in the preview.
 1. Select "Enable" to enroll in the preview.
 
-### Service Deployment
+### Instructions
 
-Click one of the ***Deploy to Azure*** buttons belows and follow the prompts in Azure Portal to deploy this solution. The first option deploys a new Azure OpenAI account. The second allows you to use an existing Azure OpenAI account.
+1. Log in to AZD.
+    
+    ```bash
+    azd auth login
+    ```
 
-The provided ARM Templates will provision the following resources:
+    > [!NOTE]  
+    > This is only required once per install.
 
-1. **Azure Cosmos DB** Serverless account with database and container with a vector embedding policy on the container and vector indexes defined.
-1. **Azure OpenAI Service** You must also specify a name for the deployment of the "completion" and "embedding" models used by this application.
-1. **Azure App service** Web application host for the ASP.NET Blazor application.
+1. Initialize the project in the current directory.
+    
+    ```bash
+    azd init --template azure-cosmosdb-copilot
+    ```
 
-**Note:** You must have access to Azure Open AI service from your subscription before attempting to deploy this application.
-
-All connection information for Azure Cosmos DB and Azure Open AI is zero-touch and injected as environment variables in the Azure App Service instance at deployment time. 
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%main%2Fazuredeploy.json)
-
-**Deploy with existing Azure OpenAI account:** Use a pre-existing Azure OpenAI service account with GPT 3.5 Turbo and ADA-002. Use this Deploy to Azure button below. Provide Azure OpenAI account name, key, and deployment names for GPT 3.5 Turbo and ADA-002 models.
-
-[![Deploy with existing Azure OpenAI](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure-Samples%2Fcosmosdb-chatgpt%2Fmain%2Fazuredeploy-no-aoai.json)
-
-
+1. Deploy the services to Azure, build your container, and deploy the application.
+    
+    ```bash
+    azd up
+    ```
+    
 ### Quickstart
 
 This solution has a number of quickstarts than you can run through to learn about the features in this sample and how to implement them yourself.
