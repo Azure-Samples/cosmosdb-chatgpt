@@ -60,7 +60,7 @@ This lab utilizes a preview feature, **Vector search for Azure Cosmos DB for NoS
 1. Initialize the project in the current directory.
     
     ```bash
-    azd init --template azure-cosmosdb-copilot
+    azd init --template cosmosdb-chatgpt
     ```
 
 1. Deploy the services to Azure, build your container, and deploy the application.
