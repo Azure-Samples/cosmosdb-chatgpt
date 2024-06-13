@@ -75,6 +75,6 @@ output roleDefinitions object = {
 }
 
 output roleAssignments array = union(
-  !empty(appPrincipalId) ? [ nosqlAppAssignment.outputs.id, openaiAppAssignment.outputs ] : [],
-  !empty(userPrincipalId) ? [ nosqlUserAssignment.outputs.id, registryUserAssignment.outputs.id, openaiUserAssignment.outputs ] : []
+  !empty(appPrincipalId) ? [ nosqlAppAssignment.outputs.id, openaiAppAssignment.outputs.id ] : [],
+  !empty(userPrincipalId) ? [ nosqlUserAssignment.outputs.id, registryUserAssignment.outputs.id, openaiUserAssignment.outputs.id ] : []
 )
