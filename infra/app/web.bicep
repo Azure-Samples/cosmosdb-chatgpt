@@ -1,10 +1,13 @@
-metadata description = 'Create web application resources.'
+metadata description = 'Create web apps.'
 
-param envName string
+param planName string
 param appName string
 param serviceTag string
 param location string = resourceGroup().location
 param tags object = {}
+
+@description('SKU of the App Service Plan.')
+param sku string = 'S1'
 
 @description('Endpoint for Azure Cosmos DB for NoSQL account.')
 param databaseAccountEndpoint string
@@ -12,8 +15,23 @@ param databaseAccountEndpoint string
 @description('Endpoint for Azure OpenAI account.')
 param openAiAccountEndpoint string
 
-@description('Maximum number of conversation tokens. Defaults to 2000.')
-param openAiMaxConversationTokens int = 2000
+type openAiOptions = {
+  maxConversationTokens: int
+  completionDeploymentName: string
+  embeddingDeploymentName: string
+}
+
+@description('Application configuration settings for OpenAI.')
+param openAiSettings openAiOptions
+
+type cosmosDbOptions = {
+  database: string
+  chatContainer: string
+  cacheContainer: string
+}
+
+@description('Application configuration settings for Azure Cosmos DB.')
+param cosmosDbSettings cosmosDbOptions
 
 type managedIdentity = {
   resourceId: string
@@ -23,57 +41,29 @@ type managedIdentity = {
 @description('Unique identifier for user-assigned managed identity.')
 param userAssignedManagedIdentity managedIdentity
 
-module containerAppsEnvironment '../core/host/container-apps/environments/managed.bicep' = {
-  name: 'container-apps-env'
+module appServicePlan '../core/host/app-service/plan.bicep' = {
+  name: 'app-service-plan'
   params: {
-    name: envName
+    name: planName
     location: location
     tags: tags
+    sku: sku
+    kind: 'linux'
   }
 }
 
-module containerAppsApp '../core/host/container-apps/app.bicep' = {
-  name: 'container-apps-app'
+module appServiceWebApp '../core/host/app-service/site.bicep' = {
+  name: 'app-service-web-app'
   params: {
     name: appName
-    parentEnvironmentName: containerAppsEnvironment.outputs.name
     location: location
     tags: union(tags, {
-        'azd-service-name': serviceTag
-      })
-    secrets: [
-      {
-        name: 'azure-cosmos-db-nosql-endpoint' // Create a uniquely-named secret
-        value: databaseAccountEndpoint // NoSQL database account endpoint
-      }
-      {
-        name: 'azure-openai-endpoint' // Create a uniquely-named secret
-        value: openAiAccountEndpoint // OpenAI model endpoint
-      }
-      {
-        name: 'azure-managed-identity-client-id' // Create a uniquely-named secret
-        value: userAssignedManagedIdentity.clientId // Client ID of user-assigned managed identity
-      }
-    ]
-    environmentVariables: [
-      {
-        name: 'COSMOSDB__ENDPOINT' // Name of the environment variable referenced in the application
-        secretRef: 'azure-cosmos-db-nosql-endpoint' // Reference to secret
-      }
-      {
-        name: 'OPENAI__ENDPOINT' // Name of the environment variable referenced in the application
-        secretRef: 'azure-openai-endpoint' // Reference to secret
-      }
-      {
-        name: 'OPENAI__MAXCONVERSATIONTOKENS' // Name of the environment variable referenced in the application
-        value: string(openAiMaxConversationTokens) // Static value
-      }
-      {
-        name: 'AZURE_CLIENT_ID' // Name of the environment variable referenced in the application
-        secretRef: 'azure-managed-identity-client-id' // Reference to secret
-      }
-    ]
-    targetPort: 8080
+      'azd-service-name': serviceTag
+    })
+    parentPlanName: appServicePlan.outputs.name
+    runtimeName: 'dotnetcore'
+    runtimeVersion: '8.0'
+    kind: 'app,linux'
     enableSystemAssignedManagedIdentity: false
     userAssignedManagedIdentityIds: [
       userAssignedManagedIdentity.resourceId
@@ -81,5 +71,26 @@ module containerAppsApp '../core/host/container-apps/app.bicep' = {
   }
 }
 
-output endpoint string = containerAppsApp.outputs.endpoint
-output envName string = containerAppsApp.outputs.name
+module appServiceWebAppConfig '../core/host/app-service/config.bicep' = {
+  name: 'app-service-config'
+  params: {
+    parentSiteName: appServiceWebApp.outputs.name
+    appSettings: {
+      OPENAI__ENDPOINT: openAiAccountEndpoint
+      OPENAI__COMPLETIONDEPLOYMENTNAME: openAiSettings.completionDeploymentName
+      OPENAI__EMBEDDINGDEPLOYMENTNAME: openAiSettings.embeddingDeploymentName
+      OPENAI__MAXCONVERSATIONTOKENS: openAiSettings.maxConversationTokens
+      SEMANTICKERNEL__ENDPOINT: openAiAccountEndpoint
+      SEMANTICKERNEL__COMPLETIONDEPLOYMENTNAME: openAiSettings.completionDeploymentName
+      SEMANTICKERNEL__EMBEDDINGDEPLOYMENTNAME: openAiSettings.embeddingDeploymentName
+      COSMOSDB__ENDPOINT: databaseAccountEndpoint
+      COSMOSDB__DATABASE: cosmosDbSettings.database
+      COSMOSDB__CHATCONTAINER: cosmosDbSettings.chatContainer
+      COSMOSDB__CACHECONTAINER: cosmosDbSettings.cacheContainer
+      AZURE_CLIENT_ID: userAssignedManagedIdentity.clientId
+    }
+  }
+}
+
+output name string = appServiceWebApp.outputs.name
+output endpoint string = appServiceWebApp.outputs.endpoint

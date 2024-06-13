@@ -15,13 +15,17 @@ param autoscale bool = false
 @description('The amount of throughput set. If setThroughput is enabled, defaults to 400.')
 param throughput int = 400
 
-var options = setThroughput ? autoscale ? {
-  autoscaleSettings: {
-    maxThroughput: throughput
-  }
-} : {
-  throughput: throughput
-} : {}
+var options = setThroughput
+  ? autoscale
+      ? {
+          autoscaleSettings: {
+            maxThroughput: throughput
+          }
+        }
+      : {
+          throughput: throughput
+        }
+  : {}
 
 resource account 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' existing = {
   name: parentAccountName

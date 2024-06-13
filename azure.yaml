@@ -1,13 +1,48 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: cosmoschatgpt
+name: cosmosdb-chatgpt
 metadata:
-  template: cosmoschatgpt
+  template: cosmosdb-chatgpt
 services:
   web:
     project: ./src
     language: csharp
-    host: containerapp
-    docker:
-      path: ./Dockerfile
-      context: ./
+    host: appservice
+hooks:
+  postprovision:
+    windows:
+      run: |
+        $userSecrets = @{
+            'OpenAi:Endpoint' = $env:AZURE_OPENAI_ACCOUNT_ENDPOINT
+            'OpenAi:CompletionDeploymentName' = $env:AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME
+            'OpenAi:EmbeddingDeploymentName' = $env:AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME
+            'SemanticKernel:Endpoint' = $env:AZURE_OPENAI_ACCOUNT_ENDPOINT
+            'SemanticKernel:CompletionDeploymentName' = $env:AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME
+            'SemanticKernel:EmbeddingDeploymentName' = $env:AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME
+            'CosmosDb:Endpoint' = $env:AZURE_COSMOS_DB_ENDPOINT
+            'CosmosDb:Database' = $env:AZURE_COSMOS_DB_DATABASE_NAME
+            'CosmosDb:ChatContainer' = $env:AZURE_COSMOS_DB_CHAT_CONTAINER_NAME
+            'CosmosDb:CacheContainer' = $env:AZURE_COSMOS_DB_CACHE_CONTAINER_NAME
+        }
+        $userSecrets | ConvertTo-Json | dotnet user-secrets set --project ./src/cosmoschatgpt.csproj
+      shell: pwsh
+      continueOnError: false
+      interactive: true
+    posix:
+      run: |
+        userSecrets=$(jq --null-input --compact-output \
+            --arg openAiEndpoint $AZURE_OPENAI_ACCOUNT_ENDPOINT \
+            --arg openAiCompletionDeploymentName $AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME \
+            --arg openAiEmbeddingDeploymentName $AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME \
+            --arg semanticKernelEndpoint $AZURE_OPENAI_ACCOUNT_ENDPOINT \
+            --arg semanticKernelCompletionDeploymentName $AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME \
+            --arg semanticKernelEmbeddingDeploymentName $AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME \
+            --arg cosmosDbEndpoint $AZURE_COSMOS_DB_ENDPOINT \
+            --arg cosmosDbDatabase $AZURE_COSMOS_DB_DATABASE_NAME \
+            --arg cosmosDbChatContainer $AZURE_COSMOS_DB_CHAT_CONTAINER_NAME \
+            --arg cosmosDbCacheContainer $AZURE_COSMOS_DB_CACHE_CONTAINER_NAME \
+            '{"OpenAi:Endpoint":$openAiEndpoint,"OpenAi:CompletionDeploymentName":$openAiCompletionDeploymentName,"OpenAi:EmbeddingDeploymentName":$openAiEmbeddingDeploymentName,"SemanticKernel:Endpoint":$semanticKernelEndpoint,"SemanticKernel:CompletionDeploymentName":$semanticKernelCompletionDeploymentName,"SemanticKernel:EmbeddingDeploymentName":$semanticKernelEmbeddingDeploymentName,"CosmosDb:Endpoint":$cosmosDbEndpoint,"CosmosDb:Database":$cosmosDbDatabase,"CosmosDb:ChatContainer":$cosmosDbChatContainer,"CosmosDb:CacheContainer":$cosmosDbCacheContainer}')
+        echo $userSecrets | dotnet user-secrets set --project ./src/cosmoschatgpt.csproj
+      shell: sh
+      continueOnError: false
+      interactive: true
