@@ -33,6 +33,7 @@ This application demonstrates the following concepts and how to implement them:
 ### Prerequisites
 
 - Azure Subscription
+- [Azure Developer CLI](https://aka.ms/azd-install)
 - Subscription access to Azure OpenAI service. Start here to [Request Access to Azure OpenAI Service](https://aka.ms/oaiapply)
 - Visual Studio, VS Code, GitHub Codespaces or another editor to edit or view the source for this sample.
 - Azure Cosmos DB for NoSQL Vector Search Preview enrollment
@@ -67,7 +68,7 @@ This lab utilizes a preview feature, **Vector search for Azure Cosmos DB for NoS
     ```bash
     azd up
     ```
-    
+
 ### Quickstart
 
 This solution has a number of quickstarts than you can run through to learn about the features in this sample and how to implement them yourself.
