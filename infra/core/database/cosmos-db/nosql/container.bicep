@@ -23,13 +23,23 @@ param partitionKeyPaths string[] = [
   '/id'
 ]
 
-var options = setThroughput ? autoscale ? {
-  autoscaleSettings: {
-    maxThroughput: throughput
-  }
-} : {
-  throughput: throughput
-} : {}
+@description('Optional custom indexing policy for the container.')
+param indexingPolicy object = {}
+
+@description('Optional vector embedding policy for the container.')
+param vectorEmbeddingPolicy object = {}
+
+var options = setThroughput
+  ? autoscale
+      ? {
+          autoscaleSettings: {
+            maxThroughput: throughput
+          }
+        }
+      : {
+          throughput: throughput
+        }
+  : {}
 
 resource account 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' existing = {
   name: parentAccountName
@@ -46,13 +56,25 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
   tags: tags
   properties: {
     options: options
-    resource: {
-      id: name
-      partitionKey: {
-        paths: partitionKeyPaths
-        kind: 'Hash'
-      }
-    }
+    resource: union(
+      {
+        id: name
+        partitionKey: {
+          paths: partitionKeyPaths
+          kind: 'Hash'
+        }
+      },
+      !empty(indexingPolicy)
+        ? {
+            indexingPolicy: indexingPolicy
+          }
+        : {},
+      !empty(vectorEmbeddingPolicy)
+        ? {
+            vectorEmbeddingPolicy: vectorEmbeddingPolicy
+          }
+        : {}
+    )
   }
 }
 

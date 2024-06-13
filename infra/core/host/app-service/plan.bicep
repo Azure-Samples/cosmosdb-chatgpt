@@ -12,6 +12,7 @@ param kind string = 'linux'
 
 @allowed([
   'F1'
+  'S1'
 ])
 @description('SKU for the plan. Defaults to "F1".')
 param sku string = 'F1'
