@@ -43,19 +43,13 @@ module nosqlUserAssignment '../core/database/cosmos-db/nosql/role/assignment.bic
   }
 }
 
-module registryUserAssignment '../core/security/role/assignment.bicep' = if (!empty(userPrincipalId)) {
-  name: 'container-registry-role-assignment-push-user'
-  params: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec') // AcrPush built-in role
-    principalId: userPrincipalId // Principal to assign role
-    principalType: 'User' // Current deployment user
-  }
-}
-
 module openaiAppAssignment '../core/security/role/assignment.bicep' = if (!empty(appPrincipalId)) {
   name: 'openai-role-assignment-read-app'
   params: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd') // Cognitive Services OpenAI User built-in role
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+    ) // Cognitive Services OpenAI User built-in role
     principalId: appPrincipalId // Principal to assign role
     principalType: 'None' // Don't specify the principal type
   }
@@ -64,7 +58,10 @@ module openaiAppAssignment '../core/security/role/assignment.bicep' = if (!empty
 module openaiUserAssignment '../core/security/role/assignment.bicep' = if (!empty(userPrincipalId)) {
   name: 'openai-role-assignment-read-user'
   params: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd') // Cognitive Services OpenAI User built-in role
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+    ) // Cognitive Services OpenAI User built-in role
     principalId: userPrincipalId // Principal to assign role
     principalType: 'User' // Current deployment user
   }
@@ -75,6 +72,6 @@ output roleDefinitions object = {
 }
 
 output roleAssignments array = union(
-  !empty(appPrincipalId) ? [ nosqlAppAssignment.outputs.id, openaiAppAssignment.outputs ] : [],
-  !empty(userPrincipalId) ? [ nosqlUserAssignment.outputs.id, registryUserAssignment.outputs.id, openaiUserAssignment.outputs ] : []
+  !empty(appPrincipalId) ? [nosqlAppAssignment.outputs.id, openaiAppAssignment.outputs] : [],
+  !empty(userPrincipalId) ? [nosqlUserAssignment.outputs.id, openaiUserAssignment.outputs] : []
 )

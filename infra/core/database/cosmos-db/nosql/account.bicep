@@ -10,6 +10,9 @@ param enableServerless bool = false
 @description('Disables key-based authentication. Defaults to false.')
 param disableKeyBasedAuth bool = false
 
+@description('Enables vector search for this account. Defaults to false.')
+param enableVectorSearch bool = false
+
 module account '../account.bicep' = {
   name: 'cosmos-db-nosql-account'
   params: {
@@ -18,6 +21,7 @@ module account '../account.bicep' = {
     tags: tags
     kind: 'GlobalDocumentDB'
     enableServerless: enableServerless
+    enableNoSQLVectorSearch: enableVectorSearch
     disableKeyBasedAuth: disableKeyBasedAuth
   }
 }

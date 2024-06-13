@@ -14,8 +14,59 @@ var containers = [
     partitionKeyPaths: [
       '/sessionId' // Partition on the session identifier
     ]
-    autoscale: true // Scale at the container level
-    throughput: 1000 // Enable autoscale with a minimum of 100 RUs and a maximum of 1,000 RUs
+    indexingPolicy: {
+      automatic: true
+      indexingMode: 'consistent'
+      includedPaths: [
+        {
+          path: '/sessionId/?'
+        }
+      ]
+      excludedPaths: [
+        {
+          path: '/*'
+        }
+      ]
+    }
+    vectorEmbeddingPolicy: {
+      vectorEmbeddings: []
+    }
+  }
+  {
+    name: 'cachecontainer' // Container for chat sessions and messages
+    partitionKeyPaths: [
+      '/id' // Partition on the session identifier
+    ]
+    indexingPolicy: {
+      automatic: true
+      indexingMode: 'consistent'
+      includedPaths: [
+        {
+          path: '/*'
+        }
+      ]
+      excludedPaths: [
+        {
+          path: '/vectors/?'
+        }
+      ]
+      vectorIndexes: [
+        {
+          path: '/vectors'
+          type: 'quantizedFlat'
+        }
+      ]
+    }
+    vectorEmbeddingPolicy: {
+      vectorEmbeddings: [
+        {
+          path: '/vectors'
+          dataType: 'float32'
+          dimensions: 1536
+          distanceFunction: 'cosine'
+        }
+      ]
+    }
   }
 ]
 
@@ -25,9 +76,8 @@ module cosmosDbAccount '../core/database/cosmos-db/nosql/account.bicep' = {
     name: accountName
     location: location
     tags: tags
-  }
-  identity: {
-    type: 'SystemAssigned'
+    enableServerless: true
+    enableVectorSearch: true
   }
 }
 
@@ -41,19 +91,21 @@ module cosmosDbDatabase '../core/database/cosmos-db/nosql/database.bicep' = {
   }
 }
 
-module cosmosDbContainers '../core/database/cosmos-db/nosql/container.bicep' = [for (container, _) in containers: {
-  name: 'cosmos-db-container-${container.name}'
-  params: {
-    name: container.name
-    parentAccountName: cosmosDbAccount.outputs.name
-    parentDatabaseName: cosmosDbDatabase.outputs.name
-    tags: tags
-    setThroughput: true
-    autoscale: container.autoscale
-    throughput: container.throughput
-    partitionKeyPaths: container.partitionKeyPaths
+module cosmosDbContainers '../core/database/cosmos-db/nosql/container.bicep' = [
+  for (container, _) in containers: {
+    name: 'cosmos-db-container-${container.name}'
+    params: {
+      name: container.name
+      parentAccountName: cosmosDbAccount.outputs.name
+      parentDatabaseName: cosmosDbDatabase.outputs.name
+      tags: tags
+      setThroughput: false
+      partitionKeyPaths: container.partitionKeyPaths
+      indexingPolicy: container.indexingPolicy
+      vectorEmbeddingPolicy: container.vectorEmbeddingPolicy
+    }
   }
-}]
+]
 
 output endpoint string = cosmosDbAccount.outputs.endpoint
 output accountName string = cosmosDbAccount.outputs.name
@@ -61,6 +113,8 @@ output accountName string = cosmosDbAccount.outputs.name
 output database object = {
   name: cosmosDbDatabase.outputs.name
 }
-output containers array = [for (_, index) in containers: {
-  name: cosmosDbContainers[index].outputs.name
-}]
+output containers array = [
+  for (_, index) in containers: {
+    name: cosmosDbContainers[index].outputs.name
+  }
+]

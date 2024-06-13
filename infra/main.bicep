@@ -25,20 +25,17 @@ param principalId string = ''
 param openAiAccountName string = ''
 param cosmosDbAccountName string = ''
 param userAssignedIdentityName string = ''
-@allowed([ 'gpt-35-turbo'])
-param gptModel string
-@allowed(['0301'])
-param gptVersion string
+param appServicePlanName string = ''
+param appServiceWebAppName string = ''
 
 // serviceName is used as value for the tag (azd-service-name) azd uses to identify deployment host
+param serviceName string = 'web'
 
-param appServicePlanName string = ''
 var abbreviations = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
-var uniqueSuffix = substring(uniqueString(subscription().id, resourceGroup.id), 1, 3) 
 var tags = {
   'azd-env-name': environmentName
-  repo: 'https://github.com/Azure-Samples/cosmosdb-chatgpt'
+  repo: 'https://github.com/azure-samples/cosmosdb-chatgpt'
 }
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
@@ -61,33 +58,39 @@ module ai 'app/ai.bicep' = {
   name: 'ai'
   scope: resourceGroup
   params: {
-    name: !empty(openAiAccountName) ? openAiAccountName : '${abbreviations.openAiAccount}${resourceToken}'
+    accountName: !empty(openAiAccountName) ? openAiAccountName : '${abbreviations.openAiAccount}-${resourceToken}'
     location: location
-    gptVersion: gptVersion
     tags: tags
   }
 }
 
-module appService 'app/appservice.bicep'= {
-  name: 'deploy_app'
+module web 'app/web.bicep' = {
+  name: 'web'
   scope: resourceGroup
   params: {
-    appServiceName: '${abbreviations.webSitesAppService}${environmentName}-${uniqueSuffix}'
-    appServicePlanName: !empty(appServicePlanName) ? appServicePlanName : '${abbreviations.webServerFarms}${environmentName}-${uniqueSuffix}'
-    cosmosEndpoint:  database.outputs.endpoint
+    appName: !empty(appServiceWebAppName) ? appServiceWebAppName : '${abbreviations.appServiceWebApp}-${resourceToken}'
+    planName: !empty(appServicePlanName) ? appServicePlanName : '${abbreviations.appServicePlan}-${resourceToken}'
     databaseAccountEndpoint: database.outputs.endpoint
-    openAiAccountEndpoint: ai.outputs.endpoint    
-    openaiName: ai.outputs.accountName
-    openaiEndpoint: ai.outputs.endpoint
+    openAiAccountEndpoint: ai.outputs.endpoint
+    cosmosDbSettings: {
+      database: database.outputs.database.name
+      chatContainer: database.outputs.containers[0].name
+      cacheContainer: database.outputs.containers[1].name
+    }
+    openAiSettings: {
+      maxConversationTokens: ai.outputs.maxConversationTokens
+      completionDeploymentName: ai.outputs.deployments[0].name
+      embeddingDeploymentName: ai.outputs.deployments[1].name
+    }
     userAssignedManagedIdentity: {
       resourceId: identity.outputs.resourceId
       clientId: identity.outputs.clientId
     }
     location: location
     tags: tags
+    serviceTag: serviceName
   }
 }
-
 
 module database 'app/database.bicep' = {
   name: 'database'
@@ -99,7 +102,6 @@ module database 'app/database.bicep' = {
   }
 }
 
- 
 module security 'app/security.bicep' = {
   name: 'security'
   scope: resourceGroup
@@ -111,20 +113,12 @@ module security 'app/security.bicep' = {
 }
 
 // Database outputs
-output AZURE_COSMOS_ENDPOINT string = database.outputs.endpoint
-output AZURE_COSMOS_DATABASE_NAME string = database.outputs.database.name
-output AZURE_COSMOS_CONTAINER_NAMES array = map(database.outputs.containers, c => c.name)
+output AZURE_COSMOS_DB_ENDPOINT string = database.outputs.endpoint
+output AZURE_COSMOS_DB_DATABASE_NAME string = database.outputs.database.name
+output AZURE_COSMOS_DB_CHAT_CONTAINER_NAME string = database.outputs.containers[0].name
+output AZURE_COSMOS_DB_CACHE_CONTAINER_NAME string = database.outputs.containers[1].name
 
-
-// Identity outputs
-output AZURE_USER_ASSIGNED_IDENTITY_NAME string = identity.outputs.name
-
-// Security outputs
-output AZURE_NOSQL_ROLE_DEFINITION_ID string = security.outputs.roleDefinitions.nosql
-
-// Application environment variables
-output COSMOSDB__ENDPOINT string = database.outputs.endpoint
-output COSMOSDB__DATABASE string = database.outputs.database.name
-output COSMOSDB__CONTAINER string = database.outputs.containers[0].name
-output OPENAI__ENDPOINT string = ai.outputs.endpoint
-output OPENAI__MAXCONVERSATIONTOKENS string = string(ai.outputs.maxConversationTokens)
+// AI outputs
+output AZURE_OPENAI_ACCOUNT_ENDPOINT string = ai.outputs.endpoint
+output AZURE_OPENAI_COMPLETION_DEPLOYMENT_NAME string = ai.outputs.deployments[0].name
+output AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME string = ai.outputs.deployments[1].name

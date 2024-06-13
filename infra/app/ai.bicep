@@ -1,82 +1,57 @@
 metadata description = 'Create AI accounts.'
 
-param name string
+param accountName string
 param location string = resourceGroup().location
 param tags object = {}
-param gptVersion string
 
-param customSubDomainName string = name
-
-param deployments array = []
-param kind string = 'OpenAI'
-param publicNetworkAccess string = 'Enabled'
-param sku object = {
-  name: 'S0'
-}
-var maxConversationTokens = 2000
-
-
-resource account 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: name
-  location: location
-  tags: tags
-  kind: kind
-  properties: {
-    customSubDomainName: customSubDomainName
-    publicNetworkAccess: publicNetworkAccess
+var deployments = [
+  {
+    name: 'completions'
+    skuCapacity: 10
+    modelName: 'gpt-35-turbo'
+    modelVersion: '0301'
   }
-  sku: sku
+  {
+    name: 'embeddings'
+    skuCapacity: 5
+    modelName: 'text-embedding-ada-002'
+    modelVersion: '2'
+  }
+]
+
+module openAiAccount '../core/ai/cognitive-services/account.bicep' = {
+  name: 'openai-account'
+  params: {
+    name: accountName
+    location: location
+    tags: tags
+    kind: 'OpenAI'
+    sku: 'S0'
+    enablePublicNetworkAccess: true
+  }
 }
 
 @batchSize(1)
-resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = [for deployment in deployments: {
-  parent: account
-  name: deployment.name
-  properties: {
-    model: deployment.model
-    raiPolicyName: contains(deployment, 'raiPolicyName') ? deployment.raiPolicyName : null
-  }
-  sku: contains(deployment, 'sku') ? deployment.sku : {
-    name: 'Standard'
-    capacity: 20
-  }
-}]
-
-resource gpt4deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: account
-  name: 'gpt-4'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'gpt-35-turbo'
-      version: gptVersion
+module openAiModelDeployments '../core/ai/cognitive-services/deployment.bicep' = [
+  for (deployment, _) in deployments: {
+    name: 'openai-model-deployment-${deployment.name}'
+    params: {
+      name: deployment.name
+      parentAccountName: openAiAccount.outputs.name
+      skuName: 'Standard'
+      skuCapacity: deployment.skuCapacity
+      modelName: deployment.modelName
+      modelVersion: deployment.modelVersion
+      modelFormat: 'OpenAI'
     }
   }
-  sku: {
-    capacity: 10
-    name: 'Standard'
-  }
-}
+]
 
-
-resource adaEmbeddingsdeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: account
-  name: 'text-embedding-ada-002'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'text-embedding-ada-002'
-      version: '2'
-    }
+output name string = openAiAccount.outputs.name
+output endpoint string = openAiAccount.outputs.endpoint
+output deployments array = [
+  for (_, index) in deployments: {
+    name: openAiModelDeployments[index].outputs.name
   }
-  sku: {
-    capacity: 10
-    name: 'Standard'
-  }
-  dependsOn: [gpt4deployment]
-}
-
-output endpoint string = account.properties.endpoint
-output accountName string = account.name
-output openaiEndpoint string = account.properties.endpoint
-output maxConversationTokens int = maxConversationTokens
+]
+output maxConversationTokens int = 2000

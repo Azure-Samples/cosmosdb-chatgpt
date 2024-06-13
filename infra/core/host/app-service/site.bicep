@@ -35,6 +35,9 @@ param allowedCorsOrigins string[] = []
 @description('Enable system-assigned managed identity. Defaults to false.')
 param enableSystemAssignedManagedIdentity bool = false
 
+@description('List of user-assigned managed identities. Defaults to an empty array.')
+param userAssignedManagedIdentityIds string[] = []
+
 var linuxFxVersion = '${runtimeName}|${runtimeVersion}'
 
 resource plan 'Microsoft.Web/serverfarms@2022-09-01' existing = {
@@ -46,17 +49,23 @@ resource site 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   tags: tags
   kind: kind
-  identity: enableSystemAssignedManagedIdentity ? {
-    type: 'SystemAssigned'
-  } : null
+  identity: {
+    type: enableSystemAssignedManagedIdentity
+      ? !empty(userAssignedManagedIdentityIds) ? 'SystemAssigned, UserAssigned' : 'SystemAssigned'
+      : !empty(userAssignedManagedIdentityIds) ? 'UserAssigned' : 'None'
+    userAssignedIdentities: !empty(userAssignedManagedIdentityIds)
+      ? toObject(userAssignedManagedIdentityIds, uaid => uaid, uaid => {})
+      : null
+  }
   properties: {
     serverFarmId: plan.id
     siteConfig: {
       linuxFxVersion: linuxFxVersion
       alwaysOn: alwaysOn
+      http20Enabled: true
       minTlsVersion: '1.2'
       cors: {
-        allowedOrigins: union([ 'https://portal.azure.com', 'https://ms.portal.azure.com' ], allowedCorsOrigins)
+        allowedOrigins: union(['https://portal.azure.com', 'https://ms.portal.azure.com'], allowedCorsOrigins)
       }
     }
     httpsOnly: true

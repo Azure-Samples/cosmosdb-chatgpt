@@ -20,4 +20,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);SKEXP0001,SKEXP0010</NoWarn>
+  </PropertyGroup>
 </Project>

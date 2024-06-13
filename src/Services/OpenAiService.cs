@@ -1,8 +1,8 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
+using Azure.Core;
 using Azure.Identity;
 using Cosmos.Chat.GPT.Models;
-using Microsoft.VisualBasic;
 
 namespace Cosmos.Chat.GPT.Services;
 
@@ -33,25 +33,23 @@ public class OpenAiService
     /// Creates a new instance of the service.
     /// </summary>
     /// <param name="endpoint">Endpoint URI.</param>
-    /// <param name="key">Account key.</param>
     /// <param name="completionDeploymentName">Name of the deployed Azure OpenAI completion model.</param>
     /// <param name="embeddingDeploymentName">Name of the deployed Azure OpenAI embedding model.</param>
     /// <exception cref="ArgumentNullException">Thrown when endpoint, key, or modelName is either null or empty.</exception>
     /// <remarks>
     /// This constructor will validate credentials and create a HTTP client instance.
     /// </remarks>
-    public OpenAiService(string endpoint, string key, string completionDeploymentName, string embeddingDeploymentName)
+    public OpenAiService(string endpoint, string completionDeploymentName, string embeddingDeploymentName)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(endpoint);
-        ArgumentNullException.ThrowIfNullOrEmpty(key);
         ArgumentNullException.ThrowIfNullOrEmpty(completionDeploymentName);
         ArgumentNullException.ThrowIfNullOrEmpty(embeddingDeploymentName);
 
         _completionDeploymentName = completionDeploymentName;
         _embeddingDeploymentName = embeddingDeploymentName;
 
-        var credential = new DefaultAzureCredential();
-        _client = new(new Uri(endpoint), credential);
+        TokenCredential credential = new DefaultAzureCredential();
+        _client = new OpenAIClient(new Uri(endpoint), credential);
     }
 
     /// <summary>
