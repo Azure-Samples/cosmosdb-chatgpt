@@ -1,16 +1,3 @@
----
-page_type: sample
-languages:
-- csharp
-products:
-- azure-cosmos-db
-- azure-openai
-name: Build a Copilot app using Azure Cosmos DB & Azure OpenAI Service
-urlFragment: chat-app
-description: Sample application that implements a Generative AI chat application that demonstrates context windows, semantic cache and Semantic Kernel integration.
-azureDeploy: https://raw.githubusercontent.com/azure-samples/cosmosdb-chatgpt/main/azuredeploy.json
----
-
 # Build a Copilot app using Azure Cosmos DB & Azure OpenAI Service
 
 **This sample is now being maintained in a new GitHub repository.**
